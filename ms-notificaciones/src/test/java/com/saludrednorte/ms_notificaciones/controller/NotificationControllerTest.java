@@ -10,18 +10,18 @@ import com.saludrednorte.ms_notificaciones.entity.TipoNotificacion;
 import com.saludrednorte.ms_notificaciones.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -30,23 +30,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests para NotificationController
- * Valida los endpoints REST
+ * Tests para NotificationController.
+ * Valida los endpoints REST sin depender de WebMvcTest/MockBean.
  */
-@WebMvcTest(NotificationController.class)
+@ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private NotificationService service;
 
-    @MockBean
+    @Mock
     private NotificationMapper mapper;
+
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
     private NotificationRequestDTO requestDTO;
     private NotificationResponseDTO responseDTO;
@@ -54,13 +51,14 @@ class NotificationControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Preparar DTO de request
+        objectMapper = new ObjectMapper().findAndRegisterModules();
+        mockMvc = MockMvcBuilders.standaloneSetup(new NotificationController(service, mapper)).build();
+
         requestDTO = new NotificationRequestDTO();
         requestDTO.setPacienteId(123L);
         requestDTO.setTipo(TipoNotificacion.CITA_CONFIRMADA);
         requestDTO.setMensaje("Su cita ha sido confirmada");
 
-        // Preparar entidad
         notification = new Notification();
         notification.setId(1L);
         notification.setPacienteId(123L);
@@ -70,7 +68,6 @@ class NotificationControllerTest {
         notification.setCreadoAt(LocalDateTime.now());
         notification.setIntentosEnvio(0);
 
-        // Preparar DTO de response
         responseDTO = new NotificationResponseDTO();
         responseDTO.setId(1L);
         responseDTO.setPacienteId(123L);
@@ -83,15 +80,13 @@ class NotificationControllerTest {
 
     @Test
     void testCreateNotification() throws Exception {
-        // Arrange
         when(mapper.requestDtoToEntity(any(NotificationRequestDTO.class))).thenReturn(notification);
         when(service.create(any(Notification.class))).thenReturn(notification);
         when(mapper.entityToResponseDto(any(Notification.class))).thenReturn(responseDTO);
 
-        // Act & Assert
         mockMvc.perform(post("/api/notifications")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDTO)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.estado").value("PENDIENTE"));
@@ -101,11 +96,9 @@ class NotificationControllerTest {
 
     @Test
     void testGetNotificationById() throws Exception {
-        // Arrange
         when(service.findById(1L)).thenReturn(Optional.of(notification));
         when(mapper.entityToResponseDto(any(Notification.class))).thenReturn(responseDTO);
 
-        // Act & Assert
         mockMvc.perform(get("/api/notifications/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
@@ -113,11 +106,9 @@ class NotificationControllerTest {
 
     @Test
     void testGetPendingNotifications() throws Exception {
-        // Arrange
         when(service.findPending()).thenReturn(List.of(notification));
         when(mapper.entityToResponseDto(any(Notification.class))).thenReturn(responseDTO);
 
-        // Act & Assert
         mockMvc.perform(get("/api/notifications/pending"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L));
@@ -125,10 +116,8 @@ class NotificationControllerTest {
 
     @Test
     void testSendNotification() throws Exception {
-        // Arrange
         when(service.sendById(1L)).thenReturn(true);
 
-        // Act & Assert
         mockMvc.perform(post("/api/notifications/1/send"))
                 .andExpect(status().isOk());
 
