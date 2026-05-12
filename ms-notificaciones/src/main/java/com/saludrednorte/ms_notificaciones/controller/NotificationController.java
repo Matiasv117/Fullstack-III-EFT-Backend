@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/notificaciones")
 public class NotificationController {
 
     private final NotificationService service;
@@ -36,8 +36,8 @@ public class NotificationController {
         return ResponseEntity.ok(mapper.entityToResponseDto(saved));
     }
 
-    @GetMapping("/pending")
-    public ResponseEntity<List<NotificationResponseDTO>> pending() {
+    @GetMapping("/pendientes")
+    public ResponseEntity<List<NotificationResponseDTO>> pendientes() {
         List<NotificationResponseDTO> result = service.findPending().stream()
                 .map(mapper::entityToResponseDto)
                 .collect(Collectors.toList());
@@ -60,24 +60,24 @@ public class NotificationController {
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/{id}/send")
-    public ResponseEntity<Void> sendOne(@PathVariable Long id) {
+    @PostMapping("/{id}/enviar")
+    public ResponseEntity<Void> enviar(@PathVariable Long id) {
         return service.sendById(id) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/{id}/send-by-channel")
-    public ResponseEntity<Void> sendByChannel(@PathVariable Long id, @RequestParam("canal") String canal) {
+    @PostMapping("/{id}/enviar-canal")
+    public ResponseEntity<Void> enviarPorCanal(@PathVariable Long id, @RequestParam("canal") String canal) {
         return service.sendById(id, canal) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/send-all")
-    public ResponseEntity<Void> sendAll() {
+    @PostMapping("/enviar-todas")
+    public ResponseEntity<Void> enviarTodas() {
         service.sendPending();
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<NotificationResponseDTO>> getAll() {
+    public ResponseEntity<List<NotificationResponseDTO>> listar() {
         List<NotificationResponseDTO> result = service.findAll().stream()
                 .map(mapper::entityToResponseDto)
                 .collect(Collectors.toList());

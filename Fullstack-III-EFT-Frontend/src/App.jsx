@@ -29,12 +29,12 @@ function App() {
         <h1>Fullstack III - Sistema de Salud</h1>
         <p>Gestión de Pacientes y Optimización de Citas</p>
         {resumenPortal && (
-          <p className="portal-resumen" style={{ fontSize: '0.95rem', marginTop: '0.5rem' }}>
+          <p className="portal-resumen">
             Resumen (BFF): {resumenPortal.totalPacientes ?? 0} paciente(s),{' '}
             {resumenPortal.totalNotificacionesPendientes ?? 0} notificación(es) pendiente(s)
           </p>
         )}
-        <img src={parguelas} style={{height: '110px', width: 'auto'}}/>
+        <img src={parguelas} alt="Equipo del proyecto" className="salud-header-photo" />
       </header>
 
       {/* Navegación */}

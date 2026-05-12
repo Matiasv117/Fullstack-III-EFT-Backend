@@ -22,6 +22,7 @@ Microservicio de notificaciones de RedNorte.
 - H2 en memoria (perfil por defecto) o PostgreSQL con `SPRING_PROFILES_ACTIVE=postgres`
 - Eureka Client
 - Scheduler
+- Flyway (solo con perfil `postgres`; tabla JPA `notificaciones`)
 
 ## Ejecutar el servicio
 
@@ -37,24 +38,26 @@ El servicio arranca en:
 
 ## Endpoints principales
 
-Base path: `/api/notifications`
+Base path: `/api/notificaciones`
 
 ### Notificaciones
 
-- `POST /api/notifications`
-- `GET /api/notifications/pending`
-- `GET /api/notifications/{id}`
-- `GET /api/notifications/paciente/{pacienteId}`
-- `POST /api/notifications/{id}/send`
-- `POST /api/notifications/{id}/send-by-channel?canal=EMAIL|SMS|PUSH`
-- `POST /api/notifications/send-all`
+- `POST /api/notificaciones`
+- `GET /api/notificaciones/pendientes`
+- `GET /api/notificaciones/{id}`
+- `GET /api/notificaciones/paciente/{pacienteId}`
+- `POST /api/notificaciones/{id}/enviar`
+- `POST /api/notificaciones/{id}/enviar-canal?canal=EMAIL|SMS|PUSH`
+- `POST /api/notificaciones/enviar-todas`
 
 ### Información
 
-- `GET /api/notifications/info/channels`
-- `GET /api/notifications/info/health`
+- `GET /api/notificaciones/info/canales`
+- `GET /api/notificaciones/info/estado`
 
-## Eureka
+## Migraciones (Flyway, perfil `postgres`)
+
+Con PostgreSQL/Insforge, Flyway usa la tabla de historial `flyway_ms_notificaciones`. La migración `V1` renombra la tabla legada `notifications` a **`notificaciones`** si aplica.
 
 Configura el servidor Eureka en `src/main/resources/application.properties`:
 

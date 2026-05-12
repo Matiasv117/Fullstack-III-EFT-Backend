@@ -83,7 +83,7 @@ $notifJson = @"
   "mensaje": "abc"
 }
 "@
-Test-Status -Url "$GatewayBaseUrl/api/notifications" -Method POST -Body $notifJson -ExpectedStatus 400
+Test-Status -Url "$GatewayBaseUrl/api/notificaciones" -Method POST -Body $notifJson -ExpectedStatus 400
 
 Write-Host "=== Smoke test completado correctamente ===" -ForegroundColor Cyan
 

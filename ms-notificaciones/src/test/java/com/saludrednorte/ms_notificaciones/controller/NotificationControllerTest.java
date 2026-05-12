@@ -84,7 +84,7 @@ class NotificationControllerTest {
         when(service.create(any(Notification.class))).thenReturn(notification);
         when(mapper.entityToResponseDto(any(Notification.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(post("/api/notifications")
+        mockMvc.perform(post("/api/notificaciones")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
@@ -99,7 +99,7 @@ class NotificationControllerTest {
         when(service.findById(1L)).thenReturn(Optional.of(notification));
         when(mapper.entityToResponseDto(any(Notification.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/api/notifications/1"))
+        mockMvc.perform(get("/api/notificaciones/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
     }
@@ -109,7 +109,7 @@ class NotificationControllerTest {
         when(service.findPending()).thenReturn(List.of(notification));
         when(mapper.entityToResponseDto(any(Notification.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/api/notifications/pending"))
+        mockMvc.perform(get("/api/notificaciones/pendientes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L));
     }
@@ -118,7 +118,7 @@ class NotificationControllerTest {
     void testSendNotification() throws Exception {
         when(service.sendById(1L)).thenReturn(true);
 
-        mockMvc.perform(post("/api/notifications/1/send"))
+        mockMvc.perform(post("/api/notificaciones/1/enviar"))
                 .andExpect(status().isOk());
 
         verify(service).sendById(1L);

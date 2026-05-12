@@ -72,7 +72,7 @@ public class PortalResumenService {
     private JsonNode fetchNotificacionesPendientes(ArrayNode errores) {
         try {
             return downstream.get()
-                    .uri("/api/notifications/pending")
+                    .uri("/api/notificaciones/pendientes")
                     .retrieve()
                     .bodyToMono(JsonNode.class)
                     .timeout(TIMEOUT)

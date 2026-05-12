@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "ms-notificaciones")
 public interface NotificationClient {
 
-    @PostMapping("/api/notifications")
+    @PostMapping("/api/notificaciones")
     ResponseEntity<Void> createNotification(@RequestBody NotificationRequestDTO request);
 }

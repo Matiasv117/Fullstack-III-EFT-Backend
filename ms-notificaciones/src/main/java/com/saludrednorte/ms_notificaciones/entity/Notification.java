@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * (citas confirmadas, canceladas, recordatorios, etc.)
  */
 @Entity
-@Table(name = "notifications")
+@Table(name = "notificaciones")
 public class Notification {
 
     @Id

@@ -13,7 +13,7 @@ Ventajas típicas: menos idas y vueltas desde el navegador, DTOs adaptados al po
 ## Requisitos
 
 - Java 17
-- API Gateway y microservicios levantados (o al menos gateway + MS que expongan `/pacientes` y `/api/notifications/pending`).
+- API Gateway y microservicios levantados (o al menos gateway + MS que expongan `/pacientes` y `/api/notificaciones/pendientes`).
 
 ## Variables de entorno
 

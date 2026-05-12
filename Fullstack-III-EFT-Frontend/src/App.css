@@ -1,3 +1,19 @@
+:root {
+  --salud-bg: #e8f2f0;
+  --salud-surface: #ffffff;
+  --salud-primary: #0d5c56;
+  --salud-primary-light: #1a7a72;
+  --salud-accent: #2a8f6f;
+  --salud-text: #1a2e2c;
+  --salud-muted: #5a6f6d;
+  --salud-border: #c5d9d4;
+  --salud-danger: #b4232c;
+  --salud-danger-bg: #fde8e8;
+  --salud-ok-bg: #e6f4ef;
+  --salud-radius: 10px;
+  --salud-shadow: 0 4px 20px rgba(13, 92, 86, 0.08);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -5,95 +21,269 @@
 }
 
 body {
-  font-family: 'Segoe UI', Roboto, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  background: linear-gradient(180deg, var(--salud-bg) 0%, #dceae7 100%);
+  color: var(--salud-text);
 }
 
 .container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 16px 32px;
 }
 
 /* Header */
 .header {
   text-align: center;
-  padding: 30px 0;
-  border-bottom: 2px solid #007bff;
-  margin-bottom: 30px;
+  padding: 28px 20px 24px;
+  background: var(--salud-surface);
+  border-radius: var(--salud-radius);
+  box-shadow: var(--salud-shadow);
+  border: 1px solid var(--salud-border);
+  margin-bottom: 24px;
 }
 
 .header h1 {
-  font-size: 36px;
-  color: #007bff;
-  margin-bottom: 10px;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  color: var(--salud-primary);
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .header p {
-  font-size: 16px;
-  color: #666;
+  font-size: 1rem;
+  color: var(--salud-muted);
+}
+
+.portal-resumen {
+  font-size: 0.95rem;
+  margin-top: 10px;
+  color: var(--salud-primary-light);
+  font-weight: 500;
+}
+
+.header img,
+.salud-header-photo {
+  margin-top: 14px;
+  border-radius: 8px;
+  max-height: 100px;
+  width: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* Navegación */
 .nav {
   display: flex;
   gap: 10px;
-  margin-bottom: 30px;
+  margin-bottom: 22px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .nav button {
-  padding: 12px 24px;
-  border: 2px solid #ddd;
-  background-color: #fff;
-  color: #333;
-  font-size: 16px;
+  padding: 11px 22px;
+  border: 1px solid var(--salud-border);
+  background-color: var(--salud-surface);
+  color: var(--salud-text);
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  border-radius: 5px;
-  transition: all 0.3s ease;
+  border-radius: 999px;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav button:hover {
-  border-color: #007bff;
-  color: #007bff;
+  border-color: var(--salud-primary-light);
+  color: var(--salud-primary);
+  box-shadow: 0 2px 8px rgba(13, 92, 86, 0.12);
 }
 
 .nav button.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: linear-gradient(135deg, var(--salud-primary) 0%, var(--salud-accent) 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(13, 92, 86, 0.25);
 }
 
 /* Contenido principal */
 .content {
   flex: 1;
-  background-color: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
+  background-color: var(--salud-surface);
+  padding: 28px 26px 32px;
+  border-radius: var(--salud-radius);
+  box-shadow: var(--salud-shadow);
+  border: 1px solid var(--salud-border);
+  margin-bottom: 24px;
 }
 
 /* Footer */
 .footer {
   text-align: center;
-  padding: 20px;
-  border-top: 2px solid #ddd;
-  color: #666;
+  padding: 16px;
+  color: var(--salud-muted);
+  font-size: 0.9rem;
 }
 
-/* Responsive */
+/* --- Componentes salud (pacientes / notificaciones) --- */
+.salud-panel {
+  padding: 0;
+}
+
+.salud-panel__title {
+  font-size: 1.35rem;
+  color: var(--salud-primary);
+  margin-bottom: 8px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--salud-border);
+}
+
+.salud-lead {
+  color: var(--salud-muted);
+  font-size: 0.95rem;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.salud-section {
+  margin-bottom: 28px;
+}
+
+.salud-section__heading {
+  font-size: 1.05rem;
+  color: var(--salud-text);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.salud-muted {
+  color: var(--salud-muted);
+}
+
+.salud-optional {
+  font-weight: 400;
+  color: var(--salud-muted);
+  font-size: 0.85rem;
+}
+
+.salud-alert {
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-size: 0.95rem;
+}
+
+.salud-alert--error {
+  background: var(--salud-danger-bg);
+  color: var(--salud-danger);
+  border: 1px solid #f5c2c7;
+}
+
+.salud-alert--ok {
+  background: var(--salud-ok-bg);
+  color: var(--salud-primary);
+  border: 1px solid var(--salud-border);
+}
+
+.salud-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.salud-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  background: #f6faf9;
+  border: 1px solid var(--salud-border);
+  border-radius: 8px;
+}
+
+.salud-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 420px;
+}
+
+.salud-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--salud-text);
+}
+
+.salud-input {
+  padding: 11px 12px;
+  border: 1px solid var(--salud-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.salud-input:focus {
+  outline: 2px solid rgba(26, 122, 114, 0.35);
+  outline-offset: 1px;
+  border-color: var(--salud-primary-light);
+}
+
+.salud-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.salud-btn:active {
+  transform: scale(0.98);
+}
+
+.salud-btn--primary {
+  background: linear-gradient(135deg, var(--salud-primary) 0%, var(--salud-accent) 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(13, 92, 86, 0.25);
+}
+
+.salud-btn--primary:hover {
+  box-shadow: 0 6px 16px rgba(13, 92, 86, 0.3);
+}
+
+.salud-btn--secondary {
+  background: #fff;
+  color: var(--salud-primary);
+  border: 1px solid var(--salud-primary-light);
+}
+
+.salud-btn--secondary:hover {
+  background: #f0faf8;
+}
+
+.salud-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  background: #e8f5e9;
+  color: var(--salud-primary);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .header h1 {
-    font-size: 24px;
-  }
-
-  .header p {
-    font-size: 14px;
+    font-size: 1.35rem;
   }
 
   .nav {
@@ -105,6 +295,11 @@ body {
   }
 
   .content {
-    padding: 20px;
+    padding: 20px 16px;
+  }
+
+  .salud-list__item {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

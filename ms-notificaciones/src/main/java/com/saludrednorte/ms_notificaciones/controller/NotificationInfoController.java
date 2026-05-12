@@ -11,11 +11,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Controlador REST para información del sistema de notificaciones
- * Expone endpoints de información y configuración
+ * Información del servicio de notificaciones (rutas en español).
  */
 @RestController
-@RequestMapping("/api/notifications/info")
+@RequestMapping("/api/notificaciones/info")
 public class NotificationInfoController {
 
     private final NotificationService notificationService;
@@ -24,13 +23,8 @@ public class NotificationInfoController {
         this.notificationService = notificationService;
     }
 
-    /**
-     * GET /api/notifications/info/channels
-     * Obtiene la lista de canales de notificación disponibles
-     * @return Lista de canales disponibles
-     */
-    @GetMapping("/channels")
-    public ResponseEntity<List<ChannelInfoDTO>> getAvailableChannels() {
+    @GetMapping("/canales")
+    public ResponseEntity<List<ChannelInfoDTO>> canalesDisponibles() {
         List<ChannelInfoDTO> channels = notificationService.getAvailableChannels().stream()
                 .map(channel -> new ChannelInfoDTO(
                         channel,
@@ -40,13 +34,8 @@ public class NotificationInfoController {
         return ResponseEntity.ok(channels);
     }
 
-    /**
-     * GET /api/notifications/info/health
-     * Verifica la salud del servicio de notificaciones
-     * @return Estado del servicio
-     */
-    @GetMapping("/health")
-    public ResponseEntity<String> health() {
-        return ResponseEntity.ok("Microservicio de Notificaciones operacional");
+    @GetMapping("/estado")
+    public ResponseEntity<String> estado() {
+        return ResponseEntity.ok("Microservicio de notificaciones operacional");
     }
 }

@@ -117,4 +117,6 @@ En el panel de Insforge: usá **Connection String** (HOST, DATABASE, USER, PASSW
 
 Más detalle y la URI JDBC de ejemplo: `config/ejemplo-insforge.env`.
 
+**API de notificaciones:** las rutas REST pasan a **`/api/notificaciones`** (español); la tabla JPA es **`notificaciones`**. Con perfil `postgres`, Flyway en `ms-notificaciones` renombra `notifications` → `notificaciones` si aún existe la tabla antigua en la base.
+
 **Qué tabla mirar:** al pulsar **Registrar** se inserta en **`paciente`**. Al pulsar **Agregar a lista** se inserta en **`lista_espera`** (referencia al paciente por id). Si Insforge sigue en 0 filas, casi siempre es porque los servicios siguen en **H2** (revisá el log al arrancar: debe decir `jdbc:postgresql://...insforge...`). Usá `config/local-insforge.env` + `start-all.ps1` o cargá variables antes de `mvnw`.

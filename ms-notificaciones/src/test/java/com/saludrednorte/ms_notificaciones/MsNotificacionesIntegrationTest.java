@@ -60,7 +60,7 @@ class MsNotificacionesIntegrationTest {
         requestDTO.setTipo(TipoNotificacion.CITA_CONFIRMADA);
         requestDTO.setMensaje("Su cita ha sido confirmada para mañana a las 10:00");
 
-        MvcResult createResult = mockMvc.perform(post("/api/notifications")
+        MvcResult createResult = mockMvc.perform(post("/api/notificaciones")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
@@ -76,14 +76,14 @@ class MsNotificacionesIntegrationTest {
         assertNotNull(created.getId());
         assertEquals("PENDIENTE", created.getEstado().name());
 
-        mockMvc.perform(post("/api/notifications/{id}/send", created.getId()))
+        mockMvc.perform(post("/api/notificaciones/{id}/enviar", created.getId()))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Health check del microservicio")
     void testHealthCheck() throws Exception {
-        mockMvc.perform(get("/api/notifications/info/health"))
+        mockMvc.perform(get("/api/notificaciones/info/estado"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("operacional")));
     }

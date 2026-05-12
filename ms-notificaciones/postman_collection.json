@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Microservicio Notificaciones - Pruebas",
-    "description": "Colección para probar los endpoints del microservicio de notificaciones",
+    "description": "Colección para probar los endpoints del microservicio de notificaciones (rutas en español)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -20,11 +20,11 @@
           "raw": "{\"pacienteId\": 1, \"tipo\": \"CITA_CONFIRMADA\", \"mensaje\": \"Su cita médica ha sido confirmada para mañana a las 10:00 AM.\"}"
         },
         "url": {
-          "raw": "http://localhost:8085/api/notifications",
+          "raw": "http://localhost:8085/api/notificaciones",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications"]
+          "path": ["api", "notificaciones"]
         }
       }
     },
@@ -34,11 +34,11 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8085/api/notifications/pending",
+          "raw": "http://localhost:8085/api/notificaciones/pendientes",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications", "pending"]
+          "path": ["api", "notificaciones", "pendientes"]
         }
       }
     },
@@ -48,11 +48,11 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8085/api/notifications/{{notificationId}}",
+          "raw": "http://localhost:8085/api/notificaciones/{{notificationId}}",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications", "{{notificationId}}"]
+          "path": ["api", "notificaciones", "{{notificationId}}"]
         }
       }
     },
@@ -62,11 +62,11 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8085/api/notifications/paciente/{{pacienteId}}",
+          "raw": "http://localhost:8085/api/notificaciones/paciente/{{pacienteId}}",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications", "paciente", "{{pacienteId}}"]
+          "path": ["api", "notificaciones", "paciente", "{{pacienteId}}"]
         }
       }
     },
@@ -76,11 +76,11 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "http://localhost:8085/api/notifications/{{notificationId}}/send",
+          "raw": "http://localhost:8085/api/notificaciones/{{notificationId}}/enviar",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications", "{{notificationId}}", "send"]
+          "path": ["api", "notificaciones", "{{notificationId}}", "enviar"]
         }
       }
     },
@@ -90,11 +90,11 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "http://localhost:8085/api/notifications/{{notificationId}}/send-by-channel?canal={{canal}}",
+          "raw": "http://localhost:8085/api/notificaciones/{{notificationId}}/enviar-canal?canal={{canal}}",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications", "{{notificationId}}", "send-by-channel"],
+          "path": ["api", "notificaciones", "{{notificationId}}", "enviar-canal"],
           "query": [
             {
               "key": "canal",
@@ -110,11 +110,11 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "http://localhost:8085/api/notifications/send-all",
+          "raw": "http://localhost:8085/api/notificaciones/enviar-todas",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications", "send-all"]
+          "path": ["api", "notificaciones", "enviar-todas"]
         }
       }
     },
@@ -124,11 +124,11 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8085/api/notifications/info/channels",
+          "raw": "http://localhost:8085/api/notificaciones/info/canales",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications", "info", "channels"]
+          "path": ["api", "notificaciones", "info", "canales"]
         }
       }
     },
@@ -138,11 +138,11 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8085/api/notifications/info/health",
+          "raw": "http://localhost:8085/api/notificaciones/info/estado",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8085",
-          "path": ["api", "notifications", "info", "health"]
+          "path": ["api", "notificaciones", "info", "estado"]
         }
       }
     }
