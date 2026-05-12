@@ -1,0 +1,17 @@
+Repositorio principal del proyecto:
+- https://github.com/Matiasv117/Fullstack-III-EFT.git
+
+Componentes incluidos en este monorepo:
+- Frontend NPM: `Fullstack-III-EFT-Frontend/` - aplicación React/Vite con la interfaz del sistema de salud.
+- API Gateway: `api-gateway/` - puerta de entrada HTTP y enrutamiento a los microservicios.
+- BFF: `bff/` - Backend for Frontend que agrega datos para el dashboard del portal.
+- Microservicio de pacientes/lista de espera: `ms-gestionpacientes/` - alta de pacientes, lista de espera y notificaciones asociadas.
+- Microservicio de notificaciones: `ms-notificaciones/` - gestión del ciclo de vida de notificaciones y estados.
+- Microservicio de optimización: `ms-optimizacion/` - citas, médicos, horarios y lógica de optimización.
+- Eureka Server: `eureka-server/` - registro y descubrimiento de servicios.
+- Arquetipo Maven base: `arquetipo-maven-salud-ms/` - plantilla mínima para generar nuevos microservicios Spring Boot.
+
+Nota:
+- En esta copia del proyecto los componentes están versionados dentro de un solo repositorio monolítico.
+- Si el equipo publica repositorios separados para cada componente, reemplazar esta sección por las URL individuales de GitHub.
+

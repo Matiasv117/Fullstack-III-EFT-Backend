@@ -1,80 +1,138 @@
-import { useState, useEffect, useCallback } from 'react'
-import { gestionPacientesApi } from '../api/gestionPacientesApi'
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  agregarPacienteAListaEspera,
+  obtenerPacientes,
+  registrarPaciente,
+  eliminarPaciente,
+} from '../api/gestionPacientesApi';
 
-/**
- * Container: datos y acciones. La vista solo pinta (presenter).
- */
+const PACIENTE_INICIAL = {
+  nombre: '',
+  apellido: '',
+  dni: '',
+  telefono: '',
+  email: '',
+};
+
 export function useGestionPacientes() {
-  const [pacientes, setPacientes] = useState([])
-  const [nuevoPaciente, setNuevoPaciente] = useState({
-    nombre: '',
-    apellido: '',
-    dni: '',
-    telefono: '',
-    email: '',
-  })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [actionMsg, setActionMsg] = useState(null)
+  const [pacientes, setPacientes] = useState([]);
+  const [nuevoPaciente, setNuevoPaciente] = useState(PACIENTE_INICIAL);
+  const [cargando, setCargando] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+  const [error, setError] = useState('');
 
-  const cargar = useCallback(async () => {
-    setError(null)
-    setLoading(true)
+  const limpiarMensajes = useCallback(() => {
+    setMensaje('');
+    setError('');
+  }, []);
+
+  const cargarPacientes = useCallback(async () => {
+    setCargando(true);
+    limpiarMensajes();
+
     try {
-      const { data } = await gestionPacientesApi.listarPacientes()
-      setPacientes(data)
-    } catch (e) {
-      setError('No se pudo cargar la lista de pacientes.')
-      console.error(e)
+      const data = await obtenerPacientes();
+      setPacientes(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || 'No fue posible cargar los pacientes');
     } finally {
-      setLoading(false)
+      setCargando(false);
     }
-  }, [])
+  }, [limpiarMensajes]);
 
   useEffect(() => {
-    cargar()
-  }, [cargar])
+    const timeoutId = window.setTimeout(() => {
+      void cargarPacientes();
+    }, 0);
 
-  const registrarPaciente = async () => {
-    setActionMsg(null)
-    setError(null)
-    try {
-      const { data } = await gestionPacientesApi.registrarPaciente(nuevoPaciente)
-      setPacientes((prev) => [...prev, data])
-      setNuevoPaciente({ nombre: '', apellido: '', dni: '', telefono: '', email: '' })
-      setActionMsg('Paciente registrado correctamente.')
-    } catch (e) {
-      setError('No se pudo registrar el paciente (DNI duplicado o error de red).')
-      console.error(e)
-    }
-  }
+    return () => window.clearTimeout(timeoutId);
+  }, [cargarPacientes]);
 
-  const agregarALista = async (pacienteId) => {
-    setActionMsg(null)
-    setError(null)
-    try {
-      await gestionPacientesApi.agregarAListaEspera({
-        paciente: { id: pacienteId },
-        gravedad: 'MEDIA',
-        interconsulta: null,
-      })
-      setActionMsg('Paciente agregado a la lista de espera.')
-    } catch (e) {
-      setError('No se pudo agregar a la lista de espera.')
-      console.error(e)
+  const actualizarCampo = useCallback((campo, valor) => {
+    setNuevoPaciente((estadoPrevio) => ({
+      ...estadoPrevio,
+      [campo]: valor,
+    }));
+  }, []);
+
+  const formValido = useMemo(() => {
+    return [nuevoPaciente.nombre, nuevoPaciente.apellido, nuevoPaciente.dni].every(
+      (campo) => campo.trim().length > 0,
+    );
+  }, [nuevoPaciente.apellido, nuevoPaciente.dni, nuevoPaciente.nombre]);
+
+  const registrar = useCallback(async () => {
+    if (!formValido) {
+      setError('Completa nombre, apellido y DNI antes de registrar.');
+      return;
     }
-  }
+
+    setCargando(true);
+    limpiarMensajes();
+
+    try {
+      const pacienteGuardado = await registrarPaciente({
+        nombre: nuevoPaciente.nombre.trim(),
+        apellido: nuevoPaciente.apellido.trim(),
+        dni: nuevoPaciente.dni.trim(),
+        telefono: nuevoPaciente.telefono.trim() || null,
+        email: nuevoPaciente.email.trim() || null,
+      });
+
+      setPacientes((pacientesActuales) => [...pacientesActuales, pacienteGuardado]);
+      setNuevoPaciente(PACIENTE_INICIAL);
+      setMensaje('Paciente registrado correctamente.');
+    } catch (err) {
+      setError(err.message || 'No fue posible registrar el paciente');
+    } finally {
+      setCargando(false);
+    }
+  }, [formValido, limpiarMensajes, nuevoPaciente.apellido, nuevoPaciente.dni, nuevoPaciente.email, nuevoPaciente.nombre, nuevoPaciente.telefono]);
+
+  const agregarALista = useCallback(async (pacienteId) => {
+    setCargando(true);
+    limpiarMensajes();
+
+    try {
+      await agregarPacienteAListaEspera(pacienteId);
+      setMensaje(`Paciente ${pacienteId} agregado a lista de espera.`);
+    } catch (err) {
+      setError(err.message || 'No fue posible agregar el paciente a la lista de espera');
+    } finally {
+      setCargando(false);
+    }
+  }, [limpiarMensajes]);
+
+  const borrarPaciente = useCallback(async (pacienteId) => {
+    setCargando(true);
+    limpiarMensajes();
+
+    try {
+      await eliminarPaciente(pacienteId);
+      setPacientes((pacientesActuales) =>
+        pacientesActuales.filter((p) => p.id !== pacienteId),
+      );
+      setMensaje(`Paciente ${pacienteId} eliminado correctamente.`);
+    } catch (err) {
+      setError(err.message || 'No fue posible eliminar el paciente');
+    } finally {
+      setCargando(false);
+    }
+  }, [limpiarMensajes]);
 
   return {
     pacientes,
     nuevoPaciente,
-    setNuevoPaciente,
-    loading,
+    cargando,
+    mensaje,
     error,
-    actionMsg,
-    setActionMsg,
-    registrarPaciente,
+    formValido,
+    actualizarCampo,
+    registrar,
     agregarALista,
-    recargar: cargar,
-  }
+    borrarPaciente,
+    recargarPacientes: cargarPacientes,
+  };
 }
+
+

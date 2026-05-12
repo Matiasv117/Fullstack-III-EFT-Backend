@@ -1,19 +1,33 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import './App.css'
 import GestionPacientes from './componentes/GestionPacientes'
+import ListaEspera from './componentes/ListaEspera'
 import Notificaciones from './componentes/Notificaciones'
 import Optimizacion from './componentes/Optimizacion'
 import parguelas from './assets/parguelas.jpg'
+import { obtenerResumenPortal } from './api/portalApi'
 
 function App() {
   const [seccionActiva, setSeccionActiva] = useState('pacientes')
   const [resumenPortal, setResumenPortal] = useState(null)
 
+  const metricas = [
+    {
+      label: 'Pacientes registrados',
+      valor: resumenPortal?.totalPacientes ?? 0,
+      detalle: 'Pacientes visibles desde el BFF',
+    },
+    {
+      label: 'Notificaciones pendientes',
+      valor: resumenPortal?.totalNotificacionesPendientes ?? 0,
+      detalle: 'Avisos que aún esperan despacho',
+    },
+  ]
+
   useEffect(() => {
     const cargarResumen = async () => {
       try {
-        const { data } = await axios.get('/api/portal/resumen')
+        const data = await obtenerResumenPortal()
         setResumenPortal(data?.resumen ?? null)
       } catch {
         setResumenPortal(null)
@@ -24,17 +38,38 @@ function App() {
 
   return (
     <div className="container">
-      {/* Header */}
       <header className="header">
-        <h1>Fullstack III - Sistema de Salud</h1>
-        <p>Gestión de Pacientes y Optimización de Citas</p>
-        {resumenPortal && (
-          <p className="portal-resumen">
-            Resumen (BFF): {resumenPortal.totalPacientes ?? 0} paciente(s),{' '}
-            {resumenPortal.totalNotificacionesPendientes ?? 0} notificación(es) pendiente(s)
+        <div className="hero-copy">
+          <span className="hero-badge">RedNorte · Sistema de salud pública</span>
+          <h1>Portal RedNorte</h1>
+          <p>
+            Gestión de pacientes, lista de espera, notificaciones y optimización de citas para
+            atención primaria y derivación asistida.
           </p>
-        )}
-        <img src={parguelas} alt="Equipo del proyecto" className="salud-header-photo" />
+          <div className="hero-tags">
+            <span>Atención primaria</span>
+            <span>Derivación asistida</span>
+            <span>Portal unificado</span>
+          </div>
+        </div>
+
+        <div className="hero-visual">
+          <img src={parguelas} alt="Equipo del proyecto" />
+          <div className="hero-note">
+            <strong>RedNorte en operación</strong>
+            <p>Lectura rápida del estado del portal para apoyar la gestión clínica diaria.</p>
+          </div>
+        </div>
+
+        <div className="portal-resumen">
+          {metricas.map((metrica) => (
+            <article key={metrica.label} className="summary-card">
+              <span>{metrica.label}</span>
+              <strong>{metrica.valor}</strong>
+              <p>{metrica.detalle}</p>
+            </article>
+          ))}
+        </div>
       </header>
 
       {/* Navegación */}
@@ -44,6 +79,12 @@ function App() {
           onClick={() => setSeccionActiva('pacientes')}
         >
           Pacientes
+        </button>
+        <button
+          className={seccionActiva === 'listaespera' ? 'active' : ''}
+          onClick={() => setSeccionActiva('listaespera')}
+        >
+          Lista de Espera
         </button>
         <button
           className={seccionActiva === 'notificaciones' ? 'active' : ''}
@@ -62,13 +103,14 @@ function App() {
       {/* Contenido */}
       <main className="content">
         {seccionActiva === 'pacientes' && <GestionPacientes />}
+        {seccionActiva === 'listaespera' && <ListaEspera />}
         {seccionActiva === 'notificaciones' && <Notificaciones />}
         {seccionActiva === 'optimizacion' && <Optimizacion />}
       </main>
 
       {/* Footer */}
       <footer className="footer">
-        <p>&copy; 2026 Salud Norte - Todos los derechos reservados</p>
+        <p>&copy; 2026 RedNorte - Sistema de salud pública</p>
       </footer>
     </div>
   )

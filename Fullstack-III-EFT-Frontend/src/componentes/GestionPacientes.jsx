@@ -1,7 +1,10 @@
-import { useGestionPacientes } from '../hooks/useGestionPacientes'
-import GestionPacientesView from './GestionPacientesView'
+import GestionPacientesView from './GestionPacientesView';
+import { useGestionPacientes } from '../hooks/useGestionPacientes';
 
-export default function GestionPacientes() {
-  const props = useGestionPacientes()
-  return <GestionPacientesView {...props} />
+function GestionPacientes() {
+  const gestionPacientes = useGestionPacientes();
+
+  return <GestionPacientesView {...gestionPacientes} />;
 }
+
+export default GestionPacientes;
