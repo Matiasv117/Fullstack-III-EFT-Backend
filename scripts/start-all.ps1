@@ -1,13 +1,7 @@
 param(
     [switch]$RestartExisting,
     [switch]$RunSmokeTest,
-    [int]$StartupTimeoutSeconds = 240,
-    # New switch to control whether to load the Insforge (Postgres) environment
-    # If the file config\local-insforge.env exists but you don't want to use it
-    # when starting services locally (to avoid unreachable DBs), don't pass -UseInsforge.
-    [switch]$UseInsforge,
-    # When using Insforge, wait up to this many seconds for the remote Postgres to be reachable
-    [int]$InsforgeWaitSeconds = 60
+    [int]$StartupTimeoutSeconds = 240
 )
 
 $ErrorActionPreference = 'Stop'
@@ -79,11 +73,10 @@ function Start-ServiceWindow {
     }
 
     Write-Host "[START] $($Service.Name)" -ForegroundColor Cyan
-    # Si existe local-insforge.env y se solicitó explícitamente con -UseInsforge,
-    # cada ventana carga DB_* y SPRING_PROFILES_ACTIVE antes de mvnw.
+    # Si existe local-insforge.env, cada ventana carga DB_* y SPRING_PROFILES_ACTIVE antes de mvnw
     $loadScript = Join-Path $root 'scripts\load-insforge-env.ps1'
     $startCmd = $Service.Command
-    if ($UseInsforge -and (Test-Path (Join-Path $root 'config\local-insforge.env'))) {
+    if (Test-Path (Join-Path $root 'config\local-insforge.env')) {
         $startCmd = ". `"$loadScript`" -SilentIfMissing; " + $Service.Command
     }
     Start-Process -FilePath powershell.exe `
@@ -93,50 +86,6 @@ function Start-ServiceWindow {
 
 Write-Host "=== Levantando todos los servicios ===" -ForegroundColor Cyan
 Write-Host "Raiz: $root" -ForegroundColor DarkGray
-
-# If the user requested to use Insforge, verify DB connectivity before starting services.
-if ($UseInsforge -and (Test-Path (Join-Path $root 'config\local-insforge.env'))) {
-    try {
-        $envFile = Join-Path $root 'config\local-insforge.env'
-        $lines = Get-Content $envFile | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' -and -not $_.StartsWith('#') }
-        $dbLine = $lines | Where-Object { $_ -match '^DB_URL=' } | Select-Object -First 1
-        if ($null -eq $dbLine) {
-            Write-Host "[WARN] No se encontró DB_URL en $envFile; asumiendo puerto 5432" -ForegroundColor Yellow
-            $dbHost = 'localhost'
-            $dbPort = 5432
-        } else {
-            $dbUrl = $dbLine -replace '^DB_URL=', ''
-            # Extraer host y puerto de una URL JDBC tipo: jdbc:postgresql://host:5432/dbname?params
-            if ($dbUrl -match 'jdbc:postgresql:\/\/(?<host>[^:\/\?]+)(:(?<port>\d+))?') {
-                $dbHost = $matches['host']
-                if ($matches['port']) { $dbPort = [int]$matches['port'] } else { $dbPort = 5432 }
-            } else {
-                Write-Host "[WARN] DB_URL no coincide con el patrón esperado: $dbUrl. Usando localhost:5432" -ForegroundColor Yellow
-                $dbHost = 'localhost'
-                $dbPort = 5432
-            }
-        }
-
-        Write-Host "[INFO] Comprobando conectividad a la BD Insforge en $dbHost`:$dbPort (espera máxima $InsforgeWaitSeconds s)" -ForegroundColor Cyan
-        $deadline = (Get-Date).AddSeconds($InsforgeWaitSeconds)
-        $ok = $false
-        while ((Get-Date) -lt $deadline) {
-            $conn = Test-NetConnection -ComputerName $dbHost -Port $dbPort -WarningAction SilentlyContinue
-            if ($conn -and $conn.TcpTestSucceeded) {
-                Write-Host "[INFO] BD alcanzable en $dbHost`:$dbPort" -ForegroundColor Green
-                $ok = $true
-                break
-            }
-            Write-Host "[INFO] BD no disponible aún en $dbHost`:$dbPort. Reintentando en 5s..." -ForegroundColor DarkYellow
-            Start-Sleep -Seconds 5
-        }
-        if (-not $ok) {
-            throw "Timeout esperando conexión a BD Insforge en $dbHost`:$dbPort después de $InsforgeWaitSeconds segundos"
-        }
-    } catch {
-        throw $_
-    }
-}
 
 foreach ($service in $services) {
     Start-ServiceWindow -Service $service
