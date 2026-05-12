@@ -31,7 +31,12 @@ function GestionPacientes() {
 
   const agregarALista = async (pacienteId) => {
     try {
-      await axios.post('/lista-espera', { pacienteId, estado: 'PENDIENTE', gravedad: 'MEDIA' });
+      // El API espera la forma JPA: paciente anidado con id (no pacienteId suelto).
+      await axios.post('/lista-espera', {
+        paciente: { id: pacienteId },
+        gravedad: 'MEDIA',
+        interconsulta: null,
+      });
       alert('Agregado a lista de espera');
     } catch (error) {
       console.error('Error al agregar a lista:', error);

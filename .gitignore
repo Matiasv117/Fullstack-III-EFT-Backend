@@ -18,6 +18,9 @@
 .project
 .settings/
 
+# Credenciales locales (Insforge / Postgres)
+config/local-insforge.env
+
 # InsForge & AI agent skills
 .insforge
 .agent

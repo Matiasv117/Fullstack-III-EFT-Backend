@@ -13,7 +13,8 @@ $services = @(
     [ordered]@{ Name = 'ms-gestionpacientes'; Path = Join-Path $root 'ms-gestionpacientes';  Port = 8083; Ready = 'Http'; Url = 'http://localhost:8083/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
     [ordered]@{ Name = 'ms-notificaciones';   Path = Join-Path $root 'ms-notificaciones';    Port = 8085; Ready = 'Http'; Url = 'http://localhost:8085/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
     [ordered]@{ Name = 'ms-optimizacion';     Path = Join-Path $root 'ms-optimizacion';      Port = 8084; Ready = 'Http'; Url = 'http://localhost:8084/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'api-gateway';         Path = Join-Path $root 'api-gateway';          Port = 8080; Ready = 'Http'; Url = 'http://localhost:8080/swagger-ui.html';          Command = '.\mvnw.cmd spring-boot:run' }
+    [ordered]@{ Name = 'api-gateway';         Path = Join-Path $root 'api-gateway';          Port = 8080; Ready = 'Http'; Url = 'http://localhost:8080/swagger-ui.html';          Command = '.\mvnw.cmd spring-boot:run' },
+    [ordered]@{ Name = 'salud-bff';           Path = Join-Path $root 'bff';                  Port = 8097; Ready = 'Http'; Url = 'http://localhost:8097/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' }
 )
 
 function Test-PortListening {
@@ -72,9 +73,15 @@ function Start-ServiceWindow {
     }
 
     Write-Host "[START] $($Service.Name)" -ForegroundColor Cyan
+    # Si existe local-insforge.env, cada ventana carga DB_* y SPRING_PROFILES_ACTIVE antes de mvnw
+    $loadScript = Join-Path $root 'scripts\load-insforge-env.ps1'
+    $startCmd = $Service.Command
+    if (Test-Path (Join-Path $root 'config\local-insforge.env')) {
+        $startCmd = ". `"$loadScript`" -SilentIfMissing; " + $Service.Command
+    }
     Start-Process -FilePath powershell.exe `
         -WorkingDirectory $Service.Path `
-        -ArgumentList @('-NoLogo', '-NoProfile', '-NoExit', '-Command', $Service.Command) | Out-Null
+        -ArgumentList @('-NoLogo', '-NoProfile', '-NoExit', '-Command', $startCmd) | Out-Null
 }
 
 Write-Host "=== Levantando todos los servicios ===" -ForegroundColor Cyan

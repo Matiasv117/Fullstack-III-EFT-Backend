@@ -16,10 +16,10 @@ Microservicio de notificaciones de RedNorte.
 
 ## Tecnologías
 
-- Spring Boot 2.7.12
-- Java 11
+- Spring Boot 3.4.x
+- Java 17
 - Spring Data JPA
-- H2 en memoria
+- H2 en memoria (perfil por defecto) o PostgreSQL con `SPRING_PROFILES_ACTIVE=postgres`
 - Eureka Client
 - Scheduler
 

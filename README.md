@@ -33,63 +33,88 @@ La aplicación permite la gestión integral de datos, ofreciendo una interfaz de
 ### **Backend & Database**
 | Tecnología | Descripción |
 | :--- | :--- |
-| **Node.js** | Entorno de ejecución. |
-| **Express** | Framework para la API REST. |
-| **MongoDB** | Gestión de base de datos. |
+| **Java 17** | Lenguaje y runtime del backend. |
+| **Spring Boot 3** | Microservicios, BFF y API Gateway. |
+| **Spring Cloud Gateway** | Punto de entrada HTTP y enrutado. |
+| **Eureka** | Descubrimiento de servicios. |
+| **PostgreSQL / H2** | PostgreSQL (perfil `postgres`, p. ej. Insforge) o H2 en memoria por defecto. |
+
+### **Componentes backend (carpetas)**
+| Carpeta | Rol |
+| :--- | :--- |
+| `bff` | **Backend for Frontend**: agrega respuestas para el portal (ej. `/api/portal/resumen`). |
+| `api-gateway` | Enruta peticiones a microservicios y al BFF. |
+| `ms-gestionpacientes` | Pacientes y lista de espera. |
+| `ms-notificaciones` | Notificaciones. |
+| `ms-optimizacion` | Citas, médicos, horarios y optimización. |
+| `eureka-server` | Registro de servicios. |
 
 ---
 
 ## ⚙️ Requisitos Previos
 Antes de comenzar, asegúrate de tener instalado:
-* 🔹 **Node.js** (Versión 16 o superior)
+* 🔹 **Node.js** (versión 18 o superior recomendada)
+* 🔹 **Java 17** y **Maven** (o usar los `mvnw` incluidos)
 * 🔹 **Git**
-* 🔹 Un gestor de paquetes (**npm** o **yarn**)
-* 🔹 Instancia de **Base de Datos** activa.
+* 🔹 **npm** (para el frontend en el repo `Fullstack-III-EFT-Frontend`)
 
 ---
 
 ## 🚀 Instalación y Configuración
 
-**Clonar el repositorio:**
+**Clonar el repositorio backend:**
 ```bash
-git clone [https://github.com/Matiasv117/Fullstack-III-EFT.git](https://github.com/Matiasv117/Fullstack-III-EFT.git)
+git clone https://github.com/Matiasv117/Fullstack-III-EFT.git
 ```
 
-**Autores:**
-<<<<<<< HEAD
-* Nombre	GitHub
-* Matías	@Matiasv117	
-* Benjamín	@Beibanezv
-* Fabián	@FabianReyes02
+**Autores**
 
-## Smoke Test E2E (Microservicios)
+| Nombre | GitHub |
+| :--- | :--- |
+| Matías Vargas | [@Matiasv117](https://github.com/Matiasv117) |
+| Benjamín Ibañez | [@beibanezv](https://github.com/beibanezv) |
+| Fabián Reyes | [@FabianReyes02](https://github.com/FabianReyes02) |
 
-Con los servicios levantados, puedes validar integracion base con:
+## Smoke Test E2E (microservicios)
+
+Con los servicios levantados, puedes validar integración base con:
 
 ```powershell
-Set-Location "C:\Users\W608-PCXX\IdeaProjects\Fullstack-III-EFT"
+Set-Location "ruta\a\Fullstack-III-EFT"
 .\scripts\smoke-test-e2e.ps1
 ```
 
-## Arranque y apagado automatico
+## Arranque y apagado automático
+
+Incluye Eureka, microservicios, API Gateway y **BFF** (`salud-bff` en el puerto **8097**).
 
 ### Levantar todo
 
 ```powershell
-Set-Location "C:\Users\W608-PCXX\IdeaProjects\Fullstack-III-EFT"
+Set-Location "ruta\a\Fullstack-III-EFT"
 .\scripts\start-all.ps1 -RestartExisting -RunSmokeTest
 ```
 
 ### Detener todo
 
 ```powershell
-Set-Location "C:\Users\W608-PCXX\IdeaProjects\Fullstack-III-EFT"
+Set-Location "ruta\a\Fullstack-III-EFT"
 .\scripts\stop-all.ps1
 ```
 
-=======
-* Nombre          GitHub
-* Matías Vargas	  @matiasv117	
-* Benjamín Ibañez	@beibanezv
-* Fabián	Reyes   @fabianReyes02
->>>>>>> 808b6921cd2fc4d2683b5529587091aa4bf9f823
+### Insforge / PostgreSQL
+
+En el panel de Insforge: usá **Connection String** (HOST, DATABASE, USER, PASSWORD). La opción **Copy Prompt** es solo para configurar un asistente de IA; **no** hace falta para Spring.
+
+1. Copiá `config/local-insforge.env.example` a `config/local-insforge.env` y pegá la **contraseña** (ese archivo no se sube a git).
+2. En PowerShell, desde la raíz del repo: **punto espacio** script (carga variables en esa ventana):
+
+   ```powershell
+   . .\scripts\load-insforge-env.ps1
+   ```
+
+3. En la **misma** ventana, levantá cada microservicio (o usá tu IDE con las mismas variables de entorno). Los tres deben compartir la misma `DB_URL` si tenéis una sola base `insforge`.
+
+Más detalle y la URI JDBC de ejemplo: `config/ejemplo-insforge.env`.
+
+**Qué tabla mirar:** al pulsar **Registrar** se inserta en **`paciente`**. Al pulsar **Agregar a lista** se inserta en **`lista_espera`** (referencia al paciente por id). Si Insforge sigue en 0 filas, casi siempre es porque los servicios siguen en **H2** (revisá el log al arrancar: debe decir `jdbc:postgresql://...insforge...`). Usá `config/local-insforge.env` + `start-all.ps1` o cargá variables antes de `mvnw`.

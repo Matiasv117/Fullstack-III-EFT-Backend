@@ -1,3 +1,6 @@
+# Perfil postgres: usar con SPRING_PROFILES_ACTIVE=postgres
+# Insforge suele exponer UNA base PostgreSQL: usa la misma DB_URL en los 3 microservicios
+# (salvo que tengáis un esquema multi-tenant avanzado).
 spring:
   config:
     activate:

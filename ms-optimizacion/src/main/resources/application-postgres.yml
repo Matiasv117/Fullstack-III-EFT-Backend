@@ -1,3 +1,4 @@
+# Ver comentarios en ms-gestionpacientes/application-postgres.yml (Insforge = misma URL típica).
 spring:
   config:
     activate:

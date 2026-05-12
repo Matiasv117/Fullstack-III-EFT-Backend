@@ -11,6 +11,13 @@ spring:
       enabled: false
     gateway:
       routes:
+        - id: salud-bff
+          uri: http://localhost:8097
+          predicates:
+            - Path=/api/portal/**
+          filters:
+            - StripPrefix=0
+
         - id: ms-listas-espera
           uri: http://localhost:8083
           predicates:
