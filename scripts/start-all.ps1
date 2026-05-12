@@ -39,11 +39,16 @@ function Wait-ForHttp {
     param(
         [string]$Url,
         [int]$TimeoutSeconds,
-        [string]$ServiceName
+        [string]$ServiceName,
+        [System.Diagnostics.Process]$Process
     )
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     do {
+        if ($null -ne $Process -and $Process.HasExited) {
+            throw "$ServiceName finalizo durante el arranque (exit code: $($Process.ExitCode)). Revisa la ventana/log de ese servicio."
+        }
+
         try {
             $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 10
             if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) {
@@ -69,7 +74,7 @@ function Start-ServiceWindow {
 
     if (Test-PortListening -Port $Service.Port) {
         Write-Host "[SKIP] $($Service.Name) ya ocupa el puerto $($Service.Port)" -ForegroundColor Yellow
-        return
+        return $null
     }
 
     Write-Host "[START] $($Service.Name)" -ForegroundColor Cyan
@@ -79,25 +84,32 @@ function Start-ServiceWindow {
     if (Test-Path (Join-Path $root 'config\local-insforge.env')) {
         $startCmd = ". `"$loadScript`" -SilentIfMissing; " + $Service.Command
     }
-    Start-Process -FilePath powershell.exe `
+    return Start-Process -FilePath powershell.exe `
         -WorkingDirectory $Service.Path `
-        -ArgumentList @('-NoLogo', '-NoProfile', '-NoExit', '-Command', $startCmd) | Out-Null
+        -ArgumentList @('-NoLogo', '-NoProfile', '-NoExit', '-Command', $startCmd) `
+        -PassThru
 }
 
 Write-Host "=== Levantando todos los servicios ===" -ForegroundColor Cyan
 Write-Host "Raiz: $root" -ForegroundColor DarkGray
 
 foreach ($service in $services) {
-    Start-ServiceWindow -Service $service
+    $process = Start-ServiceWindow -Service $service
     Start-Sleep -Seconds 3
 
+    if ($null -ne $process -and $process.HasExited) {
+        throw "$($service.Name) termino inmediatamente tras iniciar (exit code: $($process.ExitCode))."
+    }
+
     if ($service.Name -eq 'eureka-server') {
-        Wait-ForHttp -Url $service.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $service.Name
+        Wait-ForHttp -Url $service.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $service.Name -Process $process
+        # Evita carrera: el dashboard puede responder antes de que /eureka/apps acepte registros.
+        Wait-ForHttp -Url 'http://localhost:8761/eureka/apps' -TimeoutSeconds 60 -ServiceName 'eureka-registry' -Process $process
         Start-Sleep -Seconds 5
         continue
     }
 
-    Wait-ForHttp -Url $service.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $service.Name
+    Wait-ForHttp -Url $service.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $service.Name -Process $process
 }
 
 if ($RunSmokeTest) {
