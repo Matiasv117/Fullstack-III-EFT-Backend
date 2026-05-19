@@ -79,6 +79,185 @@ class ListaEsperaServiceTest {
         assertThatThrownBy(() -> listaEsperaService.actualizarEstado(55L, Estado.ASIGNADA))
                 .isInstanceOf(ResponseStatusException.class);
     }
+
+    @Test
+    void obtenerListaEspera_retornaListaCompleta() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera lista1 = new ListaEspera();
+        lista1.setId(1L);
+        lista1.setPaciente(paciente);
+        lista1.setEstado(Estado.PENDIENTE);
+
+        ListaEspera lista2 = new ListaEspera();
+        lista2.setId(2L);
+        lista2.setPaciente(paciente);
+        lista2.setEstado(Estado.ASIGNADA);
+
+        when(listaEsperaRepository.findAll()).thenReturn(java.util.List.of(lista1, lista2));
+
+        java.util.List<ListaEspera> resultado = listaEsperaService.obtenerListaEspera();
+
+        assertThat(resultado).hasSize(2);
+        assertThat(resultado.get(0).getEstado()).isEqualTo(Estado.PENDIENTE);
+    }
+
+    @Test
+    void obtenerPorEstado_returnsFiltered() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera lista = new ListaEspera();
+        lista.setId(1L);
+        lista.setPaciente(paciente);
+        lista.setEstado(Estado.PENDIENTE);
+
+        when(listaEsperaRepository.findByEstado(Estado.PENDIENTE)).thenReturn(java.util.List.of(lista));
+
+        java.util.List<ListaEspera> resultado = listaEsperaService.obtenerPorEstado(Estado.PENDIENTE);
+
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getEstado()).isEqualTo(Estado.PENDIENTE);
+    }
+
+    @Test
+    void obtenerPorGravedad_returnsOrdenado() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera lista1 = new ListaEspera();
+        lista1.setId(1L);
+        lista1.setPaciente(paciente);
+        lista1.setGravedad(Gravedad.ALTA);
+
+        ListaEspera lista2 = new ListaEspera();
+        lista2.setId(2L);
+        lista2.setPaciente(paciente);
+        lista2.setGravedad(Gravedad.ALTA);
+
+        when(listaEsperaRepository.findByGravedadOrderByIdAsc(Gravedad.ALTA))
+                .thenReturn(java.util.List.of(lista1, lista2));
+
+        java.util.List<ListaEspera> resultado = listaEsperaService.obtenerPorGravedad(Gravedad.ALTA);
+
+        assertThat(resultado).hasSize(2);
+        assertThat(resultado.get(0).getGravedad()).isEqualTo(Gravedad.ALTA);
+    }
+
+    @Test
+    void obtenerPorId_existente() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera lista = new ListaEspera();
+        lista.setId(5L);
+        lista.setPaciente(paciente);
+        lista.setEstado(Estado.PENDIENTE);
+
+        when(listaEsperaRepository.findById(5L)).thenReturn(Optional.of(lista));
+
+        Optional<ListaEspera> resultado = listaEsperaService.obtenerPorId(5L);
+
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getId()).isEqualTo(5L);
+    }
+
+    @Test
+    void obtenerPorId_noExistente() {
+        when(listaEsperaRepository.findById(999L)).thenReturn(Optional.empty());
+
+        Optional<ListaEspera> resultado = listaEsperaService.obtenerPorId(999L);
+
+        assertThat(resultado).isEmpty();
+    }
+
+    @Test
+    void agregarAListaEspera_pacientePorIdInvalido() {
+        ListaEspera listaEspera = new ListaEspera();
+        listaEspera.setPaciente(null);
+
+        assertThatThrownBy(() -> listaEsperaService.agregarAListaEspera(listaEspera))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> {
+                    ResponseStatusException exception = (ResponseStatusException) error;
+                    assertThat(exception.getStatusCode().value()).isEqualTo(400);
+                });
+    }
+
+    @Test
+    void agregarAListaEspera_pacientePorIdNulo() {
+        Paciente paciente = new Paciente();
+        paciente.setId(null);
+
+        ListaEspera listaEspera = new ListaEspera();
+        listaEspera.setPaciente(paciente);
+
+        assertThatThrownBy(() -> listaEsperaService.agregarAListaEspera(listaEspera))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void actualizarEstado_exitoso() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera lista = new ListaEspera();
+        lista.setId(10L);
+        lista.setPaciente(paciente);
+        lista.setEstado(Estado.PENDIENTE);
+
+        when(listaEsperaRepository.findById(10L)).thenReturn(Optional.of(lista));
+        when(listaEsperaRepository.save(any(ListaEspera.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
+
+        ListaEspera resultado = listaEsperaService.actualizarEstado(10L, Estado.ASIGNADA);
+
+        assertThat(resultado.getEstado()).isEqualTo(Estado.ASIGNADA);
+        verify(listaEsperaRepository).save(any(ListaEspera.class));
+    }
+
+    @Test
+    void actualizarEstado_notificacionFalla() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera lista = new ListaEspera();
+        lista.setId(10L);
+        lista.setPaciente(paciente);
+        lista.setEstado(Estado.PENDIENTE);
+
+        when(listaEsperaRepository.findById(10L)).thenReturn(Optional.of(lista));
+        when(listaEsperaRepository.save(any(ListaEspera.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(notificationClient.createNotification(any())).thenThrow(new RuntimeException("Error"));
+
+        ListaEspera resultado = listaEsperaService.actualizarEstado(10L, Estado.FINALIZADA);
+
+        assertThat(resultado.getEstado()).isEqualTo(Estado.FINALIZADA);
+    }
+
+    @Test
+    void eliminarDeListaEspera_exitoso() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera lista = new ListaEspera();
+        lista.setId(15L);
+        lista.setPaciente(paciente);
+
+        when(listaEsperaRepository.findById(15L)).thenReturn(Optional.of(lista));
+        when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
+
+        listaEsperaService.eliminarDeListaEspera(15L);
+
+        verify(listaEsperaRepository).deleteById(15L);
+    }
+
+    @Test
+    void eliminarDeListaEspera_noExiste() {
+        when(listaEsperaRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> listaEsperaService.eliminarDeListaEspera(999L))
+                .isInstanceOf(ResponseStatusException.class);
+    }
 }
-
-
