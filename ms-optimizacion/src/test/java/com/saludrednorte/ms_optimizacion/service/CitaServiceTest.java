@@ -165,5 +165,41 @@ class CitaServiceTest {
             citaService.actualizarCita(cita);
         });
     }
+
+    @Test
+    void testCrearCitaConflict() {
+        // Given: medico already has a cita at that time
+        when(citaRepository.existsByMedicoAndFechaHoraAndEstadoNot(
+                medico, cita.getFechaHora(), EstadoCita.CANCELADA))
+                .thenReturn(true);
+
+        // When & Then
+        assertThrows(ResponseStatusException.class, () -> citaService.crearCita(cita));
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    void testActualizarCitaExitosa() {
+        // Given
+        cita.setId(2L);
+        when(citaRepository.existsById(2L)).thenReturn(true);
+        when(citaRepository.save(cita)).thenReturn(cita);
+
+        // When
+        Cita resultado = citaService.actualizarCita(cita);
+
+        // Then
+        assertNotNull(resultado);
+        verify(citaRepository, times(1)).save(cita);
+    }
+
+    @Test
+    void testEliminarCitaNoEncontrada() {
+        // Given
+        when(citaRepository.existsById(999L)).thenReturn(false);
+
+        // When & Then
+        assertThrows(ResponseStatusException.class, () -> citaService.eliminarCita(999L));
+    }
 }
 

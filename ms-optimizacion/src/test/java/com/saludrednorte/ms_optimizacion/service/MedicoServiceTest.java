@@ -103,5 +103,15 @@ class MedicoServiceTest {
         // Then
         verify(medicoRepository, times(1)).deleteById(1L);
     }
+
+    @Test
+    void testActualizarMedicoNoEncontrado() {
+        // Given
+        when(medicoRepository.existsById(999L)).thenReturn(false);
+        medico.setId(999L);
+
+        // When & Then
+        assertThrows(ResponseStatusException.class, () -> medicoService.actualizarMedico(medico));
+    }
 }
 

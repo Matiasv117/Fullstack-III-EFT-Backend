@@ -87,14 +87,14 @@ class CitaTest {
         cita.setPacienteId(pacienteId);
         cita.setMedico(medico);
         cita.setFechaHora(fecha);
-        cita.setEstado(EstadoCita.PENDIENTE);
+        cita.setEstado(EstadoCita.REASIGNADA);
         
         // Then
         assertEquals(id, cita.getId());
         assertEquals(pacienteId, cita.getPacienteId());
         assertEquals(medico, cita.getMedico());
         assertEquals(fecha, cita.getFechaHora());
-        assertEquals(EstadoCita.PENDIENTE, cita.getEstado());
+        assertEquals(EstadoCita.REASIGNADA, cita.getEstado());
     }
 
     @Test
