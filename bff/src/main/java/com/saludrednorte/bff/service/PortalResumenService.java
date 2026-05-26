@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -31,11 +32,15 @@ public class PortalResumenService {
     }
 
     public JsonNode construirResumen() {
+        return construirResumen(null);
+    }
+
+    public JsonNode construirResumen(String authorizationHeader) {
         ObjectNode root = objectMapper.createObjectNode();
         ArrayNode errores = root.putArray("errores");
 
-        JsonNode pacientes = fetchPacientes(errores);
-        JsonNode notificaciones = fetchNotificacionesPendientes(errores);
+        JsonNode pacientes = fetchPacientes(errores, authorizationHeader);
+        JsonNode notificaciones = fetchNotificacionesPendientes(errores, authorizationHeader);
 
         root.set("pacientes", pacientes);
         root.set("notificacionesPendientes", notificaciones);
@@ -49,11 +54,13 @@ public class PortalResumenService {
         return root;
     }
 
-    private JsonNode fetchPacientes(ArrayNode errores) {
+    private JsonNode fetchPacientes(ArrayNode errores, String authorizationHeader) {
         try {
-            return downstream.get()
-                    .uri("/pacientes")
-                    .retrieve()
+            WebClient.RequestHeadersSpec<?> request = downstream.get().uri("/pacientes");
+            if (authorizationHeader != null && !authorizationHeader.isBlank()) {
+                request = request.header(HttpHeaders.AUTHORIZATION, authorizationHeader);
+            }
+            return request.retrieve()
                     .bodyToMono(JsonNode.class)
                     .timeout(TIMEOUT)
                     .blockOptional()
@@ -69,11 +76,13 @@ public class PortalResumenService {
         }
     }
 
-    private JsonNode fetchNotificacionesPendientes(ArrayNode errores) {
+    private JsonNode fetchNotificacionesPendientes(ArrayNode errores, String authorizationHeader) {
         try {
-            return downstream.get()
-                    .uri("/api/notificaciones/pendientes")
-                    .retrieve()
+            WebClient.RequestHeadersSpec<?> request = downstream.get().uri("/api/notificaciones/pendientes");
+            if (authorizationHeader != null && !authorizationHeader.isBlank()) {
+                request = request.header(HttpHeaders.AUTHORIZATION, authorizationHeader);
+            }
+            return request.retrieve()
                     .bodyToMono(JsonNode.class)
                     .timeout(TIMEOUT)
                     .blockOptional()
