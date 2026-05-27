@@ -16,10 +16,10 @@ function Notificaciones() {
     setError('');
 
     try {
-      const data = await obtenerNotificacionesPendientes();
-      setNotificaciones(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || 'No fue posible cargar las notificaciones');
+      const datos = await obtenerNotificacionesPendientes();
+      setNotificaciones(Array.isArray(datos) ? datos : []);
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible cargar las notificaciones');
     } finally {
       setCargando(false);
     }
@@ -42,8 +42,8 @@ function Notificaciones() {
       await enviarNotificacionApi(id);
       setNotificaciones((actuales) => actuales.filter((n) => n.id !== id));
       setMensaje(`Notificación ${id} enviada correctamente.`);
-    } catch (err) {
-      setError(err.message || 'No fue posible enviar la notificación');
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible enviar la notificación');
     } finally {
       setCargando(false);
     }

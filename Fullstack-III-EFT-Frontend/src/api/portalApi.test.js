@@ -45,6 +45,14 @@ describe('portalApi', () => {
       expect(result.resumen).toHaveProperty('totalPacientes');
       expect(result.resumen).toHaveProperty('totalNotificacionesPendientes');
     });
+
+    it('should handle null response gracefully', async () => {
+      httpClient.get.mockResolvedValue({ data: null });
+
+      const result = await obtenerResumenPortal();
+
+      expect(result).toBeNull();
+    });
   });
 });
 

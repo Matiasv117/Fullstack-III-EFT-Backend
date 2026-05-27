@@ -18,10 +18,10 @@ function Optimizacion() {
       setError('');
 
       try {
-        const data = await obtenerListaEsperaOptimizada();
-        setListaEspera(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError(err.message || 'No fue posible obtener la lista de espera');
+        const datos = await obtenerListaEsperaOptimizada();
+        setListaEspera(Array.isArray(datos) ? datos : []);
+      } catch (errorCapturado) {
+        setError(errorCapturado.message || 'No fue posible obtener la lista de espera');
       } finally {
         setCargando(false);
       }
@@ -56,14 +56,14 @@ function Optimizacion() {
     try {
       await cancelarCitaConEstrategia(citaAnclarId, estrategia);
       // Recargar la lista después de la cancelación
-      const data = await obtenerListaEsperaOptimizada();
-      setListaEspera(Array.isArray(data) ? data : []);
+      const datos = await obtenerListaEsperaOptimizada();
+      setListaEspera(Array.isArray(datos) ? datos : []);
       setCitaAnclarId(null);
       // Mostrar mensaje de éxito
       alert(`Cita ${citaAnclarId} cancelada y reasignada con estrategia ${estrategia}`);
-    } catch (err) {
+    } catch (errorCapturado) {
       setError(
-        err.message ||
+        errorCapturado.message ||
         'No fue posible procesar la cancelación de la cita'
       );
     } finally {

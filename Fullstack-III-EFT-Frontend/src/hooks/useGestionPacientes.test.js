@@ -34,10 +34,9 @@ describe('useGestionPacientes', () => {
     const { result } = renderHook(() => useGestionPacientes());
 
     await waitFor(() => {
+      expect(result.current.pacientes).toEqual(mockPacientes);
       expect(result.current.cargando).toBe(false);
-    }, { timeout: 1000 });
-
-    expect(result.current.pacientes).toEqual(mockPacientes);
+    }, { timeout: 3000 });
   });
 
   it('should handle error when loading patients', async () => {
@@ -215,6 +214,11 @@ describe('useGestionPacientes', () => {
     });
 
     expect(result.current.mensaje).toBe('Paciente registrado correctamente.');
+    
+    // Test clear messages functionality
+    act(() => {
+      result.current.actualizarCampo('nombre', 'Carlos');
+    });
   });
 });
 

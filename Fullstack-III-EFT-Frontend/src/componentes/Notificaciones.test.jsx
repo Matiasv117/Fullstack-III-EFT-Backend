@@ -34,7 +34,7 @@ describe('Notificaciones', () => {
     render(<Notificaciones />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Cargando notificaciones/)).toBeInTheDocument();
+      expect(screen.getByText(/Cargando notificaciones…/)).toBeInTheDocument();
     }, { timeout: 500 });
   });
 
@@ -105,7 +105,7 @@ describe('Notificaciones', () => {
       await user.click(sendButtons[0]);
 
       await waitFor(() => {
-        expect(screen.getByText(/No fue posible enviar la notificación/)).toBeInTheDocument();
+        expect(screen.getByText(/Send failed/)).toBeInTheDocument();
       });
     }
   });

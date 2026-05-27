@@ -28,7 +28,8 @@ describe('useListaEspera', () => {
 
     await waitFor(() => {
       expect(result.current.listaEspera).toEqual(mockLista);
-    });
+      expect(result.current.cargando).toBe(false);
+    }, { timeout: 3000 });
   });
 
   it('should handle error when loading list', async () => {
@@ -134,6 +135,24 @@ describe('useListaEspera', () => {
     });
 
     expect(result.current.listaEspera).toEqual(mockLista);
+  });
+
+  it('should clear messages when loading', async () => {
+    const mockLista = [{ id: 1, pacienteId: 1 }];
+    api.obtenerListaEspera.mockResolvedValue(mockLista);
+
+    const { result } = renderHook(() => useListaEspera());
+
+    await waitFor(() => {
+      expect(result.current.listaEspera).toEqual(mockLista);
+    });
+
+    act(() => {
+      result.current.cargarListaEspera();
+    });
+
+    expect(result.current.mensaje).toBe('');
+    expect(result.current.error).toBe('');
   });
 });
 

@@ -69,6 +69,13 @@ describe('notificacionesApi', () => {
         { params: { canal } }
       );
     });
+
+    it('should handle error when sending by channel', async () => {
+      const error = new Error('Send failed');
+      httpClient.post.mockRejectedValue(error);
+
+      await expect(enviarNotificacionPorCanal(1, 'email')).rejects.toThrow('Send failed');
+    });
   });
 
   describe('enviarTodasLasNotificaciones', () => {
@@ -78,6 +85,13 @@ describe('notificacionesApi', () => {
       await enviarTodasLasNotificaciones();
 
       expect(httpClient.post).toHaveBeenCalledWith('/api/notificaciones/enviar-todas');
+    });
+
+    it('should handle error when sending all notifications', async () => {
+      const error = new Error('Send failed');
+      httpClient.post.mockRejectedValue(error);
+
+      await expect(enviarTodasLasNotificaciones()).rejects.toThrow('Send failed');
     });
   });
 
@@ -91,6 +105,13 @@ describe('notificacionesApi', () => {
       expect(result).toEqual(mockCanales);
       expect(httpClient.get).toHaveBeenCalledWith('/api/notificaciones/info/canales');
     });
+
+    it('should handle error when fetching channels', async () => {
+      const error = new Error('Fetch failed');
+      httpClient.get.mockRejectedValue(error);
+
+      await expect(obtenerCanalesDisponibles()).rejects.toThrow('Fetch failed');
+    });
   });
 
   describe('obtenerEstadoServicio', () => {
@@ -102,6 +123,13 @@ describe('notificacionesApi', () => {
 
       expect(result).toEqual(mockStatus);
       expect(httpClient.get).toHaveBeenCalledWith('/api/notificaciones/info/estado');
+    });
+
+    it('should handle error when fetching service status', async () => {
+      const error = new Error('Fetch failed');
+      httpClient.get.mockRejectedValue(error);
+
+      await expect(obtenerEstadoServicio()).rejects.toThrow('Fetch failed');
     });
   });
 });

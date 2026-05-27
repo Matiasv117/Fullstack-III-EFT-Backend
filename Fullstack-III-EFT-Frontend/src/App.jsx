@@ -27,8 +27,8 @@ function App() {
   useEffect(() => {
     const cargarResumen = async () => {
       try {
-        const data = await obtenerResumenPortal()
-        setResumenPortal(data?.resumen ?? null)
+        const datos = await obtenerResumenPortal()
+        setResumenPortal(datos?.resumen ?? null)
       } catch {
         setResumenPortal(null)
       }

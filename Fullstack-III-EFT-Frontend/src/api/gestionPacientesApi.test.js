@@ -144,6 +144,13 @@ describe('gestionPacientesApi', () => {
       expect(result).toEqual(mockLista);
       expect(httpClient.get).toHaveBeenCalledWith('/lista-espera');
     });
+
+    it('should handle error when fetching waiting list', async () => {
+      const error = new Error('Fetch failed');
+      httpClient.get.mockRejectedValue(error);
+
+      await expect(obtenerListaEspera()).rejects.toThrow('Fetch failed');
+    });
   });
 
   describe('eliminarDelListaEspera', () => {
@@ -154,6 +161,13 @@ describe('gestionPacientesApi', () => {
       await eliminarDelListaEspera(registroId);
 
       expect(httpClient.delete).toHaveBeenCalledWith(`/lista-espera/${registroId}`);
+    });
+
+    it('should handle error when deleting from waiting list', async () => {
+      const error = new Error('Delete failed');
+      httpClient.delete.mockRejectedValue(error);
+
+      await expect(eliminarDelListaEspera(1)).rejects.toThrow('Delete failed');
     });
   });
 
@@ -193,4 +207,6 @@ describe('gestionPacientesApi', () => {
     });
   });
 });
+
+
 

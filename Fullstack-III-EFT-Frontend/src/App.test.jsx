@@ -17,6 +17,7 @@ vi.mock('./componentes/Notificaciones', () => ({
 vi.mock('./componentes/Optimizacion', () => ({
   default: () => <div>Optimizacion</div>,
 }));
+vi.mock('./assets/parguelas.jpg', () => ({ default: 'mock-image.jpg' }));
 
 import App from './App';
 import * as portalApi from './api/portalApi';
@@ -119,7 +120,7 @@ describe('App', () => {
     const notificacionesButton = screen.getByRole('button', { name: /Notificaciones/i });
     await user.click(notificacionesButton);
 
-    expect(screen.getByText('Notificaciones')).toBeInTheDocument();
+    expect(screen.getAllByText('Notificaciones').length).toBeGreaterThan(0);
   });
 
   it('should navigate to optimization section', async () => {

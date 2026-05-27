@@ -17,6 +17,7 @@ describe('httpClient', () => {
     mockResponse = { data: { message: 'Success' }, status: 200 };
     const mockAxiosInstance = { interceptors: { response: { use: vi.fn() } } };
     expect(httpClient.defaults).toBeDefined();
+    expect(httpClient.interceptors.response).toBeDefined();
   });
 
   it('should have response interceptor configured', () => {
