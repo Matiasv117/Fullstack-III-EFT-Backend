@@ -21,10 +21,10 @@ export function useListaEspera() {
     limpiarMensajes();
 
     try {
-      const data = await obtenerListaEspera();
-      setListaEspera(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || 'No fue posible cargar la lista de espera');
+      const datos = await obtenerListaEspera();
+      setListaEspera(Array.isArray(datos) ? datos : []);
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible cargar la lista de espera');
     } finally {
       setCargando(false);
     }
@@ -46,8 +46,8 @@ export function useListaEspera() {
       await eliminarDelListaEspera(id);
       setListaEspera((actual) => actual.filter((item) => item.id !== id));
       setMensaje(`Paciente ${id} eliminado de la lista de espera.`);
-    } catch (err) {
-      setError(err.message || 'No fue posible eliminar de la lista de espera');
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible eliminar de la lista de espera');
     } finally {
       setCargando(false);
     }
@@ -63,8 +63,8 @@ export function useListaEspera() {
         actual.map((item) => (item.id === id ? pacienteActualizado : item)),
       );
       setMensaje(`Estado actualizado a ${nuevoEstado}`);
-    } catch (err) {
-      setError(err.message || 'No fue posible actualizar el estado');
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible actualizar el estado');
     } finally {
       setCargando(false);
     }
