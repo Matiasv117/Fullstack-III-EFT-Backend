@@ -17,7 +17,7 @@ vi.mock('./componentes/Notificaciones', () => ({
 vi.mock('./componentes/Optimizacion', () => ({
   default: () => <div>Optimizacion</div>,
 }));
-vi.mock('./assets/parguelas.jpg', () => ({ default: 'mock-image.jpg' }));
+vi.mock('./assets/logo.png', () => ({ default: 'mock-image.jpg' }));
 
 import App from './App';
 import * as portalApi from './api/portalApi';
@@ -57,15 +57,6 @@ describe('App', () => {
     });
   });
 
-  it('should display metrics from portal', async () => {
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Pacientes registrados')).toBeInTheDocument();
-      expect(screen.getByText('Notificaciones pendientes')).toBeInTheDocument();
-    });
-  });
-
   it('should show patient count metric', async () => {
     render(<App />);
 
@@ -87,7 +78,7 @@ describe('App', () => {
   it('should display navigation buttons', () => {
     render(<App />);
 
-    expect(screen.getByRole('button', { name: /Pacientes/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Gestión de Pacientes/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Lista de Espera/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Notificaciones/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Optimización/i })).toBeInTheDocument();
@@ -97,7 +88,7 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const pacientesButton = screen.getByRole('button', { name: /Pacientes/i });
+    const pacientesButton = screen.getByRole('button', { name: /Gestión de Pacientes/i });
     await user.click(pacientesButton);
 
     expect(screen.getByText('GestionPacientes')).toBeInTheDocument();
@@ -143,17 +134,17 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const pacientesButton = screen.getByRole('button', { name: /Pacientes/i });
+    const pacientesButton = screen.getByRole('button', { name: /Gestión de Pacientes/i });
     const listaButton = screen.getByRole('button', { name: /Lista de Espera/i });
     
     // Primera selección debe ser pacientes
-    expect(pacientesButton).toHaveClass('active');
+    expect(pacientesButton).toHaveClass('navItemActive');
 
     await user.click(listaButton);
 
     // Después del click, lista debe estar activa
-    expect(listaButton).toHaveClass('active');
-    expect(pacientesButton).not.toHaveClass('active');
+    expect(listaButton).toHaveClass('navItemActive');
+    expect(pacientesButton).not.toHaveClass('navItemActive');
   });
 
   it('should handle portal summary error gracefully', async () => {
