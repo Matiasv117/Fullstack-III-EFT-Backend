@@ -1,18 +1,6 @@
-package com.saludrednorte.ms_optimizacion.service;
-
-import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
-import com.saludrednorte.ms_optimizacion.client.NotificationClient;
-import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
-import com.saludrednorte.ms_optimizacion.dto.NotificationRequestDTO;
-import com.saludrednorte.ms_optimizacion.entity.Cita;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-
+/**
+ * Servicio de optimizacion: coordina reasignacion de citas y calculo de prioridad.
+ */
 @Service
 public class OptimizacionService {
 
@@ -29,6 +17,9 @@ public class OptimizacionService {
 
     @Autowired
     private NotificationClient notificationClient;
+
+    @Autowired
+    private PrioridadCalculadora prioridadCalculadora;
 
     public void procesarCancelacion(Long citaId, String estrategiaTipo) {
         citaService.cancelarCita(citaId);
@@ -60,5 +51,17 @@ public class OptimizacionService {
     public List<ListaEsperaDTO> fallbackListaEspera(Throwable t) {
         // Retornar lista vacía o datos locales
         return List.of();
+    }
+
+    /**
+     * Calcula la prioridad de un paciente segun gravedad, distancia y dias de espera.
+     *
+     * @param gravedad nivel 1-5
+     * @param distanciaKm distancia geografica en kilometros
+     * @param diasEspera dias acumulados en espera
+     * @return nivel de prioridad calculado
+     */
+    public NivelPrioridad calcularPrioridadPaciente(int gravedad, double distanciaKm, int diasEspera) {
+        return prioridadCalculadora.calcularNivel(gravedad, distanciaKm, diasEspera);
     }
 }
