@@ -155,7 +155,6 @@ Actualizar `ms-notificaciones/pom.xml`:
 - Spring Boot: 2.7.12 → 4.0.4
 - Java: 11 → 17
 - spring-cloud: 2021.0.8 → 2025.1.1
-- springdoc: 1.7.0 → 2.8.13
 
 **Impacto:** 4 cambios en un archivo, eliminadas incompatibilidades
 

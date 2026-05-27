@@ -195,9 +195,6 @@ Archivo: ms-notificaciones/pom.xml
 ☐ Cámbiala a: <java.version>17</java.version>
 ☐ Busca <spring-cloud.version>2021.0.8</spring-cloud.version>
 ☐ Cámbiala a: <spring-cloud.version>2025.1.1</spring-cloud.version>
-☐ Busca <artifactId>springdoc-openapi-ui</artifactId>
-☐ Cámbiala a: <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-☐ Busca <version>1.7.0</version> (la de springdoc)
 ☐ Cámbiala a: <version>2.8.13</version>
 
 ☐ Guarda archivo

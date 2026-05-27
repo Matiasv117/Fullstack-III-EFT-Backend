@@ -17,9 +17,6 @@ public class SimpleAuthService {
 
     private static final List<String> PUBLIC_PATH_PREFIXES = List.of(
             "/login",
-            "/swagger-ui",
-            "/v3/api-docs",
-            "/webjars",
             "/actuator/health",
             "/actuator/info",
             "/error"

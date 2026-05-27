@@ -211,9 +211,6 @@ public class NotificationRequestDTO {
 <dependencies>
     <!-- ... otras dependencias ... -->
     <dependency>
-        <groupId>org.springdoc</groupId>
--       <artifactId>springdoc-openapi-ui</artifactId>
-+       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 -       <version>1.7.0</version>
 +       <version>2.8.13</version>
     </dependency>
@@ -393,7 +390,6 @@ Agregar nueva sección:
 - [ ] Actualizar Spring Boot 4.0.4 en ms-notificaciones
 - [ ] Actualizar Java 17 en ms-notificaciones
 - [ ] Actualizar spring-cloud 2025.1.1 en ms-notificaciones
-- [ ] Actualizar springdoc a 2.8.13 en ms-notificaciones
 - [ ] Ejecutar `mvnw clean install` en ms-notificaciones
 - [ ] Verificar compilación exitosa
 

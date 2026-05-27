@@ -70,7 +70,6 @@ mvn clean spring-boot:run
 ```
 
 **Puerto:** 8080
-**Documentación:** `http://localhost:8080/swagger-ui.html`
 
 ---
 
@@ -207,7 +206,6 @@ curl http://localhost:8080/pacientes  # A través del BFF
 
 ```
 Eureka Dashboard:      http://localhost:8761
-Swagger API Docs:      http://localhost:8080/swagger-ui.html
 Frontend:              http://localhost:5173
 Frontend Vite Logs:    Terminal - npm run dev
 ```
@@ -424,7 +422,6 @@ FRONTEND_URL=http://localhost:5173
 
 ## 📚 DOCUMENTACIÓN ÚTIL
 
-- **API Docs:** http://localhost:8080/swagger-ui.html
 - **Eureka:** http://localhost:8761
 - **Frontend Logs:** Consola de navegador (F12)
 - **Backend Logs:** Consola de cada terminal Maven
@@ -449,4 +446,3 @@ FRONTEND_URL=http://localhost:5173
 **Fecha:** 2026-05-11
 **Versión:** 1.0
 **Estado:** LISTO PARA EJECUCIÓN ✅
-

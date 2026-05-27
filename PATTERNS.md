@@ -72,8 +72,6 @@ Todo nuevo microservicio DEBE tener:
 
 <!-- Documentation -->
 <dependency>
-    <groupId>org.springdoc</groupId>
-    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     <version>2.8.13</version>
 </dependency>
 ```
@@ -217,11 +215,6 @@ management:
     readinessstate:
       enabled: true
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
 
 logging:
   level:
@@ -664,7 +657,6 @@ docker run -p 8090:8090 --env-file .env ms-[nombre]
 - `DELETE /[entidades]/{id}` - Eliminar
 
 ## Swagger
-http://localhost:8090/swagger-ui.html
 
 ## Tests
 ```bash
