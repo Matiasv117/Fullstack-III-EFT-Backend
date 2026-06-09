@@ -52,6 +52,13 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: ms-progreso
+          uri: http://localhost:8086
+          predicates:
+            - Path=/progreso/**
+          filters:
+            - StripPrefix=0
+
 eureka:
   client:
     service-url:
