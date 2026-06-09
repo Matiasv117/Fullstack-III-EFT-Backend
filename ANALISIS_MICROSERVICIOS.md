@@ -31,13 +31,12 @@ Tu proyecto tiene **la estructura base correcta pero NO está completamente inte
 - Registra pacientes (`POST /pacientes`)
 - Gestiona lista de espera
 - CRUD completo de pacientes
-- Swagger documentation en `/swagger-ui.html`
+- Swagger eliminado del proyecto
 
 #### Dependencias Importantes:
 - Spring Boot 4.0.4 (Java 17)
 - OpenFeign + Eureka Client ✅
-- Spring Data JPA + PostgreSQL + H2
-- OpenAPI/Swagger
+  - Spring Data JPA + PostgreSQL + H2
 
 #### Integraciones:
 ```java
@@ -166,10 +165,7 @@ Cloud:
   - optimizacion:    2025.1.1
   - notificaciones:  2021.0.8 ← DESINCRONIZADO
 
-Swagger:
-  - gestionpacientes: springdoc-openapi-starter-webmvc-ui:2.8.13
-  - optimizacion:    springdoc-openapi-starter-webmvc-ui:2.8.13
-  - notificaciones:  springdoc-openapi-ui:1.7.0 ← VERSIÓN ANTIGUA
+Swagger: eliminado del proyecto
 ```
 
 ### 🗄️ Base de Datos: H2 (En Memoria, No Persistente)
@@ -295,7 +291,6 @@ Crear clientes para:
 - Cambiar pom.xml parent de 2.7.12 → 4.0.4
 - Java 11 → 17
 - spring-cloud de 2021.0.8 → 2025.1.1
-- springdoc de 1.7.0 → 2.8.13
 
 ### 🎯 Prioridad 3: Implementar Insforge
 Una vez que tengas credenciales:
@@ -319,7 +314,6 @@ Una vez que tengas credenciales:
 - [ ] Implementar notificación en reasignación de citas
 - [ ] Sincronizar Spring Boot 4.0.4 en todos los servicios
 - [ ] Sincronizar spring-cloud en todos los servicios
-- [ ] Actualizar springdoc en ms-notificaciones
 - [ ] Configurar Insforge con credenciales reales
 - [ ] Migrar BD de H2 a Insforge en todos los servicios
 - [ ] Ejecutar smoke tests

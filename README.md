@@ -127,3 +127,28 @@ Más detalle y la URI JDBC de ejemplo: `config/ejemplo-insforge.env`.
 - `arquetipo-maven-salud-ms/`: arquetipo base mínimo para nuevos microservicios Spring Boot.
 - `repositorios.txt`: índice de repositorios y componentes del monorepo.
 
+## Actividad Clase 3 — autenticación temporal
+
+Implementación educativa y temporal realizada en la rama `feature/jwt-test`.
+
+### Flujo agregado
+
+1. `POST /login/admin` → genera un token Base64 para `ADMIN`.
+2. `POST /login/user` → genera un token Base64 para `USER`.
+3. `Authorization: Bearer <token>` → el `api-gateway` valida el rol con un filtro.
+4. `GET /productos` → endpoint demo protegido, accesible solo con `ADMIN`.
+5. `GET /api/portal/resumen` → el BFF reenvía el token al gateway para mantener el flujo.
+
+### Reglas simples
+
+- Sin token: `401 Unauthorized`.
+- Con `USER` en un endpoint restringido: `403 Forbidden`.
+- Con `ADMIN`: acceso completo.
+
+### Evidencias sugeridas para la entrega
+
+- Captura del login en Postman.
+- Captura de `401`, `403` y `200` en los endpoints de prueba.
+- Captura del token decodificado en https://www.jwt.io/.
+- Captura o nota de la rama `feature/jwt-test`.
+

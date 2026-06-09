@@ -6,6 +6,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicReference;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,6 +61,42 @@ class PortalResumenServiceTest {
         assertThat(resumen.get("resumen").get("totalNotificacionesPendientes").asInt()).isEqualTo(0);
         assertThat(resumen.get("errores")).hasSize(1);
         assertThat(resumen.get("notificacionesPendientes")).isEmpty();
+    }
+
+    @Test
+    void construirResumen_reenviaAuthorizationAlGateway() throws Exception {
+        AtomicReference<String> pacientesAuth = new AtomicReference<>();
+        AtomicReference<String> notificacionesAuth = new AtomicReference<>();
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/pacientes", exchange -> responderJson(exchange, "[{\"id\":1,\"nombre\":\"Ana\"}]", pacientesAuth));
+        server.createContext("/api/notificaciones/pendientes", exchange -> responderJson(exchange, "[{\"id\":10,\"mensaje\":\"Aviso\"}]", notificacionesAuth));
+        server.start();
+
+        try {
+            int port = server.getAddress().getPort();
+            WebClient webClient = WebClient.builder().baseUrl("http://localhost:" + port).build();
+
+            PortalResumenService service = new PortalResumenService(webClient, objectMapper);
+            JsonNode resumen = service.construirResumen("Bearer token");
+
+            assertThat(resumen.get("resumen").get("totalPacientes").asInt()).isEqualTo(1);
+            assertThat(resumen.get("resumen").get("totalNotificacionesPendientes").asInt()).isEqualTo(1);
+            assertThat(resumen.get("errores")).isEmpty();
+            assertThat(pacientesAuth.get()).isEqualTo("Bearer token");
+            assertThat(notificacionesAuth.get()).isEqualTo("Bearer token");
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    private static void responderJson(HttpExchange exchange, String json, AtomicReference<String> authHolder) throws IOException {
+        authHolder.set(exchange.getRequestHeaders().getFirst("Authorization"));
+        byte[] body = json.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, body.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(body);
+        }
     }
 }
 

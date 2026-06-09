@@ -132,7 +132,6 @@ ms-notificaciones
 ├─ Spring Boot 2.7.12 → 4.0.4            (1 línea)
 ├─ Java 11 → 17                          (1 línea)
 ├─ spring-cloud 2021 → 2025              (1 línea)
-├─ springdoc 1.7.0 → 2.8.13              (1 línea)
 ├─ Migrar a application-postgres.yml     (1 archivo)
 └─ ✅ LISTO
 

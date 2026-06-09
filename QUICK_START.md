@@ -30,7 +30,6 @@ cd Fullstack-III-EFT-Frontend; npm install; npm run dev
 **¿Dónde verificar que funciona?**
 - Eureka: http://localhost:8761
 - Frontend: http://localhost:5173
-- API Docs: http://localhost:8080/swagger-ui.html
 
 ---
 

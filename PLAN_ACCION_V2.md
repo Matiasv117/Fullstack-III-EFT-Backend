@@ -356,15 +356,12 @@ DESPUÉS: <java.version>17</java.version>
 ANTES: <spring-cloud.version>2021.0.8</spring-cloud.version>
 DESPUÉS: <spring-cloud.version>2025.1.1</spring-cloud.version>
 
-<!-- LÍNEA 59 - Cambiar springdoc -->
 ANTES: <version>1.7.0</version>
 DESPUÉS: <version>2.8.13</version>
 
 <!-- REEMPLAZAR NOMBRE DEL ARTIFACT TAMBIÉN:
-<artifactId>springdoc-openapi-ui</artifactId>
 -->
 DESPUÉS:
-<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 ```
 
 **Pasos:**
@@ -389,7 +386,6 @@ mvnw clean install
 - [ ] Línea 8 cambiada (Spring Boot 4.0.4)
 - [ ] Línea 18 cambiada (Java 17)
 - [ ] Línea 19 cambiada (spring-cloud 2025.1.1)
-- [ ] Línea 59 cambiada (springdoc 2.8.13)
 - [ ] Compilación exitosa
 
 ---
@@ -711,7 +707,6 @@ Agregar sección:
 - [ ] Spring Boot 4.0.4
 - [ ] Java 17
 - [ ] spring-cloud 2025.1.1
-- [ ] springdoc 2.8.13
 - [ ] Compilación exitosa
 
 ### FASE 3 COMPLETA

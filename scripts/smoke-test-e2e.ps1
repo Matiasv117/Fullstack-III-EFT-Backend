@@ -52,11 +52,6 @@ Test-Status -Url "$NotificacionesUrl/actuator/health/readiness" -ExpectedStatus 
 Test-Status -Url "$OptimizacionUrl/actuator/health" -ExpectedStatus 200
 Test-Status -Url "$OptimizacionUrl/actuator/health/readiness" -ExpectedStatus 200
 
-# Swagger unificado desde gateway
-Test-Status -Url "$GatewayBaseUrl/swagger-ui.html" -ExpectedStatus 200
-Test-Status -Url "$GatewayBaseUrl/docs/ms-listas-espera/v3/api-docs" -ExpectedStatus 200
-Test-Status -Url "$GatewayBaseUrl/docs/ms-notificaciones/v3/api-docs" -ExpectedStatus 200
-Test-Status -Url "$GatewayBaseUrl/docs/ms-optimizacion/v3/api-docs" -ExpectedStatus 200
 
 # 404: recurso inexistente
 Test-Status -Url "$GatewayBaseUrl/pacientes/99999999" -ExpectedStatus 404

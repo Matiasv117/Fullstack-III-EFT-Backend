@@ -10,6 +10,19 @@ spring:
     compatibility-verifier:
       enabled: false
     gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - http://localhost:5173
+              - http://127.0.0.1:5173
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
       routes:
         - id: salud-bff
           uri: http://localhost:8097
@@ -39,54 +52,9 @@ spring:
           filters:
             - StripPrefix=0
 
-        - id: docs-ms-listas-espera
-          uri: http://localhost:8083
-          predicates:
-            - Path=/docs/ms-listas-espera/**
-          filters:
-            - SetPath=/v3/api-docs
-
-        - id: docs-ms-notificaciones
-          uri: http://localhost:8085
-          predicates:
-            - Path=/docs/ms-notificaciones/**
-          filters:
-            - SetPath=/v3/api-docs
-
-        - id: docs-ms-optimizacion
-          uri: http://localhost:8084
-          predicates:
-            - Path=/docs/ms-optimizacion/**
-          filters:
-            - SetPath=/v3/api-docs
-
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: false
-
-logging:
-  level:
-    root: WARN
-    org.springframework.cloud.gateway: INFO
-    com.saludrednorte: DEBUG
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    disable-swagger-default-url: true
-    urls:
-      - name: ms-listas-espera
-        url: /docs/ms-listas-espera/v3/api-docs
-      - name: ms-notificaciones
-        url: /docs/ms-notificaciones/v3/api-docs
-      - name: ms-optimizacion
-        url: /docs/ms-optimizacion/v3/api-docs
-
-
-
-
