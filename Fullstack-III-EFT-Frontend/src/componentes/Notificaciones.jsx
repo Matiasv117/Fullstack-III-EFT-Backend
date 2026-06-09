@@ -16,10 +16,10 @@ function Notificaciones() {
     setError('');
 
     try {
-      const data = await obtenerNotificacionesPendientes();
-      setNotificaciones(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || 'No fue posible cargar las notificaciones');
+      const datos = await obtenerNotificacionesPendientes();
+      setNotificaciones(Array.isArray(datos) ? datos : []);
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible cargar las notificaciones');
     } finally {
       setCargando(false);
     }
@@ -42,8 +42,8 @@ function Notificaciones() {
       await enviarNotificacionApi(id);
       setNotificaciones((actuales) => actuales.filter((n) => n.id !== id));
       setMensaje(`Notificación ${id} enviada correctamente.`);
-    } catch (err) {
-      setError(err.message || 'No fue posible enviar la notificación');
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible enviar la notificación');
     } finally {
       setCargando(false);
     }
@@ -90,74 +90,104 @@ function Notificaciones() {
 
 const styles = {
   container: {
-    padding: '20px 0'
+    padding: '0',
   },
   title: {
-    fontSize: '28px',
-    color: '#0d4f5c',
-    marginBottom: '20px',
-    borderBottom: '2px solid #4db6ac',
-    paddingBottom: '10px'
+    fontSize: '2rem',
+    fontWeight: 800,
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    letterSpacing: '-0.02em',
+    marginBottom: '1.5rem',
   },
   list: {
     display: 'grid',
-    gap: '0.85rem',
+    gap: '1rem',
     listStyle: 'none',
-    padding: 0
+    padding: 0,
   },
   listItem: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '12px',
-    marginBottom: '8px',
-    backgroundColor: '#ffffff',
-    border: '1px solid #e3eaec',
-    borderRadius: '14px'
+    gap: '1.25rem',
+    padding: '1.25rem',
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+    border: '2px solid rgba(14, 165, 233, 0.15)',
+    borderRadius: '16px',
+    transition: 'all 0.25s ease',
+    boxShadow: '0 4px 12px rgba(14, 165, 233, 0.08)',
+  },
+  listItemHover: {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)',
+    borderColor: '#0ea5e9',
   },
   details: {
     display: 'grid',
-    gap: '0.25rem'
+    gap: '0.375rem',
+    flex: 1,
   },
   meta: {
-    color: '#567',
-    fontSize: '0.95rem'
+    color: '#64748b',
+    fontSize: '0.9rem',
+    fontWeight: 500,
   },
   button: {
-    padding: '8px 16px',
-    backgroundColor: '#116a7b',
-    color: 'white',
+    padding: '0.75rem 1.5rem',
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+    color: '#ffffff',
     border: 'none',
-    borderRadius: '999px',
+    borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '14px'
+    fontSize: '0.95rem',
+    fontWeight: 600,
+    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  buttonHover: {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 6px 16px rgba(14, 165, 233, 0.4)',
   },
   feedback: {
     display: 'grid',
     gap: '0.75rem',
-    marginBottom: '1rem'
+    marginBottom: '1.5rem',
   },
   alert: {
-    padding: '0.9rem 1rem',
-    borderRadius: '10px',
-    fontWeight: 600
+    padding: '1rem 1.25rem',
+    borderRadius: '14px',
+    fontWeight: 600,
+    fontSize: '0.95rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   alertSuccess: {
-    backgroundColor: '#e6f7f1',
-    color: '#116149',
-    border: '1px solid #9dd9c3'
+    background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+    color: '#065f46',
+    border: '1px solid #6ee7b7',
   },
   alertError: {
-    backgroundColor: '#fff1f1',
-    color: '#a13131',
-    border: '1px solid #f1bbbb'
+    background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+    color: '#991b1b',
+    border: '1px solid #fca5a5',
   },
   noData: {
-    color: '#5f7480',
-    fontSize: '16px',
-    fontStyle: 'italic',
-    padding: '20px'
-  }
+    color: '#94a3b8',
+    fontSize: '1rem',
+    fontWeight: 500,
+    padding: '2rem',
+    textAlign: 'center',
+    background: '#f8fafc',
+    borderRadius: '12px',
+    border: '2px dashed #e2e8f0',
+  },
 };
 
 export default Notificaciones;

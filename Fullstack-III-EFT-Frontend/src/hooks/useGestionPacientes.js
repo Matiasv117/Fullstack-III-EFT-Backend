@@ -31,10 +31,10 @@ export function useGestionPacientes() {
     limpiarMensajes();
 
     try {
-      const data = await obtenerPacientes();
-      setPacientes(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || 'No fue posible cargar los pacientes');
+      const datos = await obtenerPacientes();
+      setPacientes(Array.isArray(datos) ? datos : []);
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible cargar los pacientes');
     } finally {
       setCargando(false);
     }
@@ -82,8 +82,8 @@ export function useGestionPacientes() {
       setPacientes((pacientesActuales) => [...pacientesActuales, pacienteGuardado]);
       setNuevoPaciente(PACIENTE_INICIAL);
       setMensaje('Paciente registrado correctamente.');
-    } catch (err) {
-      setError(err.message || 'No fue posible registrar el paciente');
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible registrar el paciente');
     } finally {
       setCargando(false);
     }
@@ -96,8 +96,8 @@ export function useGestionPacientes() {
     try {
       await agregarPacienteAListaEspera(pacienteId);
       setMensaje(`Paciente ${pacienteId} agregado a lista de espera.`);
-    } catch (err) {
-      setError(err.message || 'No fue posible agregar el paciente a la lista de espera');
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible agregar el paciente a la lista de espera');
     } finally {
       setCargando(false);
     }
@@ -113,8 +113,8 @@ export function useGestionPacientes() {
         pacientesActuales.filter((p) => p.id !== pacienteId),
       );
       setMensaje(`Paciente ${pacienteId} eliminado correctamente.`);
-    } catch (err) {
-      setError(err.message || 'No fue posible eliminar el paciente');
+    } catch (errorCapturado) {
+      setError(errorCapturado.message || 'No fue posible eliminar el paciente');
     } finally {
       setCargando(false);
     }
