@@ -1,25 +1,23 @@
-package com.saludrednorte.ms_optimizacion.entity;
+package com.saludrednorte.ms_optimizacion.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@Entity
-public class Medico {
+/**
+ * DTO para transferencia de datos de Médicos.
+ * Expone solo los campos necesarios a través de la API REST.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class MedicoDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String nombre;
     private String especialidad;
 
     // Constructores
-    public Medico() {
+    public MedicoDTO() {
     }
 
-    public Medico(Long id, String nombre, String especialidad) {
+    public MedicoDTO(Long id, String nombre, String especialidad) {
         this.id = id;
         this.nombre = nombre;
         this.especialidad = especialidad;
@@ -50,3 +48,5 @@ public class Medico {
         this.especialidad = especialidad;
     }
 }
+
+

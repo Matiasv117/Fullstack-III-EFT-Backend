@@ -1,36 +1,28 @@
-package com.saludrednorte.ms_optimizacion.entity;
+package com.saludrednorte.ms_optimizacion.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.saludrednorte.ms_optimizacion.entity.EstadoCita;
+
 import java.time.LocalDateTime;
 
-@Entity
-public class Cita {
+/**
+ * DTO para transferencia de datos de Citas.
+ * Expone solo los campos necesarios a través de la API REST.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CitaDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private Long pacienteId; // Referencia al paciente en ms-gestionpacientes
-
-    @ManyToOne
-    private Medico medico;
-
+    private Long pacienteId;
+    private MedicoDTO medico;
     private LocalDateTime fechaHora;
-
-    @Enumerated(EnumType.STRING)
     private EstadoCita estado;
 
     // Constructores
-    public Cita() {
+    public CitaDTO() {
     }
 
-    public Cita(Long id, Long pacienteId, Medico medico, LocalDateTime fechaHora, EstadoCita estado) {
+    public CitaDTO(Long id, Long pacienteId, MedicoDTO medico, LocalDateTime fechaHora, EstadoCita estado) {
         this.id = id;
         this.pacienteId = pacienteId;
         this.medico = medico;
@@ -55,11 +47,11 @@ public class Cita {
         this.pacienteId = pacienteId;
     }
 
-    public Medico getMedico() {
+    public MedicoDTO getMedico() {
         return medico;
     }
 
-    public void setMedico(Medico medico) {
+    public void setMedico(MedicoDTO medico) {
         this.medico = medico;
     }
 
@@ -79,3 +71,5 @@ public class Cita {
         this.estado = estado;
     }
 }
+
+

@@ -1,7 +1,9 @@
 package com.saludrednorte.ms_optimizacion.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saludrednorte.ms_optimizacion.dto.MedicoDTO;
 import com.saludrednorte.ms_optimizacion.entity.Medico;
+import com.saludrednorte.ms_optimizacion.mapper.ClinicalMapper;
 import com.saludrednorte.ms_optimizacion.service.MedicoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,10 +30,14 @@ class MedicoControllerTest {
     @Mock
     private MedicoService medicoService;
 
+    @Mock
+    private ClinicalMapper mapper;
+
     @InjectMocks
     private MedicoController controller;
 
     private Medico medico;
+    private MedicoDTO medicoDTO;
 
     @BeforeEach
     void setUp() {
@@ -39,21 +45,21 @@ class MedicoControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
         objectMapper = new ObjectMapper();
         
-        medico = new Medico();
-        medico.setId(1L);
-        medico.setNombre("Dr. Rodriguez");
-        medico.setEspecialidad("Pediatría");
+        medico = new Medico(1L, "Dr. Rodriguez", "Pediatría");
+        medicoDTO = new MedicoDTO(1L, "Dr. Rodriguez", "Pediatría");
     }
 
     @Test
     void testRegistrarMedicoExitoso() throws Exception {
         // Given
+        when(mapper.toMedicoEntity(any(MedicoDTO.class))).thenReturn(medico);
         when(medicoService.registrarMedico(any(Medico.class))).thenReturn(medico);
+        when(mapper.toMedicoDTO(any(Medico.class))).thenReturn(medicoDTO);
         
         // When & Then
         mockMvc.perform(post("/medicos")
                 .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
+                .content(objectMapper.writeValueAsString(medicoDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.nombre").value("Dr. Rodriguez"));
@@ -66,6 +72,7 @@ class MedicoControllerTest {
         // Given
         List<Medico> medicos = List.of(medico);
         when(medicoService.obtenerTodosMedicos()).thenReturn(medicos);
+        when(mapper.toMedicoDTO(any(Medico.class))).thenReturn(medicoDTO);
         
         // When & Then
         mockMvc.perform(get("/medicos"))
@@ -79,6 +86,7 @@ class MedicoControllerTest {
     void testObtenerMedicoPorIdExistente() throws Exception {
         // Given
         when(medicoService.obtenerMedicoPorId(1L)).thenReturn(Optional.of(medico));
+        when(mapper.toMedicoDTO(any(Medico.class))).thenReturn(medicoDTO);
         
         // When & Then
         mockMvc.perform(get("/medicos/1"))
@@ -103,12 +111,14 @@ class MedicoControllerTest {
     @Test
     void testActualizarMedicoExitoso() throws Exception {
         // Given
+        when(mapper.toMedicoEntity(any(MedicoDTO.class))).thenReturn(medico);
         when(medicoService.actualizarMedico(any(Medico.class))).thenReturn(medico);
+        when(mapper.toMedicoDTO(any(Medico.class))).thenReturn(medicoDTO);
         
         // When & Then
         mockMvc.perform(put("/medicos")
                 .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
+                .content(objectMapper.writeValueAsString(medicoDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
         

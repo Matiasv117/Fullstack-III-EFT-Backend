@@ -1,9 +1,12 @@
 package com.saludrednorte.ms_optimizacion.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saludrednorte.ms_optimizacion.dto.CitaDTO;
+import com.saludrednorte.ms_optimizacion.dto.MedicoDTO;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
 import com.saludrednorte.ms_optimizacion.entity.EstadoCita;
 import com.saludrednorte.ms_optimizacion.entity.Medico;
+import com.saludrednorte.ms_optimizacion.mapper.ClinicalMapper;
 import com.saludrednorte.ms_optimizacion.service.CitaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,11 +34,16 @@ class CitaControllerTest {
     @Mock
     private CitaService citaService;
 
+    @Mock
+    private ClinicalMapper mapper;
+
     @InjectMocks
     private CitaController controller;
 
     private Cita cita;
+    private CitaDTO citaDTO;
     private Medico medico;
+    private MedicoDTO medicoDTO;
 
     @BeforeEach
     void setUp() {
@@ -44,27 +52,24 @@ class CitaControllerTest {
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
         
-        medico = new Medico();
-        medico.setId(1L);
-        medico.setNombre("Dr. Test");
+        medico = new Medico(1L, "Dr. Test", "Cardiología");
+        medicoDTO = new MedicoDTO(1L, "Dr. Test", "Cardiología");
         
-        cita = new Cita();
-        cita.setId(1L);
-        cita.setPacienteId(100L);
-        cita.setMedico(medico);
-        cita.setFechaHora(LocalDateTime.now().plusDays(1));
-        cita.setEstado(EstadoCita.CONFIRMADA);
+        cita = new Cita(1L, 100L, medico, LocalDateTime.now().plusDays(1), EstadoCita.CONFIRMADA);
+        citaDTO = new CitaDTO(1L, 100L, medicoDTO, LocalDateTime.now().plusDays(1), EstadoCita.CONFIRMADA);
     }
 
     @Test
     void testCrearCitaExitosa() throws Exception {
         // Given
+        when(mapper.toCitaEntity(any(CitaDTO.class))).thenReturn(cita);
         when(citaService.crearCita(any(Cita.class))).thenReturn(cita);
+        when(mapper.toCitaDTO(any(Cita.class))).thenReturn(citaDTO);
         
         // When & Then
         mockMvc.perform(post("/citas")
                 .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(cita)))
+                .content(objectMapper.writeValueAsString(citaDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L));
         
@@ -75,7 +80,9 @@ class CitaControllerTest {
     void testObtenerTodasCitas() throws Exception {
         // Given
         List<Cita> citas = List.of(cita);
+        List<CitaDTO> citasDTO = List.of(citaDTO);
         when(citaService.obtenerTodasCitas()).thenReturn(citas);
+        when(mapper.toCitaDTO(any(Cita.class))).thenReturn(citaDTO);
         
         // When & Then
         mockMvc.perform(get("/citas"))
@@ -89,6 +96,7 @@ class CitaControllerTest {
     void testObtenerCitaPorIdExistente() throws Exception {
         // Given
         when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
+        when(mapper.toCitaDTO(any(Cita.class))).thenReturn(citaDTO);
         
         // When & Then
         mockMvc.perform(get("/citas/1"))
@@ -115,6 +123,7 @@ class CitaControllerTest {
         // Given
         List<Cita> citas = List.of(cita);
         when(citaService.obtenerCitasPorEstado(EstadoCita.CONFIRMADA)).thenReturn(citas);
+        when(mapper.toCitaDTO(any(Cita.class))).thenReturn(citaDTO);
         
         // When & Then
         mockMvc.perform(get("/citas/estado/CONFIRMADA"))
