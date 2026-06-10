@@ -1,3 +1,17 @@
+package com.saludrednorte.ms_optimizacion.service;
+
+import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
+import com.saludrednorte.ms_optimizacion.dto.NotificationRequestDTO;
+import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
+import com.saludrednorte.ms_optimizacion.client.NotificationClient;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
 /**
  * Servicio de optimizacion: coordina reasignacion de citas y calculo de prioridad.
  */
@@ -5,9 +19,6 @@
 public class OptimizacionService {
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizacionService.class);
-
-    @Autowired
-    private OptimizacionFactory factory;
 
     @Autowired
     private CitaService citaService;
@@ -18,28 +29,10 @@ public class OptimizacionService {
     @Autowired
     private NotificationClient notificationClient;
 
-    @Autowired
-    private PrioridadCalculadora prioridadCalculadora;
-
     public void procesarCancelacion(Long citaId, String estrategiaTipo) {
+        // Placeholder: cancelar cita según estrategia
         citaService.cancelarCita(citaId);
-        Cita citaCancelada = citaService.obtenerCitaPorId(citaId).orElse(null);
-        if (citaCancelada != null) {
-            EstrategiaOptimizacion estrategia = factory.getEstrategia(estrategiaTipo);
-            estrategia.reasignarCita(citaCancelada);
-
-            // Notificar reasignación de cita
-            try {
-                NotificationRequestDTO notif = new NotificationRequestDTO();
-                notif.setPacienteId(citaCancelada.getPacienteId());
-                notif.setTipo("CITA_REASIGNADA");
-                notif.setMensaje("Cita reasignada para " + citaCancelada.getFechaHora());
-                notificationClient.createNotification(notif);
-                logger.info("Notificación de reasignación enviada para cita {}", citaCancelada.getId());
-            } catch (Exception e) {
-                logger.warn("Fallo al notificar reasignación de cita {} : {}", citaCancelada.getId(), e.getMessage());
-            }
-        }
+        logger.info("Cita {} cancelada con estrategia {}", citaId, estrategiaTipo);
     }
 
     @CircuitBreaker(name = "listaEsperaService", fallbackMethod = "fallbackListaEspera")
@@ -50,6 +43,7 @@ public class OptimizacionService {
 
     public List<ListaEsperaDTO> fallbackListaEspera(Throwable t) {
         // Retornar lista vacía o datos locales
+        logger.warn("Fallback activado para obtenerListaEspera");
         return List.of();
     }
 
@@ -62,6 +56,13 @@ public class OptimizacionService {
      * @return nivel de prioridad calculado
      */
     public NivelPrioridad calcularPrioridadPaciente(int gravedad, double distanciaKm, int diasEspera) {
-        return prioridadCalculadora.calcularNivel(gravedad, distanciaKm, diasEspera);
+        // Placeholder: calcular prioridad basado en parámetros
+        if (gravedad >= 4) {
+            return NivelPrioridad.ALTA;
+        } else if (gravedad >= 3 || diasEspera > 30) {
+            return NivelPrioridad.MEDIA;
+        } else {
+            return NivelPrioridad.BAJA;
+        }
     }
 }
