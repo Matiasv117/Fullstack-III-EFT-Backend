@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react'
+import {
+  Users, Calendar, ClipboardList, Bell, Activity,
+  Settings, Search, RefreshCw, AlertTriangle, Check, Building2, BarChart3
+} from 'lucide-react'
 import './App.css'
 import GestionPacientes from './componentes/GestionPacientes'
 import ListaEspera from './componentes/ListaEspera'
 import Notificaciones from './componentes/Notificaciones'
 import Optimizacion from './componentes/Optimizacion'
 import logo from './assets/logo.png'
+import parguelas from './assets/parguelas.jpg'
 import { obtenerResumenPortal } from './api/portalApi'
 
 function App() {
   const [seccionActiva, setSeccionActiva] = useState('pacientes')
   const [resumenPortal, setResumenPortal] = useState(null)
   const [busqueda, setBusqueda] = useState('')
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncErrorResolved, setSyncErrorResolved] = useState(false)
 
   const metricas = [
     {
@@ -37,108 +44,204 @@ function App() {
     cargarResumen()
   }, [])
 
+  const handleSyncRetry = () => {
+    setIsSyncing(true)
+    setTimeout(() => {
+      setIsSyncing(false)
+      setSyncErrorResolved(true)
+    }, 1500)
+  }
+
   const menuItems = [
-    { id: 'pacientes', label: 'Gestión de Pacientes', icon: '👥' },
-    { id: 'listaespera', label: 'Lista de Espera', icon: '📋' },
-    { id: 'notificaciones', label: 'Notificaciones', icon: '🔔' },
-    { id: 'optimizacion', label: 'Optimización', icon: '⚡' },
+    { id: 'pacientes', label: 'Gestión de Pacientes', icon: <Users className="w-5 h-5 shrink-0" /> },
+    { id: 'listaespera', label: 'Lista de Espera', icon: <ClipboardList className="w-5 h-5 shrink-0" /> },
+    { id: 'notificaciones', label: 'Notificaciones', icon: <Bell className="w-5 h-5 shrink-0" /> },
+    { id: 'optimizacion', label: 'Optimización', icon: <Activity className="w-5 h-5 shrink-0" /> },
   ]
 
   return (
-    <div className="container">
-      {/* Sidebar Lateral */}
-      <aside className="sidebar">
-        <div>
-          <h2 className="sidebarTitle">RedNorte</h2>
-          <p className="sidebarSubtitle">Sistema de salud pública</p>
-        </div>
+    <div className="flex flex-col min-h-screen text-slate-800 bg-[#f8fafc]">
+      <div className="flex flex-col lg:flex-row min-h-screen">
 
-        {/* Barra de Búsqueda */}
-        <div className="searchBox">
-          <span className="searchIcon">🔍</span>
-          <input
-            type="text"
-            className="searchInput"
-            placeholder="Buscar..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-        </div>
+        {/* Sidebar Lateral */}
+        <aside className="w-full lg:w-64 bg-white border-r border-slate-100/80 px-4 py-6 flex flex-col justify-between shrink-0">
+          <div>
+            {/* Logo */}
+            <div className="flex items-center gap-3.5 mb-8 px-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-100 shrink-0">
+                <Activity className="w-6 h-6 stroke-[3]" />
+              </div>
+              <div>
+                <h2 className="font-extrabold text-blue-900 text-lg leading-none tracking-tight">RedNorte</h2>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">Sistemas de Salud</span>
+              </div>
+            </div>
 
-        {/* Menú de Navegación */}
-        <nav className="navMenu">
-          {menuItems.map((item) => (
+            {/* Menú de Navegación */}
+            <nav className="space-y-1" aria-label="Main Navigation">
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all cursor-pointer ${seccionActiva === item.id
+                    ? 'navItemActive bg-blue-50/50 text-blue-600 font-bold'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-55 hover:bg-slate-50'
+                    }`}
+                  onClick={() => setSeccionActiva(item.id)}
+                >
+                  <span className="navItemIcon">{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+
+            </nav>
+          </div>
+
+          {/* Sidebar Footer */}
+          <div className="border-t border-slate-100 pt-4 mt-8">
             <button
-              key={item.id}
-              className={`navItem ${seccionActiva === item.id ? 'navItemActive' : ''}`}
-              onClick={() => setSeccionActiva(item.id)}
+              disabled
+              className="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg text-xs font-semibold text-slate-300 cursor-not-allowed"
             >
-              <span className="navItemIcon">{item.icon}</span>
-              <span>{item.label}</span>
+              <Settings className="w-4 h-4 shrink-0 text-slate-300" />
+              <span>General Settings</span>
             </button>
-          ))}
-        </nav>
+          </div>
+        </aside>
 
-        {/* Métricas en Sidebar */}
-        <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '2px solid #e2e8f0' }}>
-          <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '12px', fontWeight: 600 }}>RESUMEN</p>
-          {metricas.map((metrica) => (
-            <div key={metrica.label} style={{ marginBottom: '12px' }}>
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' }}>{metrica.label}</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0ea5e9', lineHeight: 1 }}>{metrica.valor}</p>
+        {/* Contenido Principal */}
+        <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden p-6 md:p-8">
+
+          {/* Header Bar */}
+          <header className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow-xs border border-slate-100">
+            <div className="relative w-full sm:w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar pacientes, clínicas..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+              />
             </div>
-          ))}
-        </div>
-      </aside>
 
-      {/* Contenido Principal */}
-      <div className="mainContent">
-        <header className="header">
-          <div className="hero-copy">
-            <span className="hero-badge">RedNorte · Sistema de salud pública</span>
-            <h1>Portal RedNorte</h1>
-            <p>
-              Gestión de pacientes, lista de espera, notificaciones y optimización de citas para
-              atención primaria y derivación asistida.
-            </p>
-            <div className="hero-tags">
-              <span>Atención primaria</span>
-              <span>Derivación asistida</span>
-              <span>Portal unificado</span>
+            <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+              <button className="relative p-2 text-slate-550 text-slate-500 hover:text-blue-500 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+              </button>
+
+              <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
+                <img
+                  src={parguelas}
+                  alt="Imagen Usuario"
+                  className="w-10 h-10 rounded-full border-2 border-blue-100 object-cover"
+                />
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-slate-800">Usuario</p>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Hero Banner Header */}
+          <div className="bg-gradient-to-r from-blue-900 via-indigo-955 via-indigo-900 to-slate-900 p-8 rounded-2xl text-white shadow-md mb-8 relative overflow-hidden">
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-bold tracking-wider uppercase border border-white/10">
+                  RedNorte · Sistema de salud pública
+                </span>
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Portal RedNorte</h1>
+                <p className="text-slate-200 max-w-2xl text-sm leading-relaxed">
+                  Gestión de pacientes, lista de espera, notificaciones y optimización de citas para
+                  atención primaria y derivación asistida.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium border border-white/5">Atención primaria</span>
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium border border-white/5">Derivación asistida</span>
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium border border-white/5">Portal unificado</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-xs w-full md:w-auto shrink-0 md:max-w-xs">
+                <img src={logo} alt="Equipo del proyecto" className="w-12 h-12 rounded-lg border border-white/20 object-cover" />
+                <div className="text-left text-xs">
+                  <strong className="block font-bold mb-0.5 text-white">RedNorte en operación</strong>
+                  <p className="text-slate-300">Lectura rápida del estado del portal para apoyar la gestión clínica diaria.</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="hero-visual">
-            <img src={logo} alt="Equipo del proyecto" />
-            <div className="hero-note">
-              <strong>RedNorte en operación</strong>
-              <p>Lectura rápida del estado del portal para apoyar la gestión clínica diaria.</p>
+          {/* Sync Alert Banner */}
+          {!syncErrorResolved && (
+            <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-100 text-rose-600 rounded-lg">
+                  {isSyncing ? (
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <AlertTriangle className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-rose-800">
+                    {isSyncing ? 'Sincronizando archivos...' : 'Atención: No se pudieron sincronizar los resultados de laboratorio recientes para 3 pacientes.'}
+                  </p>
+                  <p className="text-xs text-rose-600 mt-0.5">
+                    {isSyncing ? 'Conectando con el sistema central de laboratorios...' : 'Este es un problema de latencia temporal del servidor. Por favor, intente de nuevo.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleSyncRetry}
+                disabled={isSyncing}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white text-xs font-bold rounded-lg shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                {isSyncing ? 'Sincronizando...' : 'Reintentar sincronización'}
+              </button>
             </div>
-          </div>
+          )}
 
-          <div className="portal-resumen">
+          {syncErrorResolved && (
+            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-8 flex items-center shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                  <Check className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-emerald-800">¡Archivos médicos sincronizados con éxito!</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">Los reportes de laboratorio clínicos están al día.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Resumen Métricas */}
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {metricas.map((metrica) => (
-              <article key={metrica.label} className="summary-card">
-                <span>{metrica.label}</span>
-                <strong>{metrica.valor}</strong>
-                <p>{metrica.detalle}</p>
+              <article key={metrica.label} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
+                <p className="text-sm font-medium text-slate-500 mb-2">{metrica.label}</p>
+                <div className="flex items-baseline gap-3">
+                  <strong className="text-4xl font-bold text-slate-900 tracking-tight">{metrica.valor}</strong>
+                  <span className="text-xs text-slate-400 font-medium">{metrica.detalle}</span>
+                </div>
               </article>
             ))}
+          </section>
+
+          {/* Contenido Dinámico */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8 min-h-[500px]">
+            {seccionActiva === 'pacientes' && <GestionPacientes />}
+            {seccionActiva === 'listaespera' && <ListaEspera />}
+            {seccionActiva === 'notificaciones' && <Notificaciones />}
+            {seccionActiva === 'optimizacion' && <Optimizacion />}
           </div>
-        </header>
 
-        {/* Contenido */}
-        <main className="content">
-          {seccionActiva === 'pacientes' && <GestionPacientes />}
-          {seccionActiva === 'listaespera' && <ListaEspera />}
-          {seccionActiva === 'notificaciones' && <Notificaciones />}
-          {seccionActiva === 'optimizacion' && <Optimizacion />}
+          {/* Footer */}
+          <footer className="mt-8 py-6 text-center text-xs text-slate-400 font-medium border-t border-slate-150 border-slate-200/50">
+            <p>&copy; 2026 RedNorte - Sistema de salud pública. Todos los derechos reservados.</p>
+          </footer>
         </main>
-
-        {/* Footer */}
-        <footer className="footer">
-          <p>&copy; 2026 RedNorte - Sistema de salud pública</p>
-        </footer>
       </div>
     </div>
   )
