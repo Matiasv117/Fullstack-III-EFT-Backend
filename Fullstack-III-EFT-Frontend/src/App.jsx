@@ -8,8 +8,9 @@ import GestionPacientes from './componentes/GestionPacientes'
 import ListaEspera from './componentes/ListaEspera'
 import Notificaciones from './componentes/Notificaciones'
 import Optimizacion from './componentes/Optimizacion'
-import logo from './assets/logo.png'
-import parguelas from './assets/parguelas.jpg'
+import logo from './assets/rednorte.png'
+import logosolo from './assets/logosolo.png'
+import logo_usuario from './assets/userlogo.png'
 import { obtenerResumenPortal } from './api/portalApi'
 
 function App() {
@@ -68,9 +69,11 @@ function App() {
           <div>
             {/* Logo */}
             <div className="flex items-center gap-3.5 mb-8 px-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-100 shrink-0">
-                <Activity className="w-6 h-6 stroke-[3]" />
-              </div>
+              <img
+                src={logosolo}
+                alt="Logo RedNorte"
+                className="w-15 h-15  object-cover"
+              />
               <div>
                 <h2 className="font-extrabold text-blue-900 text-lg leading-none tracking-tight">RedNorte</h2>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">Sistemas de Salud</span>
@@ -94,17 +97,6 @@ function App() {
               ))}
 
             </nav>
-          </div>
-
-          {/* Sidebar Footer */}
-          <div className="border-t border-slate-100 pt-4 mt-8">
-            <button
-              disabled
-              className="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg text-xs font-semibold text-slate-300 cursor-not-allowed"
-            >
-              <Settings className="w-4 h-4 shrink-0 text-slate-300" />
-              <span>General Settings</span>
-            </button>
           </div>
         </aside>
 
@@ -132,12 +124,12 @@ function App() {
 
               <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
                 <img
-                  src={parguelas}
-                  alt="Imagen Usuario"
-                  className="w-10 h-10 rounded-full border-2 border-blue-100 object-cover"
+                  src={logo_usuario}
+                  alt="Imagen del Usuario"
+                  className="w-10 h-10 rounded-full border-2 border-black-100 object-cover"
                 />
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-slate-800">Usuario</p>
+                  <p className="text-sm font-semibold text-slate-800">Dr. Benjamím Ibañes</p>
                 </div>
               </div>
             </div>
@@ -148,26 +140,13 @@ function App() {
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div className="space-y-3">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-bold tracking-wider uppercase border border-white/10">
-                  RedNorte · Sistema de salud pública
+                  Sistema de salud pública
                 </span>
                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Portal RedNorte</h1>
                 <p className="text-slate-200 max-w-2xl text-sm leading-relaxed">
                   Gestión de pacientes, lista de espera, notificaciones y optimización de citas para
                   atención primaria y derivación asistida.
                 </p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium border border-white/5">Atención primaria</span>
-                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium border border-white/5">Derivación asistida</span>
-                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium border border-white/5">Portal unificado</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-xs w-full md:w-auto shrink-0 md:max-w-xs">
-                <img src={logo} alt="Equipo del proyecto" className="w-12 h-12 rounded-lg border border-white/20 object-cover" />
-                <div className="text-left text-xs">
-                  <strong className="block font-bold mb-0.5 text-white">RedNorte en operación</strong>
-                  <p className="text-slate-300">Lectura rápida del estado del portal para apoyar la gestión clínica diaria.</p>
-                </div>
               </div>
             </div>
           </div>

@@ -16,9 +16,7 @@ vi.mock('./componentes/Notificaciones', () => ({
 }));
 vi.mock('./componentes/Optimizacion', () => ({
   default: () => <div>Optimizacion</div>,
-}));
-vi.mock('./assets/logo.png', () => ({ default: 'mock-image.jpg' }));
-
+}))
 import App from './App';
 import * as portalApi from './api/portalApi';
 
@@ -57,7 +55,7 @@ describe('App', () => {
     });
   });
 
-  it('should show patient count metric', async () => {
+  it('contador de pacientes', async () => {
     render(<App />);
 
     await waitFor(() => {
@@ -66,7 +64,7 @@ describe('App', () => {
     }, { timeout: 1000 });
   });
 
-  it('should show notifications count metric', async () => {
+  it('contador de notificaciones', async () => {
     render(<App />);
 
     await waitFor(() => {
@@ -75,7 +73,7 @@ describe('App', () => {
     }, { timeout: 1000 });
   });
 
-  it('should display navigation buttons', () => {
+  it('debe mostrar botones de navegacion', () => {
     render(<App />);
 
     expect(screen.getByRole('button', { name: /Gestión de Pacientes/i })).toBeInTheDocument();
@@ -84,7 +82,7 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /Optimización/i })).toBeInTheDocument();
   });
 
-  it('should navigate to patients section', async () => {
+  it('debe navegar a la sección de pacientes', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -94,7 +92,7 @@ describe('App', () => {
     expect(screen.getByText('GestionPacientes')).toBeInTheDocument();
   });
 
-  it('should navigate to waiting list section', async () => {
+  it('debe navegar a la sección de lista de espera', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -104,7 +102,7 @@ describe('App', () => {
     expect(screen.getByText('ListaEspera')).toBeInTheDocument();
   });
 
-  it('should navigate to notifications section', async () => {
+  it('debe navegar a la sección de notificaciones', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -114,7 +112,7 @@ describe('App', () => {
     expect(screen.getAllByText('Notificaciones').length).toBeGreaterThan(0);
   });
 
-  it('should navigate to optimization section', async () => {
+  it('debe navegar a la sección de optimización', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -124,19 +122,19 @@ describe('App', () => {
     expect(screen.getByText('Optimizacion')).toBeInTheDocument();
   });
 
-  it('should display footer', () => {
+  it('debe mostrar el footer', () => {
     render(<App />);
 
     expect(screen.getByText(/© 2026 RedNorte/)).toBeInTheDocument();
   });
 
-  it('should mark active section button', async () => {
+  it('debe marcar el boton de la sección activa', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     const pacientesButton = screen.getByRole('button', { name: /Gestión de Pacientes/i });
     const listaButton = screen.getByRole('button', { name: /Lista de Espera/i });
-    
+
     // Primera selección debe ser pacientes
     expect(pacientesButton).toHaveClass('navItemActive');
 
@@ -147,7 +145,7 @@ describe('App', () => {
     expect(pacientesButton).not.toHaveClass('navItemActive');
   });
 
-  it('should handle portal summary error gracefully', async () => {
+  it('debe manejar el error del resumen del portal', async () => {
     portalApi.obtenerResumenPortal.mockRejectedValue(new Error('Fetch error'));
 
     render(<App />);
@@ -160,7 +158,7 @@ describe('App', () => {
     expect(screen.getByText('Portal RedNorte')).toBeInTheDocument();
   });
 
-  it('should display metrics with default values', async () => {
+  it('debe mostrar las metricas con valores por defecto', async () => {
     portalApi.obtenerResumenPortal.mockResolvedValue(null);
 
     render(<App />);
