@@ -1,18 +1,33 @@
 package com.saludrednorte.ms_optimizacion.service;
 
+import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
+import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
 import com.saludrednorte.ms_optimizacion.entity.EstadoCita;
 import com.saludrednorte.ms_optimizacion.entity.Medico;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class EstrategiaFIFOTest {
+
+    @Mock
+    private ListaEsperaClient listaEsperaClient;
+
+    @Mock
+    private CitaService citaService;
 
     private EstrategiaFIFO estrategiaFIFO;
     private Cita cita;
@@ -21,17 +36,22 @@ class EstrategiaFIFOTest {
     @BeforeEach
     void setUp() {
         estrategiaFIFO = new EstrategiaFIFO();
-        
+        ReflectionTestUtils.setField(estrategiaFIFO, "listaEsperaClient", listaEsperaClient);
+        ReflectionTestUtils.setField(estrategiaFIFO, "citaService", citaService);
+
         medico = new Medico();
         medico.setId(1L);
         medico.setNombre("Dr. Fernando");
-        
+
         cita = new Cita();
         cita.setId(1L);
         cita.setPacienteId(100L);
         cita.setMedico(medico);
         cita.setFechaHora(LocalDateTime.now().plusDays(1));
         cita.setEstado(EstadoCita.CANCELADA);
+
+        when(listaEsperaClient.getListaEspera()).thenReturn(Collections.emptyList());
+        lenient().when(citaService.actualizarCita(any())).thenReturn(cita);
     }
 
     @Test

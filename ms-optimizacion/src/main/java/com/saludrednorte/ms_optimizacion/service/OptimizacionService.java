@@ -1,3 +1,18 @@
+package com.saludrednorte.ms_optimizacion.service;
+
+import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
+import com.saludrednorte.ms_optimizacion.client.NotificationClient;
+import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
+import com.saludrednorte.ms_optimizacion.dto.NotificationRequestDTO;
+import com.saludrednorte.ms_optimizacion.entity.Cita;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
 /**
  * Servicio de optimizacion: coordina reasignacion de citas y calculo de prioridad.
  */

@@ -1,6 +1,9 @@
 package com.saludrednorte.ms_listas_espera.service;
 
+import com.saludrednorte.ms_listas_espera.client.CitaClient;
 import com.saludrednorte.ms_listas_espera.client.NotificationClient;
+import com.saludrednorte.ms_listas_espera.dto.CitaDTO;
+import com.saludrednorte.ms_listas_espera.dto.MedicoDTO;
 import com.saludrednorte.ms_listas_espera.dto.NotificationRequestDTO;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
@@ -11,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,12 +29,33 @@ public class PacienteService {
     @Autowired
     private NotificationClient notificationClient;
 
+    @Autowired
+    private CitaClient citaClient;
+
     public Paciente registrarPaciente(Paciente paciente) {
         if (paciente.getDni() != null && pacienteRepository.existsByDniIgnoreCase(paciente.getDni())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un paciente con el DNI indicado");
         }
 
         Paciente savedPaciente = pacienteRepository.save(paciente);
+
+        // Crear cita automáticamente con el primer médico disponible
+        try {
+            List<MedicoDTO> medicos = citaClient.obtenerTodosMedicos();
+            if (!medicos.isEmpty()) {
+                MedicoDTO medico = medicos.get(0);
+                CitaDTO cita = new CitaDTO();
+                cita.setPacienteId(savedPaciente.getId());
+                cita.setMedicoId(medico.getId());
+                cita.setFechaHora(LocalDateTime.now().plusDays(1));
+                cita.setEstado("CONFIRMADA");
+                citaClient.crearCita(cita);
+                logger.info("Cita creada automáticamente para paciente {} con médico {}", 
+                           savedPaciente.getId(), medico.getId());
+            }
+        } catch (Exception e) {
+            logger.warn("Fallo al crear cita automática pero paciente registrado: {}", e.getMessage());
+        }
 
         // Crear notificación automáticamente
         try {
