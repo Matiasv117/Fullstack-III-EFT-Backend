@@ -200,20 +200,17 @@ const Dashboard = () => {
           </div>
 
           {/* Optimization Card */}
-          <div className="bg-inverse-surface p-6 rounded-xl border border-outline-variant transition-all duration-500 group overflow-hidden relative cursor-pointer hover:scale-105 hover:shadow-2xl">
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center text-primary-fixed-dim group-hover:bg-primary-fixed group-hover:text-primary transition-all duration-500">
-                  <span className="material-symbols-outlined">query_stats</span>
-                </div>
+          <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/50 transition-all duration-500 group cursor-pointer hover:scale-105 hover:shadow-xl hover:shadow-primary/5">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 bg-tertiary-fixed rounded-lg flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-white transition-all duration-500">
+                <span className="material-symbols-outlined">query_stats</span>
               </div>
-              <h3 className="text-inverse-on-surface/60 font-label-bold mb-1">Optimización de recursos</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="font-display-hero text-display-hero text-white">94%</span>
-              </div>
-              <p className="mt-4 text-white/80 font-body-md">Nivel óptimo alcanzado</p>
             </div>
-            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+            <h3 className="text-on-surface-variant font-label-bold mb-1">Optimización de recursos</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="font-display-hero text-display-hero text-on-surface">94%</span>
+            </div>
+            <p className="mt-4 text-on-surface-variant font-body-md">Nivel óptimo alcanzado</p>
           </div>
         </section>
 
@@ -266,26 +263,28 @@ const Dashboard = () => {
 
           {/* Sidebar Content: Health Insights */}
           <div className="flex flex-col gap-gutter">
-            <div className="bg-primary p-6 rounded-xl text-white relative overflow-hidden h-full shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
-              <div className="relative z-10">
-                <h3 className="font-headline-md mb-4">Análisis de Red</h3>
-                <p className="text-white/80 mb-6">
-                  El flujo de pacientes en la clínica "Sur Este" ha incrementado un 20% en las últimas 24 horas.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center text-sm">
-                    <span>Capacidad Actual</span>
-                    <span className="font-bold">82%</span>
-                  </div>
-                  <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-white w-[82%] group-hover:bg-primary-fixed-dim transition-all duration-1000 ease-out"></div>
-                  </div>
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:shadow-lg transition-shadow duration-300 h-full group cursor-pointer">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined">analytics</span>
                 </div>
-                <button className="mt-8 w-full py-3 bg-white text-primary font-label-bold rounded-lg hover:bg-primary-fixed transition-all duration-300 active:scale-95 shadow-md">
-                  Ver Detalles Operativos
-                </button>
+                <h3 className="font-headline-md text-headline-md text-on-surface">Análisis de Red</h3>
               </div>
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-700"></div>
+              <p className="text-on-surface-variant font-body-md mb-6">
+                El flujo de pacientes en la clínica "Sur Este" ha incrementado un 20% en las últimas 24 horas.
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-on-surface-variant">Capacidad Actual</span>
+                  <span className="font-bold text-on-surface">82%</span>
+                </div>
+                <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+                  <div className="h-full bg-primary w-[82%] group-hover:bg-primary/80 transition-all duration-1000 ease-out"></div>
+                </div>
+              </div>
+              <button className="mt-8 w-full py-3 bg-primary hover:bg-primary/95 text-white font-label-bold rounded-lg transition-all duration-300 active:scale-95 shadow-md">
+                Ver Detalles Operativos
+              </button>
             </div>
           </div>
         </section>

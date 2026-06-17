@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import logo2Logo from '../assets/logo2.png'
 
 const Sidebar = ({ activeSection, onSectionChange, isDarkMode, onToggleDarkMode }) => {
   const menuItems = [
@@ -12,11 +13,9 @@ const Sidebar = ({ activeSection, onSectionChange, isDarkMode, onToggleDarkMode 
   return (
     <aside className="fixed left-0 top-0 h-full flex flex-col p-gutter bg-surface dark:bg-surface-dim w-sidebar-width z-50">
       <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-white">
-          <span className="material-symbols-outlined">medical_services</span>
-        </div>
+        <img src={logo2Logo} alt="RedNorte Logo" className="w-20 h-20 rounded-lg object-cover" />
         <div>
-          <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">RedNorte</h1>
+          <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-dark">RedNorte</h1>
           <p className="font-label-sm text-label-sm text-on-surface-variant">Administración Médica</p>
         </div>
       </div>

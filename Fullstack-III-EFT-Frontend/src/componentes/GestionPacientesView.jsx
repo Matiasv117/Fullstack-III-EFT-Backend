@@ -129,10 +129,10 @@ function GestionPacientesView({
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
         {/* Pacientes Registrados Table */}
-        <div className="xl:col-span-3 bg-white border border-slate-100 rounded-2xl shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 className="font-bold text-slate-800">Pacientes registrados</h3>
-            <span className="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-full font-bold">
+        <div className="xl:col-span-3 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xs overflow-hidden">
+          <div className="p-5 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+            <h3 className="font-bold text-on-surface">Pacientes registrados</h3>
+            <span className="bg-primary-container text-primary text-xs px-2.5 py-1 rounded-full font-bold">
               {pacientes.length} Registros
             </span>
           </div>
@@ -140,17 +140,17 @@ function GestionPacientesView({
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/75 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
+                <tr className="bg-surface-container-low text-on-surface-variant font-semibold text-xs uppercase tracking-wider border-b border-outline-variant">
                   <th className="py-4 px-6">Paciente</th>
                   <th className="py-4 px-6">Identificación</th>
                   <th className="py-4 px-6">Asignación</th>
                   <th className="py-4 px-6 text-center">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
+              <tbody className="divide-y divide-outline-variant text-sm">
                 {pacientes.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-12 px-6 text-center text-slate-400">
+                    <td colSpan={4} className="py-12 px-6 text-center text-on-surface-variant">
                       No hay pacientes registrados todavía.
                     </td>
                   </tr>
@@ -158,30 +158,30 @@ function GestionPacientesView({
                   pacientes.map((paciente) => {
                     const extra = getMockDetails(paciente);
                     return (
-                      <tr key={paciente.id} className="hover:bg-slate-50/50 transition-colors">
+                      <tr key={paciente.id} className="hover:bg-surface-container-low transition-colors">
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <img
                               src={extra.photoUrl}
                               alt={paciente.nombre}
-                              className="w-10 h-10 rounded-full border border-slate-200 object-cover cursor-pointer hover:opacity-80"
+                              className="w-10 h-10 rounded-full border border-outline-variant object-cover cursor-pointer hover:opacity-80"
                               onClick={() => handleOpenProfile(paciente)}
                             />
                             <div>
                               <p 
                                 onClick={() => handleOpenProfile(paciente)}
-                                className="font-semibold text-slate-800 hover:text-blue-600 cursor-pointer transition-colors"
+                                className="font-semibold text-on-surface hover:text-primary cursor-pointer transition-colors"
                               >
                                 {paciente.nombre} {paciente.apellido}
                               </p>
-                              <span className="text-xs text-slate-400 font-medium">{paciente.email || 'Sin email'}</span>
+                              <span className="text-xs text-on-surface-variant font-medium">{paciente.email || 'Sin email'}</span>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-6">
                           <div className="space-y-0.5">
-                            <p className="font-mono text-xs text-slate-700">DNI: {paciente.dni}</p>
-                            <p className="text-xs text-slate-400">Contacto: {paciente.telefono || 'Sin teléfono'}</p>
+                            <p className="font-mono text-xs text-on-surface">DNI: {paciente.dni}</p>
+                            <p className="text-xs text-on-surface-variant">Contacto: {paciente.telefono || 'Sin teléfono'}</p>
                           </div>
                         </td>
                         <td className="py-4 px-6">
@@ -193,7 +193,7 @@ function GestionPacientesView({
                             }`}>
                               {extra.priority}
                             </span>
-                            <p className="text-xs font-semibold text-slate-650 text-slate-600">{extra.doctor}</p>
+                            <p className="text-xs font-semibold text-on-surface">{extra.doctor}</p>
                           </div>
                         </td>
                         <td className="py-4 px-6">
@@ -209,7 +209,7 @@ function GestionPacientesView({
                             <button
                               type="button"
                               onClick={() => handleOpenProfile(paciente)}
-                              className="inline-flex items-center justify-center p-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-lg transition-colors cursor-pointer"
+                              className="inline-flex items-center justify-center p-1.5 bg-surface-container-low hover:bg-surface-container border border-outline-variant text-on-surface-variant rounded-lg transition-colors cursor-pointer"
                               title="Ver Ficha Médica"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -222,7 +222,7 @@ function GestionPacientesView({
                                 }
                               }}
                               disabled={cargando}
-                              className="inline-flex items-center justify-center p-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-lg transition-colors cursor-pointer"
+                              className="inline-flex items-center justify-center p-1.5 bg-error-container hover:bg-error-container/80 border border-error/20 text-error rounded-lg transition-colors cursor-pointer"
                               title="Eliminar"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -239,66 +239,66 @@ function GestionPacientesView({
         </div>
 
         {/* Registrar Paciente Card Form */}
-        <div className="xl:col-span-1 bg-white border border-slate-100 rounded-2xl shadow-xs p-6 h-fit space-y-6">
-          <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
-            <UserPlus className="w-5 h-5 text-blue-600 shrink-0" />
-            <h3 className="font-bold text-slate-900">Registrar nuevo paciente</h3>
+        <div className="xl:col-span-1 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xs p-6 h-fit space-y-6">
+          <div className="flex items-center gap-2 pb-4 border-b border-outline-variant">
+            <UserPlus className="w-5 h-5 text-primary shrink-0" />
+            <h3 className="font-bold text-on-surface">Registrar nuevo paciente</h3>
           </div>
 
           <form className="space-y-4 text-left">
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Nombre *</label>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Nombre *</label>
               <input
                 value={nuevoPaciente.nombre}
                 onChange={(event) => actualizarCampo('nombre', event.target.value)}
                 placeholder="Nombre *"
                 autoComplete="given-name"
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-slate-700 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm transition-all"
+                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Apellido *</label>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Apellido *</label>
               <input
                 value={nuevoPaciente.apellido}
                 onChange={(event) => actualizarCampo('apellido', event.target.value)}
                 placeholder="Apellido *"
                 autoComplete="family-name"
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-slate-700 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm transition-all"
+                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">DNI *</label>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">DNI *</label>
               <input
                 value={nuevoPaciente.dni}
                 onChange={(event) => actualizarCampo('dni', event.target.value)}
                 placeholder="DNI *"
                 autoComplete="off"
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-slate-700 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm font-mono transition-all"
+                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm font-mono transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Teléfono (opcional)</label>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Teléfono (opcional)</label>
               <input
                 value={nuevoPaciente.telefono}
                 onChange={(event) => actualizarCampo('telefono', event.target.value)}
                 placeholder="Teléfono (opcional)"
                 autoComplete="tel"
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-slate-700 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm transition-all"
+                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Correo electrónico (opcional)</label>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Correo electrónico (opcional)</label>
               <input
                 type="email"
                 value={nuevoPaciente.email}
                 onChange={(event) => actualizarCampo('email', event.target.value)}
                 placeholder="Correo electrónico (opcional)"
                 autoComplete="email"
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-slate-700 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm transition-all"
+                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
               />
             </div>
 
@@ -306,7 +306,7 @@ function GestionPacientesView({
               type="button"
               onClick={registrar}
               disabled={!formValido || cargando}
-              className={`w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-xs shadow-blue-100 transition-all cursor-pointer ${
+              className={`w-full py-2.5 px-4 bg-primary hover:bg-primary/95 text-white rounded-lg text-sm font-bold shadow-xs shadow-primary/15 transition-all cursor-pointer ${
                 (!formValido || cargando) ? 'opacity-50 cursor-not-allowed transform-none' : 'hover:-translate-y-0.5'
               }`}
             >
