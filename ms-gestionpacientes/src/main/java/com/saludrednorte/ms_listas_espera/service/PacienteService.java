@@ -18,6 +18,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Servicio para la gestión de pacientes.
+ * <p>
+ * Este servicio proporciona operaciones CRUD para pacientes, incluyendo registro automático
+ * de citas y notificaciones cuando se registra un nuevo paciente.
+ * </p>
+ */
 @Service
 public class PacienteService {
 
@@ -32,6 +39,17 @@ public class PacienteService {
     @Autowired
     private CitaClient citaClient;
 
+    /**
+     * Registra un nuevo paciente en el sistema.
+     * <p>
+     * Valida que no exista un paciente con el mismo DNI antes de registrar.
+     * Crea automáticamente una cita con el primer médico disponible y envía una notificación.
+     * </p>
+     *
+     * @param paciente el paciente a registrar
+     * @return el paciente registrado con ID asignado
+     * @throws ResponseStatusException si ya existe un paciente con el mismo DNI
+     */
     public Paciente registrarPaciente(Paciente paciente) {
         if (paciente.getDni() != null && pacienteRepository.existsByDniIgnoreCase(paciente.getDni())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un paciente con el DNI indicado");
@@ -73,14 +91,36 @@ public class PacienteService {
         return savedPaciente;
     }
 
+    /**
+     * Obtiene todos los pacientes registrados en el sistema.
+     *
+     * @return lista de todos los pacientes
+     */
     public List<Paciente> obtenerTodosPacientes() {
         return pacienteRepository.findAll();
     }
 
+    /**
+     * Obtiene un paciente por su ID.
+     *
+     * @param id el ID del paciente
+     * @return Optional con el paciente si existe, vacío si no existe
+     */
     public Optional<Paciente> obtenerPacientePorId(Long id) {
         return pacienteRepository.findById(id);
     }
 
+    /**
+     * Actualiza los datos de un paciente existente.
+     * <p>
+     * Valida que el paciente exista antes de actualizar.
+     * Envía una notificación automática cuando se actualiza el paciente.
+     * </p>
+     *
+     * @param paciente el paciente con los datos actualizados
+     * @return el paciente actualizado
+     * @throws ResponseStatusException si el paciente no existe
+     */
     public Paciente actualizarPaciente(Paciente paciente) {
         if (paciente.getId() == null || !pacienteRepository.existsById(paciente.getId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente no encontrado");
@@ -103,6 +143,12 @@ public class PacienteService {
         return updatedPaciente;
     }
 
+    /**
+     * Elimina un paciente del sistema por su ID.
+     *
+     * @param id el ID del paciente a eliminar
+     * @throws ResponseStatusException si el paciente no existe
+     */
     public void eliminarPaciente(Long id) {
         if (!pacienteRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente no encontrado");

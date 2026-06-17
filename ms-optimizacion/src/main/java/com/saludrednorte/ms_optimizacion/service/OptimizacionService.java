@@ -14,7 +14,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Servicio de optimizacion: coordina reasignacion de citas y calculo de prioridad.
+ * Servicio de optimización: coordina reasignación de citas y cálculo de prioridad.
+ * <p>
+ * Este servicio gestiona la reasignación automática de citas cuando ocurren cancelaciones,
+ * utilizando diferentes estrategias de optimización (FIFO, por gravedad).
+ * También proporciona cálculo de prioridad para pacientes en lista de espera.
+ * </p>
  */
 @Service
 public class OptimizacionService {
@@ -36,6 +41,17 @@ public class OptimizacionService {
     @Autowired
     private PrioridadCalculadora prioridadCalculadora;
 
+    /**
+     * Procesa la cancelación de una cita y reasigna el horario a otro paciente.
+     * <p>
+     * Cancela la cita original y utiliza la estrategia de optimización especificada
+     * para reasignar el horario a un paciente de la lista de espera.
+     * Envía una notificación automática cuando se reasigna la cita.
+     * </p>
+     *
+     * @param citaId el ID de la cita cancelada
+     * @param estrategiaTipo el tipo de estrategia de optimización (FIFO, POR_GRAVEDAD)
+     */
     public void procesarCancelacion(Long citaId, String estrategiaTipo) {
         citaService.cancelarCita(citaId);
         Cita citaCancelada = citaService.obtenerCitaPorId(citaId).orElse(null);
@@ -57,12 +73,29 @@ public class OptimizacionService {
         }
     }
 
+    /**
+     * Obtiene la lista de espera del microservicio de gestión de pacientes.
+     * <p>
+     * Utiliza Circuit Breaker para manejar fallos en la comunicación con el microservicio.
+     * </p>
+     *
+     * @return lista de pacientes en espera
+     */
     @CircuitBreaker(name = "listaEsperaService", fallbackMethod = "fallbackListaEspera")
     public List<ListaEsperaDTO> obtenerListaEspera() {
         // Llamada a ms-gestionpacientes usando Feign
         return listaEsperaClient.getListaEspera();
     }
 
+    /**
+     * Método de fallback para cuando falla la obtención de la lista de espera.
+     * <p>
+     * Se activa cuando el Circuit Breaker detecta fallos en la comunicación.
+     * </p>
+     *
+     * @param t la excepción que causó el fallo
+     * @return lista vacía
+     */
     public List<ListaEsperaDTO> fallbackListaEspera(Throwable t) {
         // Retornar lista vacía o datos locales
         return List.of();
