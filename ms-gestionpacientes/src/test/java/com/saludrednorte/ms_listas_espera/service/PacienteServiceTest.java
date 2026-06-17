@@ -1,6 +1,9 @@
 package com.saludrednorte.ms_listas_espera.service;
 
+import com.saludrednorte.ms_listas_espera.client.CitaClient;
 import com.saludrednorte.ms_listas_espera.client.NotificationClient;
+import com.saludrednorte.ms_listas_espera.dto.CitaDTO;
+import com.saludrednorte.ms_listas_espera.dto.MedicoDTO;
 import com.saludrednorte.ms_listas_espera.dto.NotificationRequestDTO;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
@@ -30,6 +33,9 @@ class PacienteServiceTest {
     @Mock
     private NotificationClient notificationClient;
 
+    @Mock
+    private CitaClient citaClient;
+
     private PacienteService pacienteService;
 
     @BeforeEach
@@ -37,6 +43,7 @@ class PacienteServiceTest {
         pacienteService = new PacienteService();
         ReflectionTestUtils.setField(pacienteService, "pacienteRepository", pacienteRepository);
         ReflectionTestUtils.setField(pacienteService, "notificationClient", notificationClient);
+        ReflectionTestUtils.setField(pacienteService, "citaClient", citaClient);
     }
 
     @Test
@@ -52,8 +59,14 @@ class PacienteServiceTest {
         guardado.setApellido(paciente.getApellido());
         guardado.setDni(paciente.getDni());
 
+        MedicoDTO medico = new MedicoDTO();
+        medico.setId(1L);
+        medico.setNombre("Dr. García");
+        medico.setEspecialidad("General");
+
         when(pacienteRepository.existsByDniIgnoreCase("12345678-9")).thenReturn(false);
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
+        when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of(medico));
         when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
 
         Paciente resultado = pacienteService.registrarPaciente(paciente);
@@ -96,6 +109,7 @@ class PacienteServiceTest {
         guardado.setApellido("Gómez");
 
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
+        when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of());
         when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
 
         Paciente resultado = pacienteService.registrarPaciente(paciente);
@@ -118,6 +132,7 @@ class PacienteServiceTest {
 
         when(pacienteRepository.existsByDniIgnoreCase("99999999-9")).thenReturn(false);
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
+        when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of());
         when(notificationClient.createNotification(any())).thenThrow(new RuntimeException("Notificación error"));
 
         Paciente resultado = pacienteService.registrarPaciente(paciente);
