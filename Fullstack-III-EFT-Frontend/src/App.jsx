@@ -6,10 +6,24 @@ import GestionPacientes from './componentes/GestionPacientes'
 import ListaEspera from './componentes/ListaEspera'
 import Notificaciones from './componentes/Notificaciones'
 import Optimizacion from './componentes/Optimizacion'
+import Login from './componentes/Login'
 
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    // Verificar si hay un token guardado al cargar la aplicación
+    const token = localStorage.getItem('token')
+    const savedUser = localStorage.getItem('user')
+    
+    if (token && savedUser) {
+      setIsAuthenticated(true)
+      setUser(JSON.parse(savedUser))
+    }
+  }, [])
 
   useEffect(() => {
     if (isDarkMode) {
@@ -18,6 +32,22 @@ function App() {
       document.documentElement.classList.remove('dark')
     }
   }, [isDarkMode])
+
+  const handleLoginSuccess = (userData) => {
+    setIsAuthenticated(true)
+    setUser({
+      username: userData.username,
+      role: userData.role
+    })
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setIsAuthenticated(false)
+    setUser(null)
+    setActiveSection('dashboard')
+  }
 
   const renderContent = () => {
     switch (activeSection) {
@@ -42,6 +72,11 @@ function App() {
     }
   }
 
+  // Mostrar Login si no está autenticado
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />
+  }
+
   return (
     <div className="bg-surface text-on-surface font-body-md overflow-x-hidden">
       <Sidebar 
@@ -50,7 +85,7 @@ function App() {
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
       />
-      <TopNavBar />
+      <TopNavBar user={user} onLogout={handleLogout} />
       {renderContent()}
     </div>
   )

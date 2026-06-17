@@ -25,3 +25,8 @@ logging:
   level:
     root: INFO
     com.saludrednorte.bff: DEBUG
+
+# Configuración JWT
+jwt:
+  secret: miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte
+  expiration: 86400000 # 24 horas en milisegundos

@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { LogOut, User } from 'lucide-react'
 
-const TopNavBar = () => {
+const TopNavBar = ({ user, onLogout }) => {
   const [searchValue, setSearchValue] = useState('')
 
   return (
@@ -30,14 +31,24 @@ const TopNavBar = () => {
           <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface-bright dark:border-surface-container"></span>
         </button>
         <div className="h-8 w-[1px] bg-outline-variant mx-2"></div>
-        <button className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full hover:bg-surface-container-high transition-all duration-200 group">
-          <span className="font-label-bold text-label-bold text-on-surface-variant group-hover:text-primary">
-            Dr. Benjamín
-          </span>
-          <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden">
-            <span className="material-symbols-outlined text-on-secondary-container">account_circle</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high dark:bg-surface-container-low">
+            <User className="w-5 h-5 text-on-surface-variant" />
+            <span className="font-medium text-sm text-on-surface">
+              {user?.username || 'Usuario'}
+            </span>
+            <span className="text-xs text-on-surface-variant bg-primary/10 px-2 py-0.5 rounded-full">
+              {user?.role?.replace('ROLE_', '') || 'USER'}
+            </span>
           </div>
-        </button>
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-error/10 text-error transition-all duration-200"
+            title="Cerrar sesión"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </header>
   )
