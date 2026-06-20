@@ -59,6 +59,13 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: ms-auth
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+
 eureka:
   client:
     service-url:

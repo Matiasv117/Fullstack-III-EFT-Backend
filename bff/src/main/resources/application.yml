@@ -6,6 +6,8 @@ server:
 bff:
   downstream:
     base-url: ${BFF_DOWNSTREAM_BASE_URL:http://localhost:8080}
+  auth:
+    base-url: ${BFF_AUTH_BASE_URL:http://localhost:8087}
 
 spring:
   application:
