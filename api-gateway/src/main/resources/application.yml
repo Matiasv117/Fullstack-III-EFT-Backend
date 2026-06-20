@@ -66,6 +66,13 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: ms-auditoria
+          uri: http://localhost:8088
+          predicates:
+            - Path=/api/auditoria/**
+          filters:
+            - StripPrefix=0
+
 eureka:
   client:
     service-url:
