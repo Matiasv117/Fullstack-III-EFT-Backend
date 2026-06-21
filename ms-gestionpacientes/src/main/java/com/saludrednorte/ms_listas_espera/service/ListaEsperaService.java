@@ -2,9 +2,11 @@ package com.saludrednorte.ms_listas_espera.service;
 
 import com.saludrednorte.ms_listas_espera.client.NotificationClient;
 import com.saludrednorte.ms_listas_espera.dto.NotificationRequestDTO;
+import com.saludrednorte.ms_listas_espera.dto.ListaEsperaMetricasDTO;
 import com.saludrednorte.ms_listas_espera.entity.Estado;
 import com.saludrednorte.ms_listas_espera.entity.Gravedad;
 import com.saludrednorte.ms_listas_espera.entity.ListaEspera;
+import com.saludrednorte.ms_listas_espera.repository.ListaEsperaProcedimientoRepository;
 import com.saludrednorte.ms_listas_espera.repository.ListaEsperaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,9 @@ public class ListaEsperaService {
     @Autowired
     private NotificationClient notificationClient;
 
+    @Autowired(required = false)
+    private ListaEsperaProcedimientoRepository procedimientoRepository;
+
     /**
      * Agrega un paciente a la lista de espera.
      * <p>
@@ -56,6 +61,9 @@ public class ListaEsperaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe informar el paciente asociado");
         }
         listaEspera.setEstado(Estado.PENDIENTE);
+        if (listaEspera.getGravedad() == null && procedimientoRepository != null) {
+            listaEspera.setGravedad(procedimientoRepository.calcularGravedad(0, 1));
+        }
         ListaEspera listaEsperaGuardada = listaEsperaRepository.save(listaEspera);
         enviarNotificacion(listaEsperaGuardada, "PACIENTE_ASIGNADO");
         return listaEsperaGuardada;
@@ -123,6 +131,14 @@ public class ListaEsperaService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Registro de lista de espera no encontrado");
         }
 
+        if (procedimientoRepository != null) {
+            procedimientoRepository.actualizarEstado(id, estado.name());
+            ListaEspera listaEspera = optional.get();
+            listaEspera.setEstado(estado);
+            enviarNotificacion(listaEspera, "ACTUALIZACION_ESTADO");
+            return listaEsperaRepository.findById(id).orElse(listaEspera);
+        }
+
         ListaEspera listaEspera = optional.get();
         listaEspera.setEstado(estado);
         listaEsperaRepository.save(listaEspera);
@@ -150,6 +166,17 @@ public class ListaEsperaService {
         ListaEspera listaEspera = optional.get();
         listaEsperaRepository.deleteById(id);
         enviarNotificacion(listaEspera, "ELIMINACION_LISTA_ESPERA");
+    }
+
+    /**
+     * Obtiene métricas de la lista de espera vía stored procedure (solo perfil postgres).
+     */
+    public ListaEsperaMetricasDTO obtenerMetricas() {
+        if (procedimientoRepository == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
+                    "Métricas disponibles solo con perfil postgres activo");
+        }
+        return procedimientoRepository.obtenerMetricas();
     }
 
     /**

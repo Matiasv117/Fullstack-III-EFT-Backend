@@ -1,5 +1,6 @@
 package com.saludrednorte.ms_listas_espera.controller;
 
+import com.saludrednorte.ms_listas_espera.dto.ListaEsperaMetricasDTO;
 import com.saludrednorte.ms_listas_espera.entity.Estado;
 import com.saludrednorte.ms_listas_espera.entity.Gravedad;
 import com.saludrednorte.ms_listas_espera.entity.ListaEspera;
@@ -81,6 +82,12 @@ public class ListaEsperaController {
     public List<ListaEspera> obtenerPorGravedad(
             @Parameter(description = "Nivel de gravedad") @PathVariable Gravedad gravedad) {
         return listaEsperaService.obtenerPorGravedad(gravedad);
+    }
+
+    @GetMapping("/metricas")
+    @Operation(summary = "Métricas de lista de espera", description = "Retorna métricas calculadas vía stored procedure PostgreSQL")
+    public ListaEsperaMetricasDTO obtenerMetricas() {
+        return listaEsperaService.obtenerMetricas();
     }
 
     /**
