@@ -67,6 +67,34 @@ class AuditoriaServiceTest {
     }
 
     @Test
+    void listarTodos_debeRetornarEventos() {
+        AuditLog evento = new AuditLog("admin", "LOGIN_EXITOSO", "OK");
+        evento.setId(1L);
+        evento.setTimestamp(LocalDateTime.now());
+
+        when(auditLogRepository.findAllByOrderByTimestampDesc()).thenReturn(List.of(evento));
+
+        List<AuditLogResponse> result = auditoriaService.listarTodos();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getAction()).isEqualTo("LOGIN_EXITOSO");
+    }
+
+    @Test
+    void listarPorUsuario_debeRetornarEventosFiltrados() {
+        AuditLog evento = new AuditLog("admin", "LOGIN_EXITOSO", "OK");
+        evento.setId(1L);
+        evento.setTimestamp(LocalDateTime.now());
+
+        when(auditLogRepository.findByUsernameOrderByTimestampDesc("admin")).thenReturn(List.of(evento));
+
+        List<AuditLogResponse> result = auditoriaService.listarPorUsuario("admin");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUsername()).isEqualTo("admin");
+    }
+
+    @Test
     void listarPorAccion_debeRetornarEventosFiltrados() {
         AuditLog evento = new AuditLog("admin", "CITA_OPTIMIZADA", "Cita reasignada");
         evento.setId(2L);

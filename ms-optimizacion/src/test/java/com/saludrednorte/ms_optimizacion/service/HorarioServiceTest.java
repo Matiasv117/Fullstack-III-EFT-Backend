@@ -119,14 +119,26 @@ class HorarioServiceTest {
 
     @Test
     void testActualizarHorarioNoEncontrado() {
-        // Given
         when(horarioRepository.existsById(999L)).thenReturn(false);
         horario.setId(999L);
-        
-        // When & Then
-        assertThrows(ResponseStatusException.class, () -> {
-            horarioService.actualizarHorario(horario);
-        });
+
+        assertThrows(ResponseStatusException.class, () -> horarioService.actualizarHorario(horario));
+    }
+
+    @Test
+    void testObtenerHorarioPorId() {
+        when(horarioRepository.findById(1L)).thenReturn(Optional.of(horario));
+
+        Optional<Horario> resultado = horarioService.obtenerHorarioPorId(1L);
+
+        assertTrue(resultado.isPresent());
+    }
+
+    @Test
+    void testEliminarHorarioNoEncontrado() {
+        when(horarioRepository.existsById(999L)).thenReturn(false);
+
+        assertThrows(ResponseStatusException.class, () -> horarioService.eliminarHorario(999L));
     }
 }
 

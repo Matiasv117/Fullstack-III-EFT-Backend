@@ -2,6 +2,7 @@ package com.saludrednorte.ms_listas_espera.service;
 
 import com.saludrednorte.ms_listas_espera.client.CitaClient;
 import com.saludrednorte.ms_listas_espera.dto.MedicoDTO;
+import com.saludrednorte.ms_listas_espera.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
@@ -30,6 +31,9 @@ class PacienteServiceTest {
     private NotificacionEventPublisher notificacionEventPublisher;
 
     @Mock
+    private AuditEventPublisher auditEventPublisher;
+
+    @Mock
     private CitaClient citaClient;
 
     private PacienteService pacienteService;
@@ -39,6 +43,7 @@ class PacienteServiceTest {
         pacienteService = new PacienteService();
         ReflectionTestUtils.setField(pacienteService, "pacienteRepository", pacienteRepository);
         ReflectionTestUtils.setField(pacienteService, "notificacionEventPublisher", notificacionEventPublisher);
+        ReflectionTestUtils.setField(pacienteService, "auditEventPublisher", auditEventPublisher);
         ReflectionTestUtils.setField(pacienteService, "citaClient", citaClient);
     }
 

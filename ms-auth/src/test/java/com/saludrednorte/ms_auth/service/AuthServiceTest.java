@@ -27,7 +27,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -129,6 +128,38 @@ class AuthServiceTest {
     @Test
     void validateToken_debeLanzarExcepcionCuandoTokenEsInvalido() {
         assertThatThrownBy(() -> authService.validateToken("invalid"))
+                .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void login_debePublicarEventoFallidoCuandoCredencialesSonInvalidas() {
+        LoginRequest request = new LoginRequest("admin", "wrong");
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Invalid"));
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BadCredentialsException.class);
+
+        verify(auditEventPublisher).publicar("admin", "LOGIN_FALLIDO", "Credenciales inválidas");
+    }
+
+    @Test
+    void validateToken_debeLanzarExcepcionCuandoTokenEstaExpirado() {
+        when(jwtUtil.extractUsername("expired-token")).thenReturn("admin");
+        when(userDetailsService.loadUserByUsername("admin")).thenReturn(userDetails);
+        when(jwtUtil.validateToken("expired-token", userDetails)).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.validateToken("Bearer expired-token"))
+                .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void getAuthenticatedUser_debeLanzarExcepcionCuandoTokenEsInvalido() {
+        when(jwtUtil.extractUsername("bad-token")).thenReturn("admin");
+        when(userDetailsService.loadUserByUsername("admin")).thenReturn(userDetails);
+        when(jwtUtil.validateToken("bad-token", userDetails)).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.getAuthenticatedUser("Bearer bad-token"))
                 .isInstanceOf(BadCredentialsException.class);
     }
 

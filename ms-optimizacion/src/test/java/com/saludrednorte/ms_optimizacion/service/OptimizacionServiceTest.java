@@ -2,6 +2,7 @@ package com.saludrednorte.ms_optimizacion.service;
 
 import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
+import com.saludrednorte.ms_optimizacion.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_optimizacion.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
 import com.saludrednorte.ms_optimizacion.entity.EstadoCita;
@@ -32,6 +33,12 @@ class OptimizacionServiceTest {
 
     @Mock
     private NotificacionEventPublisher notificacionEventPublisher;
+
+    @Mock
+    private AuditEventPublisher auditEventPublisher;
+
+    @Mock
+    private PrioridadCalculadora prioridadCalculadora;
 
     @Mock
     private EstrategiaOptimizacion estrategia;
@@ -71,6 +78,7 @@ class OptimizacionServiceTest {
         verify(citaService, times(1)).cancelarCita(1L);
         verify(estrategia, times(1)).reasignarCita(cita);
         verify(notificacionEventPublisher, times(1)).publicar(eq(100L), eq("CITA_REASIGNADA"), anyString());
+        verify(auditEventPublisher, times(1)).publicar(eq("sistema"), eq("CITA_OPTIMIZADA"), anyString());
     }
 
     @Test
@@ -84,7 +92,8 @@ class OptimizacionServiceTest {
         // Then
         verify(citaService, times(1)).cancelarCita(999L);
         verify(estrategia, never()).reasignarCita(any());
-        verify(notificationClient, never()).createNotification(any());
+        verify(notificacionEventPublisher, never()).publicar(anyLong(), anyString(), anyString());
+        verify(auditEventPublisher, never()).publicar(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -136,7 +145,7 @@ class OptimizacionServiceTest {
         when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
         when(factory.getEstrategia("fifo")).thenReturn(estrategia);
         doThrow(new RuntimeException("Error en notificación"))
-                .when(notificationClient).createNotification(any());
+                .when(notificacionEventPublisher).publicar(anyLong(), anyString(), anyString());
         
         // When - No debe lanzar excepción
         assertDoesNotThrow(() -> {
@@ -146,6 +155,16 @@ class OptimizacionServiceTest {
         // Then
         verify(citaService, times(1)).cancelarCita(1L);
         verify(estrategia, times(1)).reasignarCita(cita);
+    }
+
+    @Test
+    void testCalcularPrioridadPaciente() {
+        when(prioridadCalculadora.calcularNivel(4, 10.0, 5)).thenReturn(NivelPrioridad.ALTA);
+
+        NivelPrioridad resultado = optimizacionService.calcularPrioridadPaciente(4, 10.0, 5);
+
+        assertEquals(NivelPrioridad.ALTA, resultado);
+        verify(prioridadCalculadora).calcularNivel(4, 10.0, 5);
     }
 }
 
