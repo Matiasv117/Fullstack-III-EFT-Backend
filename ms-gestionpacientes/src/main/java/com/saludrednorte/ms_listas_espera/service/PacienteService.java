@@ -10,8 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import static com.saludrednorte.ms_listas_espera.config.CacheConfig.CACHE_PACIENTES;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,6 +53,7 @@ public class PacienteService {
      * @return el paciente registrado con ID asignado
      * @throws ResponseStatusException si ya existe un paciente con el mismo DNI
      */
+    @CacheEvict(value = CACHE_PACIENTES, allEntries = true)
     public Paciente registrarPaciente(Paciente paciente) {
         if (paciente.getDni() != null && pacienteRepository.existsByDniIgnoreCase(paciente.getDni())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un paciente con el DNI indicado");
@@ -95,6 +100,7 @@ public class PacienteService {
      *
      * @return lista de todos los pacientes
      */
+    @Cacheable(CACHE_PACIENTES)
     public List<Paciente> obtenerTodosPacientes() {
         return pacienteRepository.findAll();
     }
@@ -120,6 +126,7 @@ public class PacienteService {
      * @return el paciente actualizado
      * @throws ResponseStatusException si el paciente no existe
      */
+    @CacheEvict(value = CACHE_PACIENTES, allEntries = true)
     public Paciente actualizarPaciente(Paciente paciente) {
         if (paciente.getId() == null || !pacienteRepository.existsById(paciente.getId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente no encontrado");
@@ -148,6 +155,7 @@ public class PacienteService {
      * @param id el ID del paciente a eliminar
      * @throws ResponseStatusException si el paciente no existe
      */
+    @CacheEvict(value = CACHE_PACIENTES, allEntries = true)
     public void eliminarPaciente(Long id) {
         if (!pacienteRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente no encontrado");

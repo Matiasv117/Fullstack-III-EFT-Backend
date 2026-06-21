@@ -10,8 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import static com.saludrednorte.ms_listas_espera.config.CacheConfig.CACHE_LISTA_ESPERA;
+import static com.saludrednorte.ms_listas_espera.config.CacheConfig.CACHE_PACIENTES;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +50,7 @@ public class ListaEsperaService {
      * @return el registro de lista de espera guardado
      * @throws ResponseStatusException si el paciente no está informado
      */
+    @CacheEvict(value = {CACHE_LISTA_ESPERA, CACHE_PACIENTES}, allEntries = true)
     public ListaEspera agregarAListaEspera(ListaEspera listaEspera) {
         if (listaEspera.getPaciente() == null || listaEspera.getPaciente().getId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe informar el paciente asociado");
@@ -60,6 +66,7 @@ public class ListaEsperaService {
      *
      * @return lista de todos los registros de lista de espera
      */
+    @Cacheable(CACHE_LISTA_ESPERA)
     public List<ListaEspera> obtenerListaEspera() {
         return listaEsperaRepository.findAll();
     }
@@ -109,6 +116,7 @@ public class ListaEsperaService {
      * @return el registro actualizado
      * @throws ResponseStatusException si el registro no existe
      */
+    @CacheEvict(value = {CACHE_LISTA_ESPERA, CACHE_PACIENTES}, allEntries = true)
     public ListaEspera actualizarEstado(Long id, Estado estado) {
         Optional<ListaEspera> optional = listaEsperaRepository.findById(id);
         if (optional.isEmpty()) {
@@ -132,6 +140,7 @@ public class ListaEsperaService {
      * @param id el ID del registro a eliminar
      * @throws ResponseStatusException si el registro no existe
      */
+    @CacheEvict(value = {CACHE_LISTA_ESPERA, CACHE_PACIENTES}, allEntries = true)
     public void eliminarDeListaEspera(Long id) {
         Optional<ListaEspera> optional = listaEsperaRepository.findById(id);
         if (optional.isEmpty()) {
