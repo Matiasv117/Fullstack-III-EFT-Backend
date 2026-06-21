@@ -1,10 +1,9 @@
 package com.saludrednorte.ms_listas_espera.service;
 
 import com.saludrednorte.ms_listas_espera.client.CitaClient;
-import com.saludrednorte.ms_listas_espera.client.NotificationClient;
 import com.saludrednorte.ms_listas_espera.dto.CitaDTO;
 import com.saludrednorte.ms_listas_espera.dto.MedicoDTO;
-import com.saludrednorte.ms_listas_espera.dto.NotificationRequestDTO;
+import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
 import org.slf4j.Logger;
@@ -34,7 +33,7 @@ public class PacienteService {
     private PacienteRepository pacienteRepository;
 
     @Autowired
-    private NotificationClient notificationClient;
+    private NotificacionEventPublisher notificacionEventPublisher;
 
     @Autowired
     private CitaClient citaClient;
@@ -75,17 +74,17 @@ public class PacienteService {
             logger.warn("Fallo al crear cita automática pero paciente registrado: {}", e.getMessage());
         }
 
-        // Crear notificación automáticamente
+        // Publicar notificación de forma asíncrona vía RabbitMQ
         try {
-            NotificationRequestDTO notif = new NotificationRequestDTO();
-            notif.setPacienteId(savedPaciente.getId());
-            notif.setTipo("PACIENTE_ASIGNADO");
-            notif.setMensaje("Paciente " + savedPaciente.getNombre() + " " +
-                            savedPaciente.getApellido() + " registrado en el sistema");
-            notificationClient.createNotification(notif);
-            logger.info("Notificación creada para paciente {}", savedPaciente.getId());
+            notificacionEventPublisher.publicar(
+                    savedPaciente.getId(),
+                    "PACIENTE_ASIGNADO",
+                    "Paciente " + savedPaciente.getNombre() + " " +
+                            savedPaciente.getApellido() + " registrado en el sistema"
+            );
+            logger.info("Evento de notificación publicado para paciente {}", savedPaciente.getId());
         } catch (Exception e) {
-            logger.warn("Fallo al crear notificación pero paciente registrado: {}", e.getMessage());
+            logger.warn("Fallo al publicar notificación pero paciente registrado: {}", e.getMessage());
         }
 
         return savedPaciente;
@@ -128,16 +127,16 @@ public class PacienteService {
 
         Paciente updatedPaciente = pacienteRepository.save(paciente);
 
-        // Notificar actualización
+        // Publicar notificación de actualización vía RabbitMQ
         try {
-            NotificationRequestDTO notif = new NotificationRequestDTO();
-            notif.setPacienteId(updatedPaciente.getId());
-            notif.setTipo("ACTUALIZACION_ESTADO");
-            notif.setMensaje("Datos del paciente " + updatedPaciente.getNombre() + " actualizados");
-            notificationClient.createNotification(notif);
-            logger.info("Notificación de actualización enviada para paciente {}", updatedPaciente.getId());
+            notificacionEventPublisher.publicar(
+                    updatedPaciente.getId(),
+                    "ACTUALIZACION_ESTADO",
+                    "Datos del paciente " + updatedPaciente.getNombre() + " actualizados"
+            );
+            logger.info("Evento de actualización publicado para paciente {}", updatedPaciente.getId());
         } catch (Exception e) {
-            logger.warn("Fallo al notificar actualización pero paciente actualizado: {}", e.getMessage());
+            logger.warn("Fallo al publicar notificación pero paciente actualizado: {}", e.getMessage());
         }
 
         return updatedPaciente;

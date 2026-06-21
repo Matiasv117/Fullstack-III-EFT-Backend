@@ -1,20 +1,16 @@
 package com.saludrednorte.ms_listas_espera.service;
 
 import com.saludrednorte.ms_listas_espera.client.CitaClient;
-import com.saludrednorte.ms_listas_espera.client.NotificationClient;
-import com.saludrednorte.ms_listas_espera.dto.CitaDTO;
 import com.saludrednorte.ms_listas_espera.dto.MedicoDTO;
-import com.saludrednorte.ms_listas_espera.dto.NotificationRequestDTO;
+import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -31,7 +27,7 @@ class PacienteServiceTest {
     private PacienteRepository pacienteRepository;
 
     @Mock
-    private NotificationClient notificationClient;
+    private NotificacionEventPublisher notificacionEventPublisher;
 
     @Mock
     private CitaClient citaClient;
@@ -42,7 +38,7 @@ class PacienteServiceTest {
     void setUp() {
         pacienteService = new PacienteService();
         ReflectionTestUtils.setField(pacienteService, "pacienteRepository", pacienteRepository);
-        ReflectionTestUtils.setField(pacienteService, "notificationClient", notificationClient);
+        ReflectionTestUtils.setField(pacienteService, "notificacionEventPublisher", notificacionEventPublisher);
         ReflectionTestUtils.setField(pacienteService, "citaClient", citaClient);
     }
 
@@ -67,18 +63,14 @@ class PacienteServiceTest {
         when(pacienteRepository.existsByDniIgnoreCase("12345678-9")).thenReturn(false);
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
         when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of(medico));
-        when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
 
         Paciente resultado = pacienteService.registrarPaciente(paciente);
 
         assertThat(resultado.getId()).isEqualTo(10L);
         verify(pacienteRepository).save(paciente);
 
-        ArgumentCaptor<NotificationRequestDTO> captor = ArgumentCaptor.forClass(NotificationRequestDTO.class);
-        verify(notificationClient).createNotification(captor.capture());
-        assertThat(captor.getValue().getPacienteId()).isEqualTo(10L);
-        assertThat(captor.getValue().getTipo()).isEqualTo("PACIENTE_ASIGNADO");
-        assertThat(captor.getValue().getMensaje()).contains("Ana").contains("Pérez");
+        verify(notificacionEventPublisher).publicar(10L, "PACIENTE_ASIGNADO",
+                "Paciente Ana Pérez registrado en el sistema");
     }
 
     @Test
@@ -110,7 +102,6 @@ class PacienteServiceTest {
 
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
         when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of());
-        when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
 
         Paciente resultado = pacienteService.registrarPaciente(paciente);
 
@@ -133,7 +124,9 @@ class PacienteServiceTest {
         when(pacienteRepository.existsByDniIgnoreCase("99999999-9")).thenReturn(false);
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
         when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of());
-        when(notificationClient.createNotification(any())).thenThrow(new RuntimeException("Notificación error"));
+        org.mockito.Mockito.doThrow(new RuntimeException("RabbitMQ error"))
+                .when(notificacionEventPublisher).publicar(org.mockito.ArgumentMatchers.anyLong(),
+                        org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
 
         Paciente resultado = pacienteService.registrarPaciente(paciente);
 
@@ -192,7 +185,6 @@ class PacienteServiceTest {
 
         when(pacienteRepository.existsById(3L)).thenReturn(true);
         when(pacienteRepository.save(paciente)).thenReturn(paciente);
-        when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
 
         Paciente resultado = pacienteService.actualizarPaciente(paciente);
 
@@ -237,7 +229,9 @@ class PacienteServiceTest {
 
         when(pacienteRepository.existsById(7L)).thenReturn(true);
         when(pacienteRepository.save(paciente)).thenReturn(paciente);
-        when(notificationClient.createNotification(any())).thenThrow(new RuntimeException("Error notificación"));
+        org.mockito.Mockito.doThrow(new RuntimeException("Error notificación"))
+                .when(notificacionEventPublisher).publicar(org.mockito.ArgumentMatchers.anyLong(),
+                        org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
 
         Paciente resultado = pacienteService.actualizarPaciente(paciente);
 

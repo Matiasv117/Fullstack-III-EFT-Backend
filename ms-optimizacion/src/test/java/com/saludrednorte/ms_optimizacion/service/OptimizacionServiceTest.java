@@ -1,9 +1,8 @@
 package com.saludrednorte.ms_optimizacion.service;
 
 import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
-import com.saludrednorte.ms_optimizacion.client.NotificationClient;
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
-import com.saludrednorte.ms_optimizacion.dto.NotificationRequestDTO;
+import com.saludrednorte.ms_optimizacion.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
 import com.saludrednorte.ms_optimizacion.entity.EstadoCita;
 import com.saludrednorte.ms_optimizacion.entity.Medico;
@@ -32,7 +31,7 @@ class OptimizacionServiceTest {
     private ListaEsperaClient listaEsperaClient;
 
     @Mock
-    private NotificationClient notificationClient;
+    private NotificacionEventPublisher notificacionEventPublisher;
 
     @Mock
     private EstrategiaOptimizacion estrategia;
@@ -71,7 +70,7 @@ class OptimizacionServiceTest {
         // Then
         verify(citaService, times(1)).cancelarCita(1L);
         verify(estrategia, times(1)).reasignarCita(cita);
-        verify(notificationClient, times(1)).createNotification(any());
+        verify(notificacionEventPublisher, times(1)).publicar(eq(100L), eq("CITA_REASIGNADA"), anyString());
     }
 
     @Test
