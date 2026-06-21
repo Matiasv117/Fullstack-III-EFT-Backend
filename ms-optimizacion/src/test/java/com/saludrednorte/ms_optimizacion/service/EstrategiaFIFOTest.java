@@ -14,10 +14,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -94,6 +96,17 @@ class EstrategiaFIFOTest {
         // Then: ambas deben procesarse sin errores
         assertNotNull(cita.getId());
         assertNotNull(cita2.getId());
+    }
+
+    @Test
+    void testReasignarCitaFIFOConPacienteEnLista() {
+        ListaEsperaDTO candidato = new ListaEsperaDTO(5L, 200L, "consulta", "MEDIA", "PENDIENTE");
+        when(listaEsperaClient.getListaEspera()).thenReturn(List.of(candidato));
+
+        estrategiaFIFO.reasignarCita(cita);
+
+        verify(citaService).actualizarCita(cita);
+        assertEquals(200L, cita.getPacienteId());
     }
 }
 

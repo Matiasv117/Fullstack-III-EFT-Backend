@@ -6,7 +6,7 @@ spring:
     activate:
       on-profile: postgres
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/ms_gestionpacientes}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/ms_gestionpacientes}
     driverClassName: org.postgresql.Driver
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}

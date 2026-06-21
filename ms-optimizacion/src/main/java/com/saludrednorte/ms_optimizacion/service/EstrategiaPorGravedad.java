@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Estrategia por gravedad: reasigna la cita al paciente con mayor prioridad calculada.
+ */
 @Component
 public class EstrategiaPorGravedad implements EstrategiaOptimizacion {
 
@@ -25,6 +28,11 @@ public class EstrategiaPorGravedad implements EstrategiaOptimizacion {
     @Autowired
     private CitaService citaService;
 
+    /**
+     * Reasigna la cita al paciente con mayor nivel de prioridad en lista de espera.
+     *
+     * @param citaCancelada cita cancelada a reasignar
+     */
     @Override
     public void reasignarCita(Cita citaCancelada) {
         List<ListaEsperaDTO> listaEspera = listaEsperaClient.getListaEspera();

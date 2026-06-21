@@ -1,9 +1,9 @@
 package com.saludrednorte.ms_optimizacion.service;
 
 import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
-import com.saludrednorte.ms_optimizacion.client.NotificationClient;
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
-import com.saludrednorte.ms_optimizacion.dto.NotificationRequestDTO;
+import com.saludrednorte.ms_optimizacion.messaging.AuditEventPublisher;
+import com.saludrednorte.ms_optimizacion.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
@@ -36,7 +36,10 @@ public class OptimizacionService {
     private ListaEsperaClient listaEsperaClient;
 
     @Autowired
-    private NotificationClient notificationClient;
+    private NotificacionEventPublisher notificacionEventPublisher;
+
+    @Autowired
+    private AuditEventPublisher auditEventPublisher;
 
     @Autowired
     private PrioridadCalculadora prioridadCalculadora;
@@ -59,17 +62,20 @@ public class OptimizacionService {
             EstrategiaOptimizacion estrategia = factory.getEstrategia(estrategiaTipo);
             estrategia.reasignarCita(citaCancelada);
 
-            // Notificar reasignación de cita
+            // Publicar notificación de reasignación vía RabbitMQ
             try {
-                NotificationRequestDTO notif = new NotificationRequestDTO();
-                notif.setPacienteId(citaCancelada.getPacienteId());
-                notif.setTipo("CITA_REASIGNADA");
-                notif.setMensaje("Cita reasignada para " + citaCancelada.getFechaHora());
-                notificationClient.createNotification(notif);
-                logger.info("Notificación de reasignación enviada para cita {}", citaCancelada.getId());
+                notificacionEventPublisher.publicar(
+                        citaCancelada.getPacienteId(),
+                        "CITA_REASIGNADA",
+                        "Cita reasignada para " + citaCancelada.getFechaHora()
+                );
+                logger.info("Evento de reasignación publicado para cita {}", citaCancelada.getId());
             } catch (Exception e) {
-                logger.warn("Fallo al notificar reasignación de cita {} : {}", citaCancelada.getId(), e.getMessage());
+                logger.warn("Fallo al publicar reasignación de cita {} : {}", citaCancelada.getId(), e.getMessage());
             }
+
+            auditEventPublisher.publicar("sistema", "CITA_OPTIMIZADA",
+                    "Cita ID " + citaCancelada.getId() + " reasignada para paciente " + citaCancelada.getPacienteId());
         }
     }
 

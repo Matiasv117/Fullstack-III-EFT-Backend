@@ -97,4 +97,65 @@ class NotificationServiceTest {
         assertThat(result).isFalse();
         verify(repository, times(1)).findById(999L);
     }
+
+    @Test
+    void testFindByPacienteId() {
+        when(repository.findByPacienteId(123L)).thenReturn(List.of(notification));
+
+        List<Notification> result = service.findByPacienteId(123L);
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void testFindAll() {
+        when(repository.findAll()).thenReturn(List.of(notification));
+
+        assertThat(service.findAll()).hasSize(1);
+    }
+
+    @Test
+    void testSendPending() {
+        when(repository.findByEstado(EstadoNotificacion.PENDIENTE)).thenReturn(List.of(notification));
+        when(repository.save(any(Notification.class))).thenReturn(notification);
+
+        service.sendPending();
+
+        verify(repository).save(any(Notification.class));
+    }
+
+    @Test
+    void testSendByIdWithChannel() {
+        when(repository.findById(1L)).thenReturn(Optional.of(notification));
+        when(repository.save(any(Notification.class))).thenReturn(notification);
+
+        assertThat(service.sendById(1L, "SMS")).isTrue();
+    }
+
+    @Test
+    void testGetAvailableChannels() {
+        assertThat(service.getAvailableChannels()).containsExactly("EMAIL", "SMS", "PUSH");
+    }
+
+    @Test
+    void testCreateNullNotification() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.create(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void testCreateDuplicatePending() {
+        when(repository.existsByPacienteIdAndTipoAndMensajeAndEstado(
+                notification.getPacienteId(), notification.getTipo(), notification.getMensaje(), EstadoNotificacion.PENDIENTE))
+                .thenReturn(true);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.create(notification))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+    }
+
+    @Test
+    void testSendByIdInvalidChannel() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.sendById(1L, "WHATSAPP"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

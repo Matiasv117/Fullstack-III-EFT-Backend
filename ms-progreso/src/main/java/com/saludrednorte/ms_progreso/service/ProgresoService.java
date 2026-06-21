@@ -19,6 +19,11 @@ public class ProgresoService {
 
     private final ProgresoRepository progresoRepository;
 
+    /**
+     * Constructor con inyeccion del repositorio de progreso.
+     *
+     * @param progresoRepository repositorio JPA de progreso del paciente
+     */
     public ProgresoService(ProgresoRepository progresoRepository) {
         this.progresoRepository = progresoRepository;
     }

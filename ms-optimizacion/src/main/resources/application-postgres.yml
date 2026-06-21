@@ -4,7 +4,7 @@ spring:
     activate:
       on-profile: postgres
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/ms_optimizacion}
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/ms_optimizacion}
     driverClassName: org.postgresql.Driver
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
@@ -16,4 +16,8 @@ spring:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:update}
     show-sql: ${JPA_SHOW_SQL:false}
+  flyway:
+    enabled: true
+    table: flyway_ms_optimizacion
+    baseline-on-migrate: true
 

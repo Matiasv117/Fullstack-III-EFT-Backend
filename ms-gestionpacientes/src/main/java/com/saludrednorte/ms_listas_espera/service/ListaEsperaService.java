@@ -2,16 +2,23 @@ package com.saludrednorte.ms_listas_espera.service;
 
 import com.saludrednorte.ms_listas_espera.client.NotificationClient;
 import com.saludrednorte.ms_listas_espera.dto.NotificationRequestDTO;
+import com.saludrednorte.ms_listas_espera.dto.ListaEsperaMetricasDTO;
 import com.saludrednorte.ms_listas_espera.entity.Estado;
 import com.saludrednorte.ms_listas_espera.entity.Gravedad;
 import com.saludrednorte.ms_listas_espera.entity.ListaEspera;
+import com.saludrednorte.ms_listas_espera.repository.ListaEsperaProcedimientoRepository;
 import com.saludrednorte.ms_listas_espera.repository.ListaEsperaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import static com.saludrednorte.ms_listas_espera.config.CacheConfig.CACHE_LISTA_ESPERA;
+import static com.saludrednorte.ms_listas_espera.config.CacheConfig.CACHE_PACIENTES;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +41,9 @@ public class ListaEsperaService {
     @Autowired
     private NotificationClient notificationClient;
 
+    @Autowired(required = false)
+    private ListaEsperaProcedimientoRepository procedimientoRepository;
+
     /**
      * Agrega un paciente a la lista de espera.
      * <p>
@@ -45,11 +55,15 @@ public class ListaEsperaService {
      * @return el registro de lista de espera guardado
      * @throws ResponseStatusException si el paciente no está informado
      */
+    @CacheEvict(value = {CACHE_LISTA_ESPERA, CACHE_PACIENTES}, allEntries = true)
     public ListaEspera agregarAListaEspera(ListaEspera listaEspera) {
         if (listaEspera.getPaciente() == null || listaEspera.getPaciente().getId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe informar el paciente asociado");
         }
         listaEspera.setEstado(Estado.PENDIENTE);
+        if (listaEspera.getGravedad() == null && procedimientoRepository != null) {
+            listaEspera.setGravedad(procedimientoRepository.calcularGravedad(0, 1));
+        }
         ListaEspera listaEsperaGuardada = listaEsperaRepository.save(listaEspera);
         enviarNotificacion(listaEsperaGuardada, "PACIENTE_ASIGNADO");
         return listaEsperaGuardada;
@@ -60,6 +74,7 @@ public class ListaEsperaService {
      *
      * @return lista de todos los registros de lista de espera
      */
+    @Cacheable(CACHE_LISTA_ESPERA)
     public List<ListaEspera> obtenerListaEspera() {
         return listaEsperaRepository.findAll();
     }
@@ -109,10 +124,19 @@ public class ListaEsperaService {
      * @return el registro actualizado
      * @throws ResponseStatusException si el registro no existe
      */
+    @CacheEvict(value = {CACHE_LISTA_ESPERA, CACHE_PACIENTES}, allEntries = true)
     public ListaEspera actualizarEstado(Long id, Estado estado) {
         Optional<ListaEspera> optional = listaEsperaRepository.findById(id);
         if (optional.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Registro de lista de espera no encontrado");
+        }
+
+        if (procedimientoRepository != null) {
+            procedimientoRepository.actualizarEstado(id, estado.name());
+            ListaEspera listaEspera = optional.get();
+            listaEspera.setEstado(estado);
+            enviarNotificacion(listaEspera, "ACTUALIZACION_ESTADO");
+            return listaEsperaRepository.findById(id).orElse(listaEspera);
         }
 
         ListaEspera listaEspera = optional.get();
@@ -132,6 +156,7 @@ public class ListaEsperaService {
      * @param id el ID del registro a eliminar
      * @throws ResponseStatusException si el registro no existe
      */
+    @CacheEvict(value = {CACHE_LISTA_ESPERA, CACHE_PACIENTES}, allEntries = true)
     public void eliminarDeListaEspera(Long id) {
         Optional<ListaEspera> optional = listaEsperaRepository.findById(id);
         if (optional.isEmpty()) {
@@ -141,6 +166,17 @@ public class ListaEsperaService {
         ListaEspera listaEspera = optional.get();
         listaEsperaRepository.deleteById(id);
         enviarNotificacion(listaEspera, "ELIMINACION_LISTA_ESPERA");
+    }
+
+    /**
+     * Obtiene métricas de la lista de espera vía stored procedure (solo perfil postgres).
+     */
+    public ListaEsperaMetricasDTO obtenerMetricas() {
+        if (procedimientoRepository == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
+                    "Métricas disponibles solo con perfil postgres activo");
+        }
+        return procedimientoRepository.obtenerMetricas();
     }
 
     /**

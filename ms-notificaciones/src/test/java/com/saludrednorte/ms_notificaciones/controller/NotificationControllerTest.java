@@ -123,4 +123,57 @@ class NotificationControllerTest {
 
         verify(service).sendById(1L);
     }
+
+    @Test
+    void testGetNotificationByIdNotFound() throws Exception {
+        when(service.findById(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/notificaciones/99"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetByPacienteId() throws Exception {
+        when(service.findByPacienteId(123L)).thenReturn(List.of(notification));
+        when(mapper.entityToResponseDto(any(Notification.class))).thenReturn(responseDTO);
+
+        mockMvc.perform(get("/api/notificaciones/paciente/123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].pacienteId").value(123));
+    }
+
+    @Test
+    void testSendNotificationNotFound() throws Exception {
+        when(service.sendById(99L)).thenReturn(false);
+
+        mockMvc.perform(post("/api/notificaciones/99/enviar"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testEnviarPorCanal() throws Exception {
+        when(service.sendById(1L, "EMAIL")).thenReturn(true);
+
+        mockMvc.perform(post("/api/notificaciones/1/enviar-canal")
+                        .param("canal", "EMAIL"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testEnviarTodas() throws Exception {
+        mockMvc.perform(post("/api/notificaciones/enviar-todas"))
+                .andExpect(status().isOk());
+
+        verify(service).sendPending();
+    }
+
+    @Test
+    void testListarTodas() throws Exception {
+        when(service.findAll()).thenReturn(List.of(notification));
+        when(mapper.entityToResponseDto(any(Notification.class))).thenReturn(responseDTO);
+
+        mockMvc.perform(get("/api/notificaciones"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L));
+    }
 }
