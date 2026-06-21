@@ -4,6 +4,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Endpoints legacy de autenticacion Base64.
+ * Preferir {@code POST /api/auth/login} (ms-auth) para obtener JWT firmado.
+ */
 @RestController
 @RequestMapping("/login")
 public class AuthController {

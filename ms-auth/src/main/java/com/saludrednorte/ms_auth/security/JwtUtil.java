@@ -18,7 +18,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:miClaveSecretaSuperSeguraParaJWT2024}")
+    @Value("${jwt.secret:miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 24 horas por defecto
@@ -129,5 +129,30 @@ public class JwtUtil {
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    /**
+     * Verifica firma y expiracion del token sin consultar la base de datos local.
+     *
+     * @param token token JWT
+     * @return true si el token es valido
+     */
+    public boolean isTokenValid(String token) {
+        try {
+            extractAllClaims(token);
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Extrae el rol del claim {@code role} del token JWT.
+     *
+     * @param token token JWT
+     * @return rol del usuario o null
+     */
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> (String) claims.get("role"));
     }
 }

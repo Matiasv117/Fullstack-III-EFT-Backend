@@ -150,29 +150,31 @@ function Test-Status {
 
 Assert-Prerequisites
 
-# Autenticacion via API Gateway (token Base64 legacy compatible con filtros MS)
-Write-Host "=== Autenticando con API Gateway ==="
-try {
-    $authResponse = Invoke-WebRequest -Uri "$GatewayBaseUrl/login/admin" -Method POST -UseBasicParsing -TimeoutSec 10
-    $token = $authResponse.Content.Trim()
-    $global:AuthHeaders = @{ "Authorization" = "Bearer $token" }
-    Write-Host "[OK]   Token de administrador obtenido via Gateway" -ForegroundColor Green
-} catch {
-    Write-Host "[FAIL] No se pudo obtener token del Gateway: $_" -ForegroundColor Red
-    exit 1
-}
-
-# Login ms-auth (JWT real) via Gateway
-Write-Host "=== Login ms-auth (JWT) ==="
+# Autenticacion via ms-auth (JWT firmado) a traves del Gateway
+Write-Host "=== Autenticando con ms-auth (JWT) ==="
 try {
     $loginJson = '{"username":"admin","password":"admin123"}'
     $loginResp = Invoke-Http -Url "$GatewayBaseUrl/api/auth/login" -Method POST -Body $loginJson
-    if ([int]$loginResp.StatusCode -eq 200) {
-        $jwtBody = $loginResp.Content | ConvertFrom-Json
-        Write-Host "[OK]   POST $GatewayBaseUrl/api/auth/login -> 200 (usuario: $($jwtBody.username))" -ForegroundColor Green
+    if ([int]$loginResp.StatusCode -ne 200) {
+        throw "Login retorno $($loginResp.StatusCode)"
     }
+    $jwtBody = $loginResp.Content | ConvertFrom-Json
+    if (-not $jwtBody.token) {
+        throw "Respuesta sin token JWT"
+    }
+    $global:AuthHeaders = @{ "Authorization" = "Bearer $($jwtBody.token)" }
+    Write-Host "[OK]   JWT obtenido de ms-auth (usuario: $($jwtBody.username), rol: $($jwtBody.role))" -ForegroundColor Green
 } catch {
-    Write-Host "[WARN] ms-auth no disponible via Gateway; continuando con token Gateway" -ForegroundColor Yellow
+    Write-Host "[WARN] ms-auth no disponible, usando token legacy del Gateway: $_" -ForegroundColor Yellow
+    try {
+        $authResponse = Invoke-WebRequest -Uri "$GatewayBaseUrl/login/admin" -Method POST -UseBasicParsing -TimeoutSec 10
+        $token = $authResponse.Content.Trim()
+        $global:AuthHeaders = @{ "Authorization" = "Bearer $token" }
+        Write-Host "[OK]   Token legacy del Gateway obtenido" -ForegroundColor Green
+    } catch {
+        Write-Host "[FAIL] No se pudo autenticar: $_" -ForegroundColor Red
+        exit 1
+    }
 }
 
 Write-Host "=== Health checks ==="

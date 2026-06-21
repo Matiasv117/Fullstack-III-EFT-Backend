@@ -64,3 +64,6 @@ management:
     readinessstate:
       enabled: true
 
+jwt:
+  secret: miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte
+  expiration: 86400000

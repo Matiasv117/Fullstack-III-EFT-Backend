@@ -31,3 +31,6 @@ eureka:
     register-with-eureka: true
     fetch-registry: false
 
+jwt:
+  secret: miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte
+  expiration: 86400000

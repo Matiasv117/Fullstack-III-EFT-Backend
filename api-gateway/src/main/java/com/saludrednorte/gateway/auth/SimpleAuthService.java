@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+/**
+ * Servicio de autenticacion del API Gateway.
+ * Valida JWT emitidos por ms-auth y mantiene compatibilidad con tokens legacy Base64.
+ */
 @Service
 public class SimpleAuthService {
 
@@ -30,11 +34,23 @@ public class SimpleAuthService {
             "/api/notificaciones/pendientes"
     );
 
+    private final JwtTokenValidator jwtTokenValidator;
+
+    public SimpleAuthService(JwtTokenValidator jwtTokenValidator) {
+        this.jwtTokenValidator = jwtTokenValidator;
+    }
+
+    /**
+     * Genera un token legacy Base64 (solo para desarrollo / retrocompatibilidad).
+     */
     public String generarToken(String usuario, String rol) {
         String datos = usuario + ":" + rol.toUpperCase(Locale.ROOT);
         return Base64.getEncoder().encodeToString(datos.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Decodifica y valida el Bearer token: primero JWT de ms-auth, luego legacy Base64.
+     */
     public Optional<TokenData> decodeBearerToken(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return Optional.empty();
@@ -45,6 +61,15 @@ public class SimpleAuthService {
             return Optional.empty();
         }
 
+        Optional<TokenData> jwtData = jwtTokenValidator.validate(token);
+        if (jwtData.isPresent()) {
+            return jwtData;
+        }
+
+        return decodeLegacyToken(token);
+    }
+
+    private Optional<TokenData> decodeLegacyToken(String token) {
         try {
             String decoded = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
             String[] partes = decoded.split(":", 2);
@@ -87,5 +112,3 @@ public class SimpleAuthService {
     public record TokenData(String username, String role) {
     }
 }
-
-

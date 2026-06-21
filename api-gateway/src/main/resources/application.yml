@@ -73,6 +73,9 @@ spring:
           filters:
             - StripPrefix=0
 
+jwt:
+  secret: miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte
+
 eureka:
   client:
     service-url:
