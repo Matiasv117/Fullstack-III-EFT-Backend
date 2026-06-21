@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Estrategia FIFO: reasigna la cita al paciente con menor ID en lista de espera.
+ */
 @Component
 public class EstrategiaFIFO implements EstrategiaOptimizacion {
 
@@ -22,6 +25,11 @@ public class EstrategiaFIFO implements EstrategiaOptimizacion {
     @Autowired
     private CitaService citaService;
 
+    /**
+     * Reasigna la cita al primer paciente disponible en lista de espera (FIFO).
+     *
+     * @param citaCancelada cita cancelada a reasignar
+     */
     @Override
     public void reasignarCita(Cita citaCancelada) {
         List<ListaEsperaDTO> listaEspera = listaEsperaClient.getListaEspera();
