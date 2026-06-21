@@ -5,6 +5,7 @@ import com.saludrednorte.ms_auth.dto.LoginResponse;
 import com.saludrednorte.ms_auth.dto.RegisterRequest;
 import com.saludrednorte.ms_auth.entity.User;
 import com.saludrednorte.ms_auth.repository.UserRepository;
+import com.saludrednorte.ms_auth.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_auth.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,6 +38,9 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AuditEventPublisher auditEventPublisher;
+
     /**
      * Autentica credenciales y genera un token JWT.
      *
@@ -44,21 +48,27 @@ public class AuthService {
      * @return respuesta con token y datos del usuario
      */
     public LoginResponse login(LoginRequest loginRequest) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
-        String token = jwtUtil.generateToken(userDetails);
-        String role = userDetails.getAuthorities().stream()
-                .findFirst()
-                .map(authority -> authority.getAuthority())
-                .orElse("ROLE_USER");
+            UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+            String token = jwtUtil.generateToken(userDetails);
+            String role = userDetails.getAuthorities().stream()
+                    .findFirst()
+                    .map(authority -> authority.getAuthority())
+                    .orElse("ROLE_USER");
 
-        return new LoginResponse(token, userDetails.getUsername(), role);
+            auditEventPublisher.publicar(loginRequest.getUsername(), "LOGIN_EXITOSO", "Inicio de sesión exitoso");
+            return new LoginResponse(token, userDetails.getUsername(), role);
+        } catch (BadCredentialsException e) {
+            auditEventPublisher.publicar(loginRequest.getUsername(), "LOGIN_FALLIDO", "Credenciales inválidas");
+            throw e;
+        }
     }
 
     /**
@@ -78,6 +88,8 @@ public class AuthService {
                 request.getRole()
         );
         userRepository.save(user);
+
+        auditEventPublisher.publicar(user.getUsername(), "USUARIO_REGISTRADO", "Nuevo usuario registrado con rol " + user.getRole());
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         String token = jwtUtil.generateToken(userDetails);

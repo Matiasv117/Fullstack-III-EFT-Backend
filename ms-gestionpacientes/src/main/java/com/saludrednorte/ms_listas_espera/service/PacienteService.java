@@ -3,6 +3,7 @@ package com.saludrednorte.ms_listas_espera.service;
 import com.saludrednorte.ms_listas_espera.client.CitaClient;
 import com.saludrednorte.ms_listas_espera.dto.CitaDTO;
 import com.saludrednorte.ms_listas_espera.dto.MedicoDTO;
+import com.saludrednorte.ms_listas_espera.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
@@ -38,6 +39,9 @@ public class PacienteService {
 
     @Autowired
     private NotificacionEventPublisher notificacionEventPublisher;
+
+    @Autowired
+    private AuditEventPublisher auditEventPublisher;
 
     @Autowired
     private CitaClient citaClient;
@@ -91,6 +95,9 @@ public class PacienteService {
         } catch (Exception e) {
             logger.warn("Fallo al publicar notificación pero paciente registrado: {}", e.getMessage());
         }
+
+        auditEventPublisher.publicar("PACIENTE_REGISTRADO",
+                "Paciente ID " + savedPaciente.getId() + " - " + savedPaciente.getNombre() + " " + savedPaciente.getApellido());
 
         return savedPaciente;
     }

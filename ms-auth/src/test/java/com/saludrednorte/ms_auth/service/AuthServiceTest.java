@@ -4,6 +4,7 @@ import com.saludrednorte.ms_auth.dto.LoginRequest;
 import com.saludrednorte.ms_auth.dto.LoginResponse;
 import com.saludrednorte.ms_auth.dto.RegisterRequest;
 import com.saludrednorte.ms_auth.entity.User;
+import com.saludrednorte.ms_auth.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_auth.repository.UserRepository;
 import com.saludrednorte.ms_auth.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +48,9 @@ class AuthServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AuditEventPublisher auditEventPublisher;
 
     @InjectMocks
     private AuthService authService;

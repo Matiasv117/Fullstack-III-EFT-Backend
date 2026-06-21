@@ -2,6 +2,7 @@ package com.saludrednorte.ms_optimizacion.service;
 
 import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
+import com.saludrednorte.ms_optimizacion.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_optimizacion.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -38,6 +39,9 @@ public class OptimizacionService {
     private NotificacionEventPublisher notificacionEventPublisher;
 
     @Autowired
+    private AuditEventPublisher auditEventPublisher;
+
+    @Autowired
     private PrioridadCalculadora prioridadCalculadora;
 
     /**
@@ -69,6 +73,9 @@ public class OptimizacionService {
             } catch (Exception e) {
                 logger.warn("Fallo al publicar reasignación de cita {} : {}", citaCancelada.getId(), e.getMessage());
             }
+
+            auditEventPublisher.publicar("sistema", "CITA_OPTIMIZADA",
+                    "Cita ID " + citaCancelada.getId() + " reasignada para paciente " + citaCancelada.getPacienteId());
         }
     }
 
