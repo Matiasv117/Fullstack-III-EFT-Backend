@@ -18,6 +18,22 @@ export const authApi = {
   },
 
   /**
+   * Inicia sesión como paciente usando datos personales
+   * @param {string} nombre - Nombre del paciente
+   * @param {string} apellido - Apellido del paciente
+   * @param {string} rut - RUT del paciente
+   * @returns {Promise} Respuesta con token JWT y datos del paciente
+   */
+  loginPaciente: async (nombre, apellido, rut) => {
+    const response = await httpClient.post(`${API_BASE_URL}/login-paciente`, {
+      nombre,
+      apellido,
+      rut,
+    });
+    return response.data;
+  },
+
+  /**
    * Valida un token JWT
    * @param {string} token - Token JWT a validar
    * @returns {Promise} Respuesta indicando si el token es válido

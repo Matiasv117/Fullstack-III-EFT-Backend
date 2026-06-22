@@ -106,4 +106,27 @@ public class PacienteController {
             @Parameter(description = "ID del paciente") @PathVariable Long id) {
         pacienteService.eliminarPaciente(id);
     }
+
+    /**
+     * Busca un paciente por nombre, apellido y RUT.
+     *
+     * @param nombre el nombre del paciente
+     * @param apellido el apellido del paciente
+     * @param dni el RUT/DNI del paciente
+     * @return ResponseEntity con el paciente si existe, 404 si no existe
+     */
+    @GetMapping("/buscar")
+    @Operation(summary = "Buscar paciente por datos personales", description = "Busca un paciente por nombre, apellido y RUT")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Paciente encontrado"),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado")
+    })
+    public ResponseEntity<Paciente> buscarPaciente(
+            @Parameter(description = "Nombre del paciente") @RequestParam String nombre,
+            @Parameter(description = "Apellido del paciente") @RequestParam String apellido,
+            @Parameter(description = "RUT/DNI del paciente") @RequestParam String dni) {
+        return pacienteService.buscarPorNombreApellidoDni(nombre, apellido, dni)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

@@ -169,4 +169,16 @@ public class PacienteService {
         }
         pacienteRepository.deleteById(id);
     }
+
+    /**
+     * Busca un paciente por nombre, apellido y RUT.
+     *
+     * @param nombre el nombre del paciente
+     * @param apellido el apellido del paciente
+     * @param dni el RUT/DNI del paciente
+     * @return Optional con el paciente si existe, vacío si no existe
+     */
+    public Optional<Paciente> buscarPorNombreApellidoDni(String nombre, String apellido, String dni) {
+        return pacienteRepository.findByNombreIgnoreCaseAndApellidoIgnoreCaseAndDniIgnoreCase(nombre, apellido, dni);
+    }
 }

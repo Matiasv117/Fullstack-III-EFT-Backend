@@ -2,6 +2,7 @@ package com.saludrednorte.ms_auth.controller;
 
 import com.saludrednorte.ms_auth.dto.LoginRequest;
 import com.saludrednorte.ms_auth.dto.LoginResponse;
+import com.saludrednorte.ms_auth.dto.PacienteLoginRequest;
 import com.saludrednorte.ms_auth.dto.RegisterRequest;
 import com.saludrednorte.ms_auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,18 +44,29 @@ public class AuthController {
 
     /**
      * Registra un nuevo usuario en el sistema.
+     * Solo accesible para usuarios con rol ADMIN.
      *
      * @param request datos del usuario a registrar
      * @return respuesta HTTP con el token JWT del usuario creado
      */
     @PostMapping("/register")
-    @Operation(summary = "Registrar usuario", description = "Crea un nuevo usuario y retorna un token JWT")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+    @Operation(summary = "Registrar usuario", description = "Crea un nuevo usuario y retorna un token JWT (Solo ADMIN)")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request, @RequestHeader("Authorization") String token) {
         try {
+            // Verificar que el solicitante sea admin
+            Map<String, Object> userInfo = authService.getAuthenticatedUser(token);
+            String role = (String) userInfo.get("role");
+            
+            if (!"ROLE_ADMIN".equals(role)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Solo administradores pueden registrar funcionarios"));
+            }
+            
             LoginResponse response = authService.register(request);
             return ResponseEntity.status(201).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body(Map.of("error", "No autorizado"));
         }
     }
 
@@ -87,6 +99,23 @@ public class AuthController {
     public ResponseEntity<?> getAuthenticatedUser(@RequestHeader("Authorization") String token) {
         try {
             return ResponseEntity.ok(authService.getAuthenticatedUser(token));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Autentica un paciente usando sus datos personales (nombre, apellido, RUT).
+     * Si el paciente no existe, lo crea automáticamente.
+     *
+     * @param request datos del paciente (nombre, apellido, RUT)
+     * @return respuesta HTTP con el token JWT y datos del paciente
+     */
+    @PostMapping("/login-paciente")
+    @Operation(summary = "Login de paciente", description = "Autentica paciente por datos personales, crea si no existe")
+    public ResponseEntity<?> loginPaciente(@Valid @RequestBody PacienteLoginRequest request) {
+        try {
+            return ResponseEntity.ok(authService.loginPaciente(request));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
         }

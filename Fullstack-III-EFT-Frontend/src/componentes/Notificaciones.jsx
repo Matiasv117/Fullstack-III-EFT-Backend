@@ -3,7 +3,7 @@ import {
   enviarNotificacion as enviarNotificacionApi,
   obtenerNotificacionesPendientes,
 } from '../api/notificacionesApi';
-import { Bell, RefreshCw, Send, Check, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Bell, RefreshCw, Send, Check, AlertTriangle, AlertCircle, Zap } from 'lucide-react';
 
 function Notificaciones() {
   const [notificaciones, setNotificaciones] = useState([]);

@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { LogIn, User, Lock, AlertCircle } from 'lucide-react';
+import { LogIn, User, Lock, AlertCircle, UserCircle, IdCard } from 'lucide-react';
 import authApi from '../api/authApi';
 
 function Login({ onLoginSuccess }) {
+  const [loginType, setLoginType] = useState('paciente'); // 'paciente' o 'funcionario'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [rut, setRut] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -14,7 +18,13 @@ function Login({ onLoginSuccess }) {
     setIsLoading(true);
 
     try {
-      const response = await authApi.login(username, password);
+      let response;
+      
+      if (loginType === 'paciente') {
+        response = await authApi.loginPaciente(nombre, apellido, rut);
+      } else {
+        response = await authApi.login(username, password);
+      }
       
       // Guardar token en localStorage
       localStorage.setItem('token', response.token);
@@ -26,7 +36,7 @@ function Login({ onLoginSuccess }) {
       // Notificar al componente padre que el login fue exitoso
       onLoginSuccess(response);
     } catch (err) {
-      setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.');
+      setError(err.message || 'Error al iniciar sesión. Verifica tus datos.');
     } finally {
       setIsLoading(false);
     }
@@ -49,6 +59,34 @@ function Login({ onLoginSuccess }) {
             </p>
           </div>
 
+          {/* Login Type Selector */}
+          <div className="mb-6 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setLoginType('paciente')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+                loginType === 'paciente'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              <UserCircle className="w-5 h-5 inline mr-2" />
+              Soy Paciente
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginType('funcionario')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+                loginType === 'funcionario'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              <IdCard className="w-5 h-5 inline mr-2" />
+              Soy Funcionario
+            </button>
+          </div>
+
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
@@ -59,47 +97,116 @@ function Login({ onLoginSuccess }) {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username Field */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Usuario
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+            {loginType === 'paciente' ? (
+              <>
+                {/* Nombre Field */}
+                <div>
+                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nombre
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <UserCircle className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="nombre"
+                      type="text"
+                      value={nombre}
+                      onChange={(e) => setNombre(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                      placeholder="Ingresa tu nombre"
+                      required
+                    />
+                  </div>
                 </div>
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                  placeholder="Ingresa tu usuario"
-                  required
-                />
-              </div>
-            </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Contraseña
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                {/* Apellido Field */}
+                <div>
+                  <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Apellido
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <UserCircle className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="apellido"
+                      type="text"
+                      value={apellido}
+                      onChange={(e) => setApellido(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                      placeholder="Ingresa tu apellido"
+                      required
+                    />
+                  </div>
                 </div>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                  placeholder="Ingresa tu contraseña"
-                  required
-                />
-              </div>
-            </div>
+
+                {/* RUT Field */}
+                <div>
+                  <label htmlFor="rut" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    RUT
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <IdCard className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="rut"
+                      type="text"
+                      value={rut}
+                      onChange={(e) => setRut(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                      placeholder="Ingresa tu RUT"
+                      required
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Username Field */}
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Usuario
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="username"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                      placeholder="Ingresa tu usuario"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Password Field */}
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                      placeholder="Ingresa tu contraseña"
+                      required
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Submit Button */}
             <button
@@ -115,23 +222,36 @@ function Login({ onLoginSuccess }) {
               ) : (
                 <>
                   <LogIn className="w-5 h-5" />
-                  <span>Iniciar Sesión</span>
+                  <span>{loginType === 'paciente' ? 'Ingresar como Paciente' : 'Iniciar Sesión'}</span>
                 </>
               )}
             </button>
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
-              Credenciales de demostración:
-            </p>
-            <div className="space-y-1 text-xs text-blue-800 dark:text-blue-400">
-              <p><strong>Paciente:</strong> paciente / paciente123</p>
-              <p><strong>Funcionario:</strong> funcionario / funcionario123</p>
-              <p><strong>Admin:</strong> admin / admin123</p>
+          {loginType === 'funcionario' && (
+            <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
+                Credenciales de demostración:
+              </p>
+              <div className="space-y-1 text-xs text-blue-800 dark:text-blue-400">
+                <p><strong>Funcionario:</strong> funcionario / funcionario123</p>
+                <p><strong>Admin:</strong> admin / admin123</p>
+              </div>
             </div>
-          </div>
+          )}
+          
+          {loginType === 'paciente' && (
+            <div className="mt-8 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-sm font-medium text-green-900 dark:text-green-300 mb-2">
+                Información para pacientes:
+              </p>
+              <div className="space-y-1 text-xs text-green-800 dark:text-green-400">
+                <p>Ingresa tu nombre, apellido y RUT para acceder.</p>
+                <p>Si es tu primera vez, se creará tu perfil automáticamente.</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

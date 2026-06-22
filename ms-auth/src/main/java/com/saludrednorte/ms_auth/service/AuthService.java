@@ -2,9 +2,11 @@ package com.saludrednorte.ms_auth.service;
 
 import com.saludrednorte.ms_auth.dto.LoginRequest;
 import com.saludrednorte.ms_auth.dto.LoginResponse;
+import com.saludrednorte.ms_auth.dto.PacienteDTO;
+import com.saludrednorte.ms_auth.dto.PacienteLoginRequest;
 import com.saludrednorte.ms_auth.dto.RegisterRequest;
-import com.saludrednorte.ms_auth.entity.User;
 import com.saludrednorte.ms_auth.repository.UserRepository;
+import com.saludrednorte.ms_auth.client.PacienteClient;
 import com.saludrednorte.ms_auth.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_auth.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -40,6 +43,9 @@ public class AuthService {
 
     @Autowired
     private AuditEventPublisher auditEventPublisher;
+
+    @Autowired
+    private PacienteClient pacienteClient;
 
     /**
      * Autentica credenciales y genera un token JWT.
@@ -82,7 +88,7 @@ public class AuthService {
             throw new IllegalArgumentException("El nombre de usuario ya existe");
         }
 
-        User user = new User(
+        com.saludrednorte.ms_auth.entity.User user = new com.saludrednorte.ms_auth.entity.User(
                 request.getUsername(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getRole()
@@ -148,5 +154,63 @@ public class AuthService {
                 "role", role,
                 "message", "Acceso autorizado a endpoint privado"
         );
+    }
+
+    /**
+     * Autentica un paciente usando sus datos personales (nombre, apellido, RUT).
+     * Si el paciente no existe, lo crea automáticamente.
+     *
+     * @param request datos del paciente (nombre, apellido, RUT)
+     * @return respuesta con token JWT y datos del paciente
+     */
+    public LoginResponse loginPaciente(PacienteLoginRequest request) {
+        try {
+            // Buscar paciente en ms-gestionpacientes
+            PacienteDTO paciente = pacienteClient.buscarPaciente(
+                    request.getNombre(),
+                    request.getApellido(),
+                    request.getRut()
+            );
+
+            // Si el paciente no existe, crearlo
+            if (paciente == null) {
+                PacienteDTO nuevoPaciente = new PacienteDTO(
+                        request.getNombre(),
+                        request.getApellido(),
+                        request.getRut()
+                );
+                paciente = pacienteClient.crearPaciente(nuevoPaciente);
+                auditEventPublisher.publicar(
+                        "PACIENTE_" + request.getRut(),
+                        "PACIENTE_CREADO_AUTO",
+                        "Paciente creado automáticamente: " + request.getNombre() + " " + request.getApellido()
+                );
+            }
+
+            // Crear UserDetails para el paciente
+            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                    "PACIENTE_" + paciente.getId(),
+                    "",
+                    new ArrayList<>()
+            );
+
+            // Generar token JWT
+            String token = jwtUtil.generateToken(userDetails);
+
+            auditEventPublisher.publicar(
+                    "PACIENTE_" + paciente.getId(),
+                    "LOGIN_PACIENTE_EXITOSO",
+                    "Login exitoso para paciente: " + paciente.getNombre() + " " + paciente.getApellido()
+            );
+
+            return new LoginResponse(token, "PACIENTE_" + paciente.getId(), "ROLE_PACIENTE");
+        } catch (Exception e) {
+            auditEventPublisher.publicar(
+                    "PACIENTE_" + request.getRut(),
+                    "LOGIN_PACIENTE_FALLIDO",
+                    "Error en login de paciente: " + e.getMessage()
+            );
+            throw new BadCredentialsException("Error al autenticar paciente: " + e.getMessage());
+        }
     }
 }

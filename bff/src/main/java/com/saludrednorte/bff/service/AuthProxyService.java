@@ -2,6 +2,7 @@ package com.saludrednorte.bff.service;
 
 import com.saludrednorte.bff.dto.LoginRequest;
 import com.saludrednorte.bff.dto.LoginResponse;
+import com.saludrednorte.bff.dto.PacienteLoginRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -58,6 +59,19 @@ public class AuthProxyService {
         return authWebClient.get()
                 .uri("/api/auth/me")
                 .header("Authorization", authorizationHeader)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+    }
+
+    /**
+     * Delega el login de paciente al microservicio ms-auth.
+     */
+    public Map<String, Object> loginPaciente(PacienteLoginRequest request) {
+        return authWebClient.post()
+                .uri("/api/auth/login-paciente")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();

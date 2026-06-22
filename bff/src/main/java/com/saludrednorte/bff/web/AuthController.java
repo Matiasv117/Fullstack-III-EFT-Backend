@@ -1,6 +1,7 @@
 package com.saludrednorte.bff.web;
 
 import com.saludrednorte.bff.dto.LoginRequest;
+import com.saludrednorte.bff.dto.PacienteLoginRequest;
 import com.saludrednorte.bff.service.AuthProxyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -67,6 +68,23 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "No autenticado"));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("error", "Error al obtener usuario autenticado"));
+        }
+    }
+
+    /**
+     * Endpoint para login de pacientes que delega a ms-auth.
+     *
+     * @param request datos del paciente (nombre, apellido, RUT)
+     * @return respuesta con el token JWT y datos del paciente
+     */
+    @PostMapping("/login-paciente")
+    public ResponseEntity<?> loginPaciente(@RequestBody PacienteLoginRequest request) {
+        try {
+            return ResponseEntity.ok(authProxyService.loginPaciente(request));
+        } catch (WebClientResponseException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error al procesar login de paciente"));
         }
     }
 }
