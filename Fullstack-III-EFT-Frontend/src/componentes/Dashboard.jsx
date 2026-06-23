@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 
-const Dashboard = () => {
+const Dashboard = ({ user }) => {
+  const isPaciente = user?.role === 'ROLE_PACIENTE';
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncErrorResolved, setSyncErrorResolved] = useState(false)
 
@@ -41,6 +42,88 @@ const Dashboard = () => {
     { id: 3, name: 'Roberto Gómez', initials: 'RG', type: 'Laboratorios', time: '12:00 PM', status: 'Retrasado', statusColor: 'error' },
   ]
 
+  if (isPaciente) {
+    return (
+      <main className="ml-[260px] pt-24 p-gutter min-h-screen">
+        <div className="max-w-[1400px] mx-auto flex flex-col gap-gutter">
+          
+          {/* Hero Banner del Paciente */}
+          <section className="fade-in-up stagger-1 relative overflow-hidden rounded-xl bg-primary-fixed-dim min-h-[200px] flex items-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-[#00174b] opacity-95"></div>
+            <div className="relative z-10 px-12 py-10 flex justify-between w-full items-center">
+              <div className="max-w-2xl">
+                <span className="inline-block px-3 py-1 bg-white/10 text-white rounded-full font-label-bold text-label-bold mb-4 backdrop-blur-md">
+                  PORTAL DEL PACIENTE
+                </span>
+                <h2 className="font-display-hero text-display-hero text-white mb-2">
+                  Bienvenido a tu Portal de Salud
+                </h2>
+                <p className="font-body-lg text-body-lg text-white/80">
+                  Aquí puedes revisar el estado de tu ficha, tus citas médicas programadas y tu situación en la lista de espera.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Grid de Contenido Bento del Paciente */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter fade-in-up stagger-3">
+            
+            {/* Card Cita */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/50 transition-all duration-500 group cursor-pointer hover:scale-105">
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                  <span className="material-symbols-outlined">event_available</span>
+                </div>
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-label-bold text-[11px] font-bold">CONFIRMADA</span>
+              </div>
+              <h3 className="text-on-surface-variant font-label-bold mb-1">Próxima Cita Médica</h3>
+              <div className="flex flex-col gap-1 mt-2">
+                <span className="font-headline-md text-on-surface text-xl font-bold">Consulta de Medicina General</span>
+                <span className="text-on-surface-variant text-body-md">Mañana a las 10:30 AM</span>
+                <span className="text-on-surface-variant text-xs mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs text-primary">pin_drop</span>
+                  Edificio Central - Consultorio 104
+                </span>
+              </div>
+            </div>
+
+            {/* Card Lista de Espera */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-tertiary/50 transition-all duration-500 group cursor-pointer hover:scale-105">
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-12 h-12 bg-tertiary-fixed rounded-lg flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-white transition-all duration-500">
+                  <span className="material-symbols-outlined">list_alt</span>
+                </div>
+                <span className="px-3 py-1 bg-tertiary-container text-on-tertiary-container rounded-full font-label-bold text-[11px] font-bold">EN PROCESO</span>
+              </div>
+              <h3 className="text-on-surface-variant font-label-bold mb-1">Tu Estado en Lista de Espera</h3>
+              <div className="flex flex-col gap-1 mt-2">
+                <span className="font-headline-md text-on-surface text-xl font-bold">Prioridad de Atención: Media</span>
+                <span className="text-on-surface-variant text-body-md">Tu solicitud de interconsulta ha sido recibida y está siendo procesada para su asignación rápida.</span>
+              </div>
+            </div>
+
+            {/* Card Notificaciones */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/50 transition-all duration-500 group cursor-pointer hover:scale-105">
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-12 h-12 bg-secondary-container rounded-lg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                  <span className="material-symbols-outlined">notifications_active</span>
+                </div>
+                <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded font-label-bold text-[10px] font-bold">NUEVO</span>
+              </div>
+              <h3 className="text-on-surface-variant font-label-bold mb-1">Mensajes Recientes</h3>
+              <div className="flex flex-col gap-1 mt-2">
+                <span className="font-headline-md text-on-surface text-md font-bold">¡Registro Exitoso!</span>
+                <span className="text-on-surface-variant text-body-sm">Tu cuenta de paciente ha sido creada y vinculada automáticamente con tu RUT. Ya estás registrado en el sistema de Salud Red Norte.</span>
+              </div>
+            </div>
+
+          </section>
+
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="ml-[260px] pt-24 p-gutter min-h-screen">
       <div className="max-w-[1400px] mx-auto flex flex-col gap-gutter">
@@ -54,7 +137,7 @@ const Dashboard = () => {
                 SISTEMA DE SALUD PÚBLICA
               </span>
               <h2 className="font-display-hero text-display-hero text-white mb-2">
-                Bienvenido, Dr. Benjamín Ibañez
+                Bienvenido, {user?.username || 'Dr. Benjamín Ibañez'}
               </h2>
               <p className="font-body-lg text-body-lg text-white/80">
                 Hoy tienes 12 citas programadas y 4 reportes pendientes de revisión. Tu eficiencia operativa aumentó un 8% esta semana.

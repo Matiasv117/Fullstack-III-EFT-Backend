@@ -52,7 +52,7 @@ function App() {
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
-        return <Dashboard />
+        return <Dashboard user={user} />
       case 'pacientes':
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><GestionPacientes /></div>
       case 'clinicas':
@@ -80,6 +80,7 @@ function App() {
   return (
     <div className="bg-surface text-on-surface font-body-md overflow-x-hidden">
       <Sidebar 
+        user={user}
         activeSection={activeSection} 
         onSectionChange={setActiveSection}
         isDarkMode={isDarkMode}

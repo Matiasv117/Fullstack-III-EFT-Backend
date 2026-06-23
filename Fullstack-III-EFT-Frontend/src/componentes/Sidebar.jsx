@@ -1,22 +1,33 @@
 import { useState } from 'react'
 import logo2Logo from '../assets/logo2.png'
 
-const Sidebar = ({ activeSection, onSectionChange, isDarkMode, onToggleDarkMode }) => {
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { id: 'pacientes', label: 'Pacientes', icon: 'group' },
-    { id: 'clinicas', label: 'Clínicas', icon: 'medical_services' },
-    { id: 'reportes', label: 'Reportes', icon: 'analytics' },
-    { id: 'ajustes', label: 'Ajustes', icon: 'settings' },
-  ]
+const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDarkMode }) => {
+  const isPaciente = user?.role === 'ROLE_PACIENTE';
+
+  const menuItems = isPaciente
+    ? [
+      { id: 'dashboard', label: 'Mi Portal', icon: 'dashboard' },
+    ]
+    : [
+      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { id: 'pacientes', label: 'Pacientes', icon: 'group' },
+      { id: 'listaespera', label: 'Lista de Espera', icon: 'list_alt' },
+      { id: 'notificaciones', label: 'Notificaciones', icon: 'notifications' },
+      { id: 'optimizacion', label: 'Optimización', icon: 'query_stats' },
+      { id: 'clinicas', label: 'Clínicas', icon: 'medical_services' },
+      { id: 'reportes', label: 'Reportes', icon: 'analytics' },
+      { id: 'ajustes', label: 'Ajustes', icon: 'settings' },
+    ];
 
   return (
     <aside className="fixed left-0 top-0 h-full flex flex-col p-gutter bg-surface dark:bg-surface-dim w-sidebar-width z-50">
       <div className="flex items-center gap-3 mb-10 px-2">
-        <img src={logo2Logo} alt="RedNorte Logo" className="w-20 h-20 rounded-lg object-cover" />
+        <img src={logo2Logo} alt="RedNorte Logo" className="w-25 h20 rounded-lg object-cover" />
         <div>
           <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-dark">RedNorte</h1>
-          <p className="font-label-sm text-label-sm text-on-surface-variant">Administración Médica</p>
+          <p className="font-label-sm text-label-sm text-on-surface-variant">
+            {isPaciente ? 'Portal del Paciente' : 'Administración Médica'}
+          </p>
         </div>
       </div>
 
@@ -25,11 +36,10 @@ const Sidebar = ({ activeSection, onSectionChange, isDarkMode, onToggleDarkMode 
           <button
             key={item.id}
             onClick={() => onSectionChange(item.id)}
-            className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${
-              activeSection === item.id
-                ? 'sidebar-item-active'
-                : 'text-on-surface-variant hover:bg-surface-container-high'
-            }`}
+            className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${activeSection === item.id
+              ? 'sidebar-item-active'
+              : 'text-on-surface-variant hover:bg-surface-container-high'
+              }`}
           >
             <span
               className="material-symbols-outlined"
@@ -43,7 +53,7 @@ const Sidebar = ({ activeSection, onSectionChange, isDarkMode, onToggleDarkMode 
       </nav>
 
       <div className="mt-auto border-t border-outline-variant pt-6 flex flex-col gap-3">
-        <button 
+        <button
           onClick={onToggleDarkMode}
           className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg"
         >

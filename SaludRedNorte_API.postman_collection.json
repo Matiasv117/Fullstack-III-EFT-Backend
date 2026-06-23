@@ -1,0 +1,667 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+    "name": "Salud Red Norte - API Completa",
+    "description": "Colección de Postman para probar de extremo a extremo (E2E) todos los microservicios de la plataforma de salud pública Salud Red Norte, incluyendo el sistema de autenticación dual, gestión de pacientes, lista de espera, notificaciones, optimización de citas, auditoría y progreso de pacientes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Autenticación (ms-auth & BFF)",
+      "item": [
+        {
+          "name": "Login Funcionario / Administrador (Convencional)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set('authToken', response.token);",
+                  "        console.log('Token JWT guardado:', response.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{bffUrl}}/api/auth/login",
+              "host": [
+                "{{bffUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Inicia sesión con credenciales tradicionales de funcionario o administrador. Extrae automáticamente el token JWT y lo guarda en la variable de colección `authToken`."
+          }
+        },
+        {
+          "name": "Login Paciente (Autenticación Dual / Creación Auto)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set('authToken', response.token);",
+                  "        console.log('Token JWT de Paciente guardado:', response.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos\",\n  \"apellido\": \"Gómez\",\n  \"rut\": \"11.222.333-4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{bffUrl}}/api/auth/login-paciente",
+              "host": [
+                "{{bffUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login-paciente"
+              ]
+            },
+            "description": "Inicia sesión como paciente ingresando nombre, apellido y RUT. Si es la primera vez del paciente, el backend lo registra automáticamente sin necesidad de registro manual."
+          }
+        },
+        {
+          "name": "Validar Token JWT",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{bffUrl}}/api/auth/validate",
+              "host": [
+                "{{bffUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "validate"
+              ]
+            },
+            "description": "Delega al BFF para validar si el token actual de la variable `authToken` sigue siendo válido y no ha expirado."
+          }
+        },
+        {
+          "name": "Obtener Mi Información (Usuario Actual)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{bffUrl}}/api/auth/me",
+              "host": [
+                "{{bffUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Obtiene los detalles del usuario autenticado (nombre de usuario y rol) asociados al token de la variable `authToken`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Gestión de Pacientes (ms-gestionpacientes)",
+      "item": [
+        {
+          "name": "Registrar Nuevo Paciente (Manual/Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"María\",\n  \"apellido\": \"Fernández\",\n  \"dni\": \"87654321-K\",\n  \"email\": \"maria@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/pacientes",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "pacientes"
+              ]
+            },
+            "description": "Registra un nuevo paciente de manera explícita en el sistema. Genera automáticamente una cita de cortesía con el primer médico libre y un evento en notificaciones."
+          }
+        },
+        {
+          "name": "Listar Todos los Pacientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/pacientes",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "pacientes"
+              ]
+            },
+            "description": "Obtiene la lista de todos los pacientes registrados en la base de datos PostgreSQL."
+          }
+        },
+        {
+          "name": "Buscar Paciente por Datos Personales",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/pacientes/buscar?nombre=María&apellido=Fernández&dni=87654321-K",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "pacientes",
+                "buscar"
+              ],
+              "query": [
+                {
+                  "key": "nombre",
+                  "value": "María"
+                },
+                {
+                  "key": "apellido",
+                  "value": "Fernández"
+                },
+                {
+                  "key": "dni",
+                  "value": "87654321-K"
+                }
+              ]
+            },
+            "description": "Busca un paciente específico mediante su coincidencia exacta de nombre, apellido y RUT/DNI. Este endpoint es público a nivel de microservicio para habilitar la validación en el login de pacientes."
+          }
+        },
+        {
+          "name": "Obtener Paciente por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/pacientes/1",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "pacientes",
+                "1"
+              ]
+            },
+            "description": "Obtiene la información de un paciente específico a través de su ID numérico."
+          }
+        },
+        {
+          "name": "Actualizar Paciente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"nombre\": \"María José\",\n  \"apellido\": \"Fernández\",\n  \"dni\": \"87654321-K\",\n  \"email\": \"mariajose@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/pacientes",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "pacientes"
+              ]
+            },
+            "description": "Actualiza la información personal de un paciente existente. Invalida los datos guardados en caché Redis automáticamente."
+          }
+        },
+        {
+          "name": "Eliminar Paciente por ID",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/pacientes/1",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "pacientes",
+                "1"
+              ]
+            },
+            "description": "Elimina un paciente del sistema y limpia su registro de caché de forma síncrona."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Lista de Espera",
+      "item": [
+        {
+          "name": "Agregar Paciente a Lista de Espera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paciente\": {\n    \"id\": 1\n  },\n  \"gravedad\": \"MEDIA\",\n  \"interconsulta\": \"Derivación médica por dolores lumbares agudos\",\n  \"estado\": \"PENDIENTE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/lista-espera",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "lista-espera"
+              ]
+            },
+            "description": "Añade un paciente registrado a la lista de espera de especialidades clínicas."
+          }
+        },
+        {
+          "name": "Obtener Lista de Espera Activa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/lista-espera",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "lista-espera"
+              ]
+            },
+            "description": "Lista a todas las personas en espera. Utiliza caché de Redis para optimizar los tiempos de respuesta del endpoint."
+          }
+        },
+        {
+          "name": "Actualizar Estado en Lista de Espera",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/lista-espera/1/estado/EN_PROCESO",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "lista-espera",
+                "1",
+                "estado",
+                "EN_PROCESO"
+              ]
+            },
+            "description": "Cambia el estado de una derivación en lista de espera (por ejemplo, de PENDIENTE a EN_PROCESO o COMPLETADO)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Notificaciones (ms-notificaciones)",
+      "item": [
+        {
+          "name": "Obtener Historial de Notificaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/notifications",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications"
+              ]
+            },
+            "description": "Consulta todas las notificaciones registradas en el microservicio ms-notificaciones."
+          }
+        },
+        {
+          "name": "Obtener Notificaciones Pendientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/notifications/pendientes",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "pendientes"
+              ]
+            },
+            "description": "Lista únicamente las notificaciones que tienen estado PENDIENTE y que aún no han sido transmitidas al paciente por ningún canal físico."
+          }
+        },
+        {
+          "name": "Enviar Todas las Notificaciones Pendientes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/notifications/enviar-todas",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "enviar-todas"
+              ]
+            },
+            "description": "Procesa masivamente el envío de todas las notificaciones pendientes a través de los canales correspondientes (SMS, EMAIL, etc.)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Optimización (ms-optimizacion)",
+      "item": [
+        {
+          "name": "Obtener Prioridades de la Lista de Espera",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/optimizacion/lista-espera",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "optimizacion",
+                "lista-espera"
+              ]
+            },
+            "description": "Llama al microservicio de optimización para que analice la lista de espera de pacientes mediante algoritmos de prioridad por gravedad clínica, distancia y días de espera."
+          }
+        },
+        {
+          "name": "Reasignar Cita Médica por Cancelación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/optimizacion/cancelar-cita?citaId=1&estrategiaTipo=POR_GRAVEDAD",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "optimizacion",
+                "cancelar-cita"
+              ],
+              "query": [
+                {
+                  "key": "citaId",
+                  "value": "1"
+                },
+                {
+                  "key": "estrategiaTipo",
+                  "value": "POR_GRAVEDAD",
+                  "description": "Estrategia: FIFO o POR_GRAVEDAD"
+                }
+              ]
+            },
+            "description": "Simula la cancelación de un horario de cita y ejecuta una estrategia de reasignación automática para otorgar el horario liberado al paciente con mayor prioridad en lista de espera."
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Auditoría (ms-auditoria)",
+      "item": [
+        {
+          "name": "Listar Todos los Eventos de Auditoría",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/auditoria/eventos",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "eventos"
+              ]
+            },
+            "description": "Obtiene el registro histórico global de auditoría (logs de seguridad, registros, logins exitosos/fallidos) almacenados asíncronamente vía RabbitMQ."
+          }
+        },
+        {
+          "name": "Filtrar Auditoría por Usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/auditoria/eventos/usuario/admin",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "eventos",
+                "usuario",
+                "admin"
+              ]
+            },
+            "description": "Filtra la bitácora de auditoría para consultar las acciones realizadas por un usuario específico (ej: `admin`, `funcionario`)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Progreso del Paciente (ms-progreso)",
+      "item": [
+        {
+          "name": "Consultar Historial de Progreso de un Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayUrl}}/api/progreso/paciente/1",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "progreso",
+                "paciente",
+                "1"
+              ]
+            },
+            "description": "Obtiene el estado de avance, consultas realizadas, recetas y progreso general de tratamiento médico para el paciente indicado."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "bffUrl",
+      "value": "http://localhost:8097",
+      "type": "string"
+    },
+    {
+      "key": "gatewayUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
