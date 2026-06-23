@@ -8,11 +8,11 @@
 		<version>3.4.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>saludrednorte</groupId>
-	<artifactId>ms-listas-espera</artifactId>
+	<groupId>com.saludrednorte</groupId>
+	<artifactId>ms-gestionpacientes</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>ms-gestionpacientes</name>
+	<description>Microservicio de gestión de pacientes y listas de espera - Red Norte</description>
 	<url/>
 	<licenses>
 		<license/>

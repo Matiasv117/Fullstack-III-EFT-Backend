@@ -1,5 +1,31 @@
 spring:
+  application:
+    name: ms-auditoria-test
+  datasource:
+    url: jdbc:h2:mem:auditoriatestdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
   rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
     listener:
       simple:
         auto-startup: false
+
+jwt:
+  secret: testSecretKeyParaTestsUnitarios1234567890
+  expiration: 86400000
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false

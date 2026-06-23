@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: bff-test
+  main:
+    web-application-type: none
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+jwt:
+  secret: testSecretKeyParaTestsUnitarios1234567890
+
+bff:
+  downstream:
+    base-url: http://localhost:8080

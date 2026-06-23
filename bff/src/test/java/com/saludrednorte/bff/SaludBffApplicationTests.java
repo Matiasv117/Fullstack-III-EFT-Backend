@@ -9,4 +9,5 @@ class SaludBffApplicationTests {
     @Test
     void contextLoads() {
     }
+
 }

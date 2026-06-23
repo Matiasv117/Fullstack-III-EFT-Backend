@@ -72,10 +72,13 @@ class AuthControllerTest {
     @Test
     void register_debeRetornar201CuandoUsuarioEsNuevo() throws Exception {
         RegisterRequest request = new RegisterRequest("nuevo", "clave123", "ROLE_PACIENTE");
+        when(authService.getAuthenticatedUser(anyString()))
+                .thenReturn(Map.of("role", "ROLE_ADMIN"));
         when(authService.register(any(RegisterRequest.class)))
                 .thenReturn(new LoginResponse("token", "nuevo", "ROLE_PACIENTE"));
 
         mockMvc.perform(post("/api/auth/register")
+                        .header("Authorization", "Bearer token-admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -85,10 +88,13 @@ class AuthControllerTest {
     @Test
     void register_debeRetornar409CuandoUsuarioYaExiste() throws Exception {
         RegisterRequest request = new RegisterRequest("admin", "admin123", "ROLE_ADMIN");
+        when(authService.getAuthenticatedUser(anyString()))
+                .thenReturn(Map.of("role", "ROLE_ADMIN"));
         when(authService.register(any(RegisterRequest.class)))
                 .thenThrow(new IllegalArgumentException("El nombre de usuario ya existe"));
 
         mockMvc.perform(post("/api/auth/register")
+                        .header("Authorization", "Bearer token-admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
