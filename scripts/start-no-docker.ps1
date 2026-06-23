@@ -107,68 +107,8 @@ function Start-ServiceWindow {
 
     Write-Host "[START] $($Service.Name)" -ForegroundColor Cyan
     
-    # Si existe local-insforge.env, leer variables y pasarlas explícitamente
-    $envFile = Join-Path $root 'config\local-insforge.env'
+    # Usar el comando directamente sin variables de entorno personalizadas
     $startCmd = $Service.Command
-    
-    if (Test-Path $envFile) {
-        # Leer variables del archivo
-        $springProfiles = ""
-        $dbUrl = ""
-        $dbUsername = ""
-        $dbPassword = ""
-        $dbDriver = ""
-        $dbDialect = ""
-        $rabbitmqHost = ""
-        $rabbitmqPort = ""
-        $rabbitmqUsername = ""
-        $rabbitmqPassword = ""
-        $redisHost = ""
-        $redisPort = ""
-        
-        Get-Content $envFile | ForEach-Object {
-            $line = $_.Trim()
-            if ($line -eq '' -or $line.StartsWith('#')) { return }
-            if ($line -match '^([^#=]+)=(.*)$') {
-                $name = $matches[1].Trim()
-                $val = $matches[2].Trim()
-                
-                switch ($name) {
-                    "SPRING_PROFILES_ACTIVE" { $springProfiles = $val }
-                    "DB_URL" { $dbUrl = $val }
-                    "DB_USERNAME" { $dbUsername = $val }
-                    "DB_PASSWORD" { $dbPassword = $val }
-                    "DB_DRIVER" { $dbDriver = $val }
-                    "DB_DIALECT" { $dbDialect = $val }
-                    "RABBITMQ_HOST" { $rabbitmqHost = $val }
-                    "RABBITMQ_PORT" { $rabbitmqPort = $val }
-                    "RABBITMQ_USERNAME" { $rabbitmqUsername = $val }
-                    "RABBITMQ_PASSWORD" { $rabbitmqPassword = $val }
-                    "REDIS_HOST" { $redisHost = $val }
-                    "REDIS_PORT" { $redisPort = $val }
-                }
-            }
-        }
-        
-        # Construir comando con variables de entorno explícitas
-        $envVars = @()
-        if ($springProfiles) { $envVars += "`$env:SPRING_PROFILES_ACTIVE='$springProfiles'" }
-        if ($dbUrl) { $envVars += "`$env:DB_URL='$dbUrl'" }
-        if ($dbUsername) { $envVars += "`$env:DB_USERNAME='$dbUsername'" }
-        if ($dbPassword) { $envVars += "`$env:DB_PASSWORD='$dbPassword'" }
-        if ($dbDriver) { $envVars += "`$env:DB_DRIVER='$dbDriver'" }
-        if ($dbDialect) { $envVars += "`$env:DB_DIALECT='$dbDialect'" }
-        if ($rabbitmqHost) { $envVars += "`$env:RABBITMQ_HOST='$rabbitmqHost'" }
-        if ($rabbitmqPort) { $envVars += "`$env:RABBITMQ_PORT='$rabbitmqPort'" }
-        if ($rabbitmqUsername) { $envVars += "`$env:RABBITMQ_USERNAME='$rabbitmqUsername'" }
-        if ($rabbitmqPassword) { $envVars += "`$env:RABBITMQ_PASSWORD='$rabbitmqPassword'" }
-        if ($redisHost) { $envVars += "`$env:REDIS_HOST='$redisHost'" }
-        if ($redisPort) { $envVars += "`$env:REDIS_PORT='$redisPort'" }
-        
-        if ($envVars.Count -gt 0) {
-            $startCmd = ($envVars -join '; ') + '; ' + $Service.Command
-        }
-    }
     
     return Start-Process -FilePath powershell.exe `
         -WorkingDirectory $Service.Path `

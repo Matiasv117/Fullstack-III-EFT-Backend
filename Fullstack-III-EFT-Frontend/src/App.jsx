@@ -7,6 +7,8 @@ import ListaEspera from './componentes/ListaEspera'
 import Notificaciones from './componentes/Notificaciones'
 import Optimizacion from './componentes/Optimizacion'
 import Login from './componentes/Login'
+import ClinicalOptions from './componentes/ClinicalOptions'
+import Ayuda from './componentes/Ayuda'
 
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard')
@@ -49,6 +51,10 @@ function App() {
     setActiveSection('dashboard')
   }
 
+  const handleShowAyuda = () => {
+    setActiveSection('ayuda')
+  }
+
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
@@ -56,7 +62,7 @@ function App() {
       case 'pacientes':
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><GestionPacientes /></div>
       case 'clinicas':
-        return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Clínicas</h1></div>
+        return <ClinicalOptions />
       case 'reportes':
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Reportes</h1></div>
       case 'ajustes':
@@ -67,6 +73,8 @@ function App() {
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><Notificaciones /></div>
       case 'optimizacion':
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><Optimizacion /></div>
+      case 'ayuda':
+        return <Ayuda />
       default:
         return <Dashboard />
     }
@@ -85,6 +93,8 @@ function App() {
         onSectionChange={setActiveSection}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        onLogout={handleLogout}
+        onShowAyuda={handleShowAyuda}
       />
       <TopNavBar user={user} onLogout={handleLogout} />
       {renderContent()}

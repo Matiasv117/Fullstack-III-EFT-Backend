@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import logo2Logo from '../assets/logo2.png'
 
-const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDarkMode }) => {
+const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDarkMode, onLogout, onShowAyuda }) => {
   const isPaciente = user?.role === 'ROLE_PACIENTE';
 
   const menuItems = isPaciente
@@ -64,11 +64,17 @@ const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDar
             {isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
           </span>
         </button>
-        <button className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg">
+        <button 
+          onClick={onShowAyuda}
+          className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg"
+        >
           <span className="material-symbols-outlined">help</span>
           <span className="font-body-md text-body-md">Ayuda</span>
         </button>
-        <button className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg">
+        <button 
+          onClick={onLogout}
+          className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg"
+        >
           <span className="material-symbols-outlined text-error">logout</span>
           <span className="font-body-md text-body-md">Cerrar Sesión</span>
         </button>

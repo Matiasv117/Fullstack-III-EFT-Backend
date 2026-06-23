@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 const Dashboard = ({ user }) => {
   const isPaciente = user?.role === 'ROLE_PACIENTE';
   const [isSyncing, setIsSyncing] = useState(false)
-  const [syncErrorResolved, setSyncErrorResolved] = useState(false)
+  const [syncErrorResolved, setSyncErrorResolved] = useState(true) // Por defecto resuelto ya que los servicios están funcionando
 
   const handleSyncRetry = () => {
     setIsSyncing(true)
