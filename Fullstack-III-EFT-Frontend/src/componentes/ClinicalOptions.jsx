@@ -3,9 +3,12 @@ import {
   Stethoscope, Calendar, FileText, Users, Activity, 
   Settings, ChevronRight, Clock, AlertCircle, CheckCircle
 } from 'lucide-react';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './Toast';
 
 function ClinicalOptions() {
   const [selectedOption, setSelectedOption] = useState(null);
+  const { toasts, removeToast, success, error, info } = useToast();
 
   const clinicalOptions = [
     {
@@ -15,21 +18,21 @@ function ClinicalOptions() {
       description: 'Programar y administrar consultas médicas',
       color: 'blue',
       items: [
-        { name: 'Agendar consulta', action: () => alert('Función de agendar consulta') },
-        { name: 'Ver calendario', action: () => alert('Función de calendario') },
-        { name: 'Historial de consultas', action: () => alert('Función de historial') },
+        { name: 'Agendar consulta', action: () => info('Módulo de Agenda: Cargando calendario...', 3000) },
+        { name: 'Ver calendario', action: () => info('Abriendo vista de calendario médico...', 3000) },
+        { name: 'Historial de consultas', action: () => info('Buscando historial de consultas...', 3000) },
       ]
     },
     {
       id: 'especialidades',
       icon: Users,
       title: 'Especialidades Médicas',
-      description: 'Administrar especialidades y médicos',
+      description: 'Administrar especialidades and médicos',
       color: 'green',
       items: [
-        { name: 'Lista de especialidades', action: () => alert('Función de especialidades') },
-        { name: 'Médicos disponibles', action: () => alert('Función de médicos') },
-        { name: 'Asignar especialidad', action: () => alert('Función de asignación') },
+        { name: 'Lista de especialidades', action: () => info('Obteniendo lista de especialidades activas...', 3000) },
+        { name: 'Médicos disponibles', action: () => info('Consultando staff de médicos de turno...', 3000) },
+        { name: 'Asignar especialidad', action: () => info('Abriendo asignador de especialidades...', 3000) },
       ]
     },
     {
@@ -39,9 +42,9 @@ function ClinicalOptions() {
       description: 'Gestionar exámenes médicos y resultados',
       color: 'purple',
       items: [
-        { name: 'Solicitar examen', action: () => alert('Función de solicitud') },
-        { name: 'Ver resultados', action: () => alert('Función de resultados') },
-        { name: 'Historial de exámenes', action: () => alert('Función de historial') },
+        { name: 'Solicitar examen', action: () => info('Abriendo formulario de solicitud de examen...', 3000) },
+        { name: 'Ver resultados', action: () => info('Cargando resultados de laboratorio...', 3000) },
+        { name: 'Historial de exámenes', action: () => info('Recuperando historial de exámenes del paciente...', 3000) },
       ]
     },
     {
@@ -51,9 +54,9 @@ function ClinicalOptions() {
       description: 'Manejo de casos urgentes',
       color: 'red',
       items: [
-        { name: 'Triaje de urgencias', action: () => alert('Función de triaje') },
-        { name: 'Casos activos', action: () => alert('Función de casos') },
-        { name: 'Protocolos de emergencia', action: () => alert('Función de protocolos') },
+        { name: 'Triaje de urgencias', action: () => info('Iniciando protocolo de clasificación de urgencias...', 3000) },
+        { name: 'Casos activos', action: () => info('Listando pacientes ingresados en box de urgencia...', 3000) },
+        { name: 'Protocolos de emergencia', action: () => info('Cargando manual de protocolos y procedimientos...', 3000) },
       ]
     },
     {
@@ -63,9 +66,9 @@ function ClinicalOptions() {
       description: 'Control de medicamentos y recetas',
       color: 'orange',
       items: [
-        { name: 'Inventario de medicamentos', action: () => alert('Función de inventario') },
-        { name: 'Generar recetas', action: () => alert('Función de recetas') },
-        { name: 'Control de stock', action: () => alert('Función de stock') },
+        { name: 'Inventario de medicamentos', action: () => info('Consultando stock actual de bodega...', 3000) },
+        { name: 'Generar recetas', action: () => info('Abriendo generador de recetas médicas digitales...', 3000) },
+        { name: 'Control de stock', action: () => info('Verificando alertas de bajo stock...', 3000) },
       ]
     },
     {
@@ -75,9 +78,9 @@ function ClinicalOptions() {
       description: 'Ajustes del sistema clínico',
       color: 'gray',
       items: [
-        { name: 'Horarios de atención', action: () => alert('Función de horarios') },
-        { name: 'Parámetros médicos', action: () => alert('Función de parámetros') },
-        { name: 'Integraciones', action: () => alert('Función de integraciones') },
+        { name: 'Horarios de atención', action: () => info('Configurando rango de atención por bloques...', 3000) },
+        { name: 'Parámetros médicos', action: () => info('Abriendo edición de constantes y parámetros clínicos...', 3000) },
+        { name: 'Integraciones', action: () => info('Verificando canales de integración con Fonasa...', 3000) },
       ]
     }
   ];
@@ -101,8 +104,10 @@ function ClinicalOptions() {
   };
 
   return (
-    <div className="ml-[260px] pt-24 p-gutter min-h-screen">
-      <div className="max-w-7xl mx-auto">
+    <>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <div className="ml-[260px] pt-24 p-gutter min-h-screen">
+        <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Opciones Clínicas</h1>
           <p className="text-slate-600">Gestión integral de servicios médicos y clínicos</p>
@@ -180,6 +185,7 @@ function ClinicalOptions() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

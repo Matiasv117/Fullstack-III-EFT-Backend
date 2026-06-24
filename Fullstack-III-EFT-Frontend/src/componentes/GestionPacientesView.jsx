@@ -51,11 +51,23 @@ function GestionPacientesView({
   agregarALista,
   borrarPaciente,
   recargarPacientes,
+  searchTerm = '',
 }) {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [clinicalNotes, setClinicalNotes] = useState({});
   const [newNoteText, setNewNoteText] = useState('');
   const [refillStatus, setRefillStatus] = useState({});
+
+  const filteredPacientes = pacientes.filter((p) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (p.nombre && p.nombre.toLowerCase().includes(term)) ||
+      (p.apellido && p.apellido.toLowerCase().includes(term)) ||
+      (p.dni && p.dni.toLowerCase().includes(term)) ||
+      (p.email && p.email.toLowerCase().includes(term))
+    );
+  });
 
   const handleOpenProfile = (paciente) => {
     setSelectedPatient(paciente);
@@ -133,7 +145,7 @@ function GestionPacientesView({
           <div className="p-5 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
             <h3 className="font-bold text-on-surface">Pacientes registrados</h3>
             <span className="bg-primary-container text-primary text-xs px-2.5 py-1 rounded-full font-bold">
-              {pacientes.length} Registros
+              {filteredPacientes.length} Registros
             </span>
           </div>
 
@@ -148,14 +160,14 @@ function GestionPacientesView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant text-sm">
-                {pacientes.length === 0 ? (
+                {filteredPacientes.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-12 px-6 text-center text-on-surface-variant">
-                      No hay pacientes registrados todavía.
+                      No hay pacientes registrados que coincidan con la búsqueda.
                     </td>
                   </tr>
                 ) : (
-                  pacientes.map((paciente) => {
+                  filteredPacientes.map((paciente) => {
                     const extra = getMockDetails(paciente);
                     return (
                       <tr key={paciente.id} className="hover:bg-surface-container-low transition-colors">

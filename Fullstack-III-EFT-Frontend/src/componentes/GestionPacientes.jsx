@@ -1,10 +1,10 @@
 import GestionPacientesView from './GestionPacientesView';
 import { useGestionPacientes } from '../hooks/useGestionPacientes';
 
-function GestionPacientes() {
+function GestionPacientes({ searchTerm = '' }) {
   const gestionPacientes = useGestionPacientes();
 
-  return <GestionPacientesView {...gestionPacientes} />;
+  return <GestionPacientesView {...gestionPacientes} searchTerm={searchTerm} />;
 }
 
 export default GestionPacientes;

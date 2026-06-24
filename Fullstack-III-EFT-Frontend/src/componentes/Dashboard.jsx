@@ -1,17 +1,54 @@
 import { useState, useEffect } from 'react'
+import { obtenerPacientes, obtenerListaEspera } from '../api/gestionPacientesApi';
+import { obtenerNotificacionesPendientes } from '../api/notificacionesApi';
+import ConnectionStatus from './ConnectionStatus';
 
 const Dashboard = ({ user }) => {
   const isPaciente = user?.role === 'ROLE_PACIENTE';
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncErrorResolved, setSyncErrorResolved] = useState(true) // Por defecto resuelto ya que los servicios están funcionando
+  const [stats, setStats] = useState({
+    totalPacientes: 1284,
+    notificacionesPendientes: 4,
+    listaEsperaCount: 15,
+  });
 
   const handleSyncRetry = () => {
     setIsSyncing(true)
     setTimeout(() => {
       setIsSyncing(false)
       setSyncErrorResolved(true)
+      fetchRealData()
     }, 1500)
   }
+
+  const fetchRealData = async () => {
+    try {
+      const [pacientes, notificaciones, espera] = await Promise.allSettled([
+        obtenerPacientes(),
+        obtenerNotificacionesPendientes(),
+        obtenerListaEspera(),
+      ]);
+      
+      setStats({
+        totalPacientes: pacientes.status === 'fulfilled' && Array.isArray(pacientes.value) 
+          ? pacientes.value.length 
+          : 1284,
+        notificacionesPendientes: notificaciones.status === 'fulfilled' && Array.isArray(notificaciones.value) 
+          ? notificaciones.value.length 
+          : 4,
+        listaEsperaCount: espera.status === 'fulfilled' && Array.isArray(espera.value) 
+          ? espera.value.length 
+          : 15,
+      });
+    } catch (err) {
+      console.error("Error al cargar datos del backend en el Dashboard", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRealData();
+  }, []);
 
   useEffect(() => {
     const buttons = document.querySelectorAll('button')
@@ -219,7 +256,7 @@ const Dashboard = ({ user }) => {
             </div>
             <h3 className="text-on-surface-variant font-label-bold mb-1">Pacientes registrados</h3>
             <div className="flex items-baseline gap-2">
-              <span className="font-display-hero text-display-hero text-on-surface">1,284</span>
+              <span className="font-display-hero text-display-hero text-on-surface">{stats.totalPacientes.toLocaleString()}</span>
               <span className="text-on-surface-variant text-body-md">total</span>
             </div>
             <div className="mt-4 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
@@ -237,12 +274,12 @@ const Dashboard = ({ user }) => {
             </div>
             <h3 className="text-on-surface-variant font-label-bold mb-1">Notificaciones pendientes</h3>
             <div className="flex items-baseline gap-2">
-              <span className="font-display-hero text-display-hero text-on-surface">04</span>
+              <span className="font-display-hero text-display-hero text-on-surface">{stats.notificacionesPendientes.toString().padStart(2, '0')}</span>
               <span className="text-on-surface-variant text-body-md">mensajes</span>
             </div>
             <p className="mt-4 text-on-surface-variant font-body-md flex items-center gap-1">
               <span className="material-symbols-outlined text-[16px] text-tertiary">info</span>
-              2 requieren acción inmediata
+              {stats.notificacionesPendientes > 0 ? `${stats.notificacionesPendientes} requieren acción inmediata` : 'Ninguna requiere acción'}
             </p>
           </div>
 
@@ -346,6 +383,7 @@ const Dashboard = ({ user }) => {
 
           {/* Sidebar Content: Health Insights */}
           <div className="flex flex-col gap-gutter">
+            <ConnectionStatus compact={true} />
             <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:shadow-lg transition-shadow duration-300 h-full group cursor-pointer">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-primary">

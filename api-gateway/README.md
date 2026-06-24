@@ -39,7 +39,7 @@ http://localhost:8080/{nombre-servicio}/{ruta}
 
 Ejemplos:
 
-- `http://localhost:8080/ms-auth/auth/login` → ms-auth (puerto 8087)
+- `http://localhost:8080/api/auth/login` → ms-auth (puerto 8087)
 - `http://localhost:8080/ms-auditoria/auditoria/eventos` → ms-auditoria (puerto 8088)
 - `http://localhost:8080/ms-gestionpacientes/pacientes` → ms-gestionpacientes (puerto 8083)
 - `http://localhost:8080/ms-notificaciones/api/notificaciones` → ms-notificaciones (puerto 8085)

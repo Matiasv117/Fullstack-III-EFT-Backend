@@ -9,12 +9,15 @@ import Optimizacion from './componentes/Optimizacion'
 import Login from './componentes/Login'
 import ClinicalOptions from './componentes/ClinicalOptions'
 import Ayuda from './componentes/Ayuda'
+import Reportes from './componentes/Reportes'
+import Ajustes from './componentes/Ajustes'
 
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     // Verificar si hay un token guardado al cargar la aplicación
@@ -60,13 +63,22 @@ function App() {
       case 'dashboard':
         return <Dashboard user={user} />
       case 'pacientes':
-        return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><GestionPacientes /></div>
+        return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><GestionPacientes searchTerm={searchTerm} /></div>
       case 'clinicas':
         return <ClinicalOptions />
       case 'reportes':
-        return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Reportes</h1></div>
+        return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><Reportes /></div>
       case 'ajustes':
-        return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Ajustes</h1></div>
+        return (
+          <div className="ml-[260px] pt-24 p-gutter min-h-screen">
+            <Ajustes 
+              user={user} 
+              isDarkMode={isDarkMode} 
+              onToggleDarkMode={() => setIsDarkMode(!isDarkMode)} 
+              onLogout={handleLogout} 
+            />
+          </div>
+        )
       case 'listaespera':
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><ListaEspera /></div>
       case 'notificaciones':
@@ -96,7 +108,13 @@ function App() {
         onLogout={handleLogout}
         onShowAyuda={handleShowAyuda}
       />
-      <TopNavBar user={user} onLogout={handleLogout} />
+      <TopNavBar 
+        user={user} 
+        onLogout={handleLogout} 
+        searchValue={searchTerm} 
+        setSearchValue={setSearchTerm} 
+        onSearchFocus={() => setActiveSection('pacientes')} 
+      />
       {renderContent()}
     </div>
   )

@@ -3,8 +3,11 @@ import { obtenerListaEsperaOptimizada, cancelarCitaConEstrategia } from '../api/
 import { 
   Zap, Play, Filter, AlertTriangle, RefreshCw, ClipboardList, Info, ChevronDown
 } from 'lucide-react';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './Toast';
 
 function Optimizacion() {
+  const { toasts, removeToast, success, error: toastError, info } = useToast();
   const [listaEspera, setListaEspera] = useState([]);
   const [listaFiltrada, setListaFiltrada] = useState([]);
   const [cargando, setCargando] = useState(false);
@@ -61,9 +64,10 @@ function Optimizacion() {
       // Recargar la lista después de la cancelación
       const datos = await obtenerListaEsperaOptimizada();
       setListaEspera(Array.isArray(datos) ? datos : []);
+      const prevCitaId = citaAnclarId;
       setCitaAnclarId(null);
       // Mostrar mensaje de éxito
-      alert(`Cita ${citaAnclarId} cancelada y reasignada con estrategia ${estrategia}`);
+      success(`Cita ${prevCitaId} cancelada y reasignada con estrategia ${estrategia.toUpperCase()}`, 5000);
     } catch (errorCapturado) {
       setError(
         errorCapturado.message ||
@@ -94,7 +98,9 @@ function Optimizacion() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <div className="space-y-6">
       {/* Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
@@ -283,6 +289,7 @@ function Optimizacion() {
       </div>
 
     </div>
+    </>
   );
 }
 
