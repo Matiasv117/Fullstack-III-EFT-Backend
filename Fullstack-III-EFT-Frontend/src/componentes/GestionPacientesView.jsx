@@ -4,6 +4,7 @@ import {
   Calendar, User, CreditCard, Phone, Mail, MapPin, 
   Pill, X, ChevronDown, Check
 } from 'lucide-react'
+import { validarNombre, validarApellido, validarDNI, validarEmail, validarTelefono } from '../utils/validations'
 
 // Mock data generator for extra clinical profile details based on patient DNI/ID
 const getMockDetails = (paciente) => {
@@ -56,6 +57,7 @@ function GestionPacientesView({
   const [clinicalNotes, setClinicalNotes] = useState({});
   const [newNoteText, setNewNoteText] = useState('');
   const [refillStatus, setRefillStatus] = useState({});
+  const [erroresCampo, setErroresCampo] = useState({});
 
   const handleOpenProfile = (paciente) => {
     setSelectedPatient(paciente);
@@ -88,6 +90,38 @@ function GestionPacientesView({
         return copy;
       });
     }, 2000);
+  };
+
+  const validarFormulario = () => {
+    const errores = {};
+
+    const validNombre = validarNombre(nuevoPaciente.nombre);
+    if (!validNombre.valido) errores.nombre = validNombre.mensaje;
+
+    const validApellido = validarApellido(nuevoPaciente.apellido);
+    if (!validApellido.valido) errores.apellido = validApellido.mensaje;
+
+    const validDNI = validarDNI(nuevoPaciente.dni);
+    if (!validDNI.valido) errores.dni = validDNI.mensaje;
+
+    if (nuevoPaciente.telefono) {
+      const validTel = validarTelefono(nuevoPaciente.telefono);
+      if (!validTel.valido) errores.telefono = validTel.mensaje;
+    }
+
+    if (nuevoPaciente.email) {
+      const validMail = validarEmail(nuevoPaciente.email);
+      if (!validMail.valido) errores.email = validMail.mensaje;
+    }
+
+    setErroresCampo(errores);
+    return Object.keys(errores).length === 0;
+  };
+
+  const handleRegistrar = () => {
+    if (validarFormulario()) {
+      registrar();
+    }
   };
 
   return (
@@ -245,74 +279,144 @@ function GestionPacientesView({
             <h3 className="font-bold text-on-surface">Registrar nuevo paciente</h3>
           </div>
 
-          <form className="space-y-4 text-left">
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Nombre *</label>
-              <input
-                value={nuevoPaciente.nombre}
-                onChange={(event) => actualizarCampo('nombre', event.target.value)}
-                placeholder="Nombre *"
-                autoComplete="given-name"
-                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
-              />
-            </div>
+           <form className="space-y-4 text-left">
+             <div>
+               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Nombre *</label>
+               <input
+                 value={nuevoPaciente.nombre}
+                 onChange={(event) => {
+                   actualizarCampo('nombre', event.target.value);
+                   if (erroresCampo.nombre) {
+                     setErroresCampo(prev => ({ ...prev, nombre: '' }));
+                   }
+                 }}
+                 placeholder="Nombre *"
+                 autoComplete="given-name"
+                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm transition-all ${
+                   erroresCampo.nombre
+                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
+                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                 }`}
+               />
+               {erroresCampo.nombre && (
+                 <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1">
+                   <span>⚠</span> {erroresCampo.nombre}
+                 </p>
+               )}
+             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Apellido *</label>
-              <input
-                value={nuevoPaciente.apellido}
-                onChange={(event) => actualizarCampo('apellido', event.target.value)}
-                placeholder="Apellido *"
-                autoComplete="family-name"
-                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
-              />
-            </div>
+             <div>
+               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Apellido *</label>
+               <input
+                 value={nuevoPaciente.apellido}
+                 onChange={(event) => {
+                   actualizarCampo('apellido', event.target.value);
+                   if (erroresCampo.apellido) {
+                     setErroresCampo(prev => ({ ...prev, apellido: '' }));
+                   }
+                 }}
+                 placeholder="Apellido *"
+                 autoComplete="family-name"
+                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm transition-all ${
+                   erroresCampo.apellido
+                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
+                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                 }`}
+               />
+               {erroresCampo.apellido && (
+                 <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1">
+                   <span>⚠</span> {erroresCampo.apellido}
+                 </p>
+               )}
+             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">DNI *</label>
-              <input
-                value={nuevoPaciente.dni}
-                onChange={(event) => actualizarCampo('dni', event.target.value)}
-                placeholder="DNI *"
-                autoComplete="off"
-                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm font-mono transition-all"
-              />
-            </div>
+             <div>
+               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">DNI *</label>
+               <input
+                 value={nuevoPaciente.dni}
+                 onChange={(event) => {
+                   actualizarCampo('dni', event.target.value);
+                   if (erroresCampo.dni) {
+                     setErroresCampo(prev => ({ ...prev, dni: '' }));
+                   }
+                 }}
+                 placeholder="DNI *"
+                 autoComplete="off"
+                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm font-mono transition-all ${
+                   erroresCampo.dni
+                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
+                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                 }`}
+               />
+               {erroresCampo.dni && (
+                 <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1">
+                   <span>⚠</span> {erroresCampo.dni}
+                 </p>
+               )}
+             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Teléfono (opcional)</label>
-              <input
-                value={nuevoPaciente.telefono}
-                onChange={(event) => actualizarCampo('telefono', event.target.value)}
-                placeholder="Teléfono (opcional)"
-                autoComplete="tel"
-                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
-              />
-            </div>
+             <div>
+               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Teléfono (opcional)</label>
+               <input
+                 value={nuevoPaciente.telefono}
+                 onChange={(event) => {
+                   actualizarCampo('telefono', event.target.value);
+                   if (erroresCampo.telefono) {
+                     setErroresCampo(prev => ({ ...prev, telefono: '' }));
+                   }
+                 }}
+                 placeholder="Teléfono (opcional)"
+                 autoComplete="tel"
+                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm transition-all ${
+                   erroresCampo.telefono
+                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
+                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                 }`}
+               />
+               {erroresCampo.telefono && (
+                 <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1">
+                   <span>⚠</span> {erroresCampo.telefono}
+                 </p>
+               )}
+             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Correo electrónico (opcional)</label>
-              <input
-                type="email"
-                value={nuevoPaciente.email}
-                onChange={(event) => actualizarCampo('email', event.target.value)}
-                placeholder="Correo electrónico (opcional)"
-                autoComplete="email"
-                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
-              />
-            </div>
+             <div>
+               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Correo electrónico (opcional)</label>
+               <input
+                 type="email"
+                 value={nuevoPaciente.email}
+                 onChange={(event) => {
+                   actualizarCampo('email', event.target.value);
+                   if (erroresCampo.email) {
+                     setErroresCampo(prev => ({ ...prev, email: '' }));
+                   }
+                 }}
+                 placeholder="Correo electrónico (opcional)"
+                 autoComplete="email"
+                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm transition-all ${
+                   erroresCampo.email
+                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
+                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                 }`}
+               />
+               {erroresCampo.email && (
+                 <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1">
+                   <span>⚠</span> {erroresCampo.email}
+                 </p>
+               )}
+             </div>
 
-            <button
-              type="button"
-              onClick={registrar}
-              disabled={!formValido || cargando}
-              className={`w-full py-2.5 px-4 bg-primary hover:bg-primary/95 text-white rounded-lg text-sm font-bold shadow-xs shadow-primary/15 transition-all cursor-pointer ${
-                (!formValido || cargando) ? 'opacity-50 cursor-not-allowed transform-none' : 'hover:-translate-y-0.5'
-              }`}
-            >
-              {cargando ? 'Procesando…' : 'Registrar paciente'}
-            </button>
-          </form>
+             <button
+               type="button"
+               onClick={handleRegistrar}
+               disabled={cargando}
+               className={`w-full py-2.5 px-4 bg-primary hover:bg-primary/95 text-white rounded-lg text-sm font-bold shadow-xs shadow-primary/15 transition-all cursor-pointer ${
+                 cargando ? 'opacity-50 cursor-not-allowed transform-none' : 'hover:-translate-y-0.5'
+               }`}
+             >
+               {cargando ? 'Procesando…' : 'Registrar paciente'}
+             </button>
+           </form>
         </div>
       </div>
 

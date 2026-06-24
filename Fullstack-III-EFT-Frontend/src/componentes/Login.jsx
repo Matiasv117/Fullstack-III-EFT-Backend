@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LogIn, User, Lock, AlertCircle, UserCircle, IdCard } from 'lucide-react';
 import authApi from '../api/authApi';
+import { validarRUT, validarNombre, validarApellido, validarPassword, validarUsuario } from '../utils/validations';
 
 function Login({ onLoginSuccess }) {
   const [loginType, setLoginType] = useState('paciente'); // 'paciente' o 'funcionario'
@@ -10,31 +11,64 @@ function Login({ onLoginSuccess }) {
   const [apellido, setApellido] = useState('');
   const [rut, setRut] = useState('');
   const [error, setError] = useState('');
+  const [erroresCampo, setErroresCampo] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setErroresCampo({});
     setIsLoading(true);
 
     try {
-      let response;
-      
-      if (loginType === 'paciente') {
-        response = await authApi.loginPaciente(nombre, apellido, rut);
-      } else {
-        response = await authApi.login(username, password);
-      }
-      
-      // Guardar token en localStorage
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify({
-        username: response.username,
-        role: response.role
-      }));
+      let errores = {};
 
-      // Notificar al componente padre que el login fue exitoso
-      onLoginSuccess(response);
+      if (loginType === 'paciente') {
+        // Validaciones para login de paciente
+        const validNombre = validarNombre(nombre);
+        if (!validNombre.valido) errores.nombre = validNombre.mensaje;
+
+        const validApellido = validarApellido(apellido);
+        if (!validApellido.valido) errores.apellido = validApellido.mensaje;
+
+        const validRUT = validarRUT(rut);
+        if (!validRUT.valido) errores.rut = validRUT.mensaje;
+
+        if (Object.keys(errores).length > 0) {
+          setErroresCampo(errores);
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await authApi.loginPaciente(nombre, apellido, rut);
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify({
+          username: response.username,
+          role: response.role
+        }));
+        onLoginSuccess(response);
+      } else {
+        // Validaciones para login de funcionario
+        const validUsuario = validarUsuario(username);
+        if (!validUsuario.valido) errores.username = validUsuario.mensaje;
+
+        const validPassword = validarPassword(password);
+        if (!validPassword.valido) errores.password = validPassword.mensaje;
+
+        if (Object.keys(errores).length > 0) {
+          setErroresCampo(errores);
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await authApi.login(username, password);
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify({
+          username: response.username,
+          role: response.role
+        }));
+        onLoginSuccess(response);
+      }
     } catch (err) {
       setError(err.message || 'Error al iniciar sesión. Verifica tus datos.');
     } finally {
@@ -99,112 +133,182 @@ function Login({ onLoginSuccess }) {
           <form onSubmit={handleSubmit} className="space-y-6">
             {loginType === 'paciente' ? (
               <>
-                {/* Nombre Field */}
-                <div>
-                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nombre
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <UserCircle className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="nombre"
-                      type="text"
-                      value={nombre}
-                      onChange={(e) => setNombre(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                      placeholder="Ingresa tu nombre"
-                      required
-                    />
-                  </div>
-                </div>
+           {/* Nombre Field */}
+                 <div>
+                   <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                     Nombre
+                   </label>
+                   <div className="relative">
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <UserCircle className="h-5 w-5 text-gray-400" />
+                     </div>
+                     <input
+                       id="nombre"
+                       type="text"
+                       value={nombre}
+                       onChange={(e) => {
+                         setNombre(e.target.value);
+                         if (erroresCampo.nombre) {
+                           setErroresCampo(prev => ({ ...prev, nombre: '' }));
+                         }
+                       }}
+                       className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
+                         erroresCampo.nombre
+                           ? 'border-red-500 focus:ring-red-500'
+                           : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                       }`}
+                       placeholder="Ingresa tu nombre"
+                       required
+                     />
+                   </div>
+                   {erroresCampo.nombre && (
+                     <p className="text-red-600 dark:text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                       <span>⚠</span> {erroresCampo.nombre}
+                     </p>
+                   )}
+                 </div>
 
-                {/* Apellido Field */}
-                <div>
-                  <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Apellido
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <UserCircle className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="apellido"
-                      type="text"
-                      value={apellido}
-                      onChange={(e) => setApellido(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                      placeholder="Ingresa tu apellido"
-                      required
-                    />
-                  </div>
-                </div>
+                 {/* Apellido Field */}
+                 <div>
+                   <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                     Apellido
+                   </label>
+                   <div className="relative">
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <UserCircle className="h-5 w-5 text-gray-400" />
+                     </div>
+                     <input
+                       id="apellido"
+                       type="text"
+                       value={apellido}
+                       onChange={(e) => {
+                         setApellido(e.target.value);
+                         if (erroresCampo.apellido) {
+                           setErroresCampo(prev => ({ ...prev, apellido: '' }));
+                         }
+                       }}
+                       className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
+                         erroresCampo.apellido
+                           ? 'border-red-500 focus:ring-red-500'
+                           : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                       }`}
+                       placeholder="Ingresa tu apellido"
+                       required
+                     />
+                   </div>
+                   {erroresCampo.apellido && (
+                     <p className="text-red-600 dark:text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                       <span>⚠</span> {erroresCampo.apellido}
+                     </p>
+                   )}
+                 </div>
 
-                {/* RUT Field */}
-                <div>
-                  <label htmlFor="rut" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    RUT
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <IdCard className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="rut"
-                      type="text"
-                      value={rut}
-                      onChange={(e) => setRut(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                      placeholder="Ingresa tu RUT"
-                      required
-                    />
-                  </div>
-                </div>
+                 {/* RUT Field */}
+                 <div>
+                   <label htmlFor="rut" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                     RUT
+                   </label>
+                   <div className="relative">
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <IdCard className="h-5 w-5 text-gray-400" />
+                     </div>
+                     <input
+                       id="rut"
+                       type="text"
+                       value={rut}
+                       onChange={(e) => {
+                         setRut(e.target.value);
+                         if (erroresCampo.rut) {
+                           setErroresCampo(prev => ({ ...prev, rut: '' }));
+                         }
+                       }}
+                       className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
+                         erroresCampo.rut
+                           ? 'border-red-500 focus:ring-red-500'
+                           : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                       }`}
+                       placeholder="Ej: 12.345.678-9 o 12345678-9"
+                       required
+                     />
+                   </div>
+                   {erroresCampo.rut && (
+                     <p className="text-red-600 dark:text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                       <span>⚠</span> {erroresCampo.rut}
+                     </p>
+                   )}
+                 </div>
               </>
             ) : (
               <>
-                {/* Username Field */}
-                <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Usuario
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                      placeholder="Ingresa tu usuario"
-                      required
-                    />
-                  </div>
-                </div>
+                 {/* Username Field */}
+                 <div>
+                   <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                     Usuario
+                   </label>
+                   <div className="relative">
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <User className="h-5 w-5 text-gray-400" />
+                     </div>
+                     <input
+                       id="username"
+                       type="text"
+                       value={username}
+                       onChange={(e) => {
+                         setUsername(e.target.value);
+                         if (erroresCampo.username) {
+                           setErroresCampo(prev => ({ ...prev, username: '' }));
+                         }
+                       }}
+                       className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
+                         erroresCampo.username
+                           ? 'border-red-500 focus:ring-red-500'
+                           : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                       }`}
+                       placeholder="Ingresa tu usuario"
+                       required
+                     />
+                   </div>
+                   {erroresCampo.username && (
+                     <p className="text-red-600 dark:text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                       <span>⚠</span> {erroresCampo.username}
+                     </p>
+                   )}
+                 </div>
 
-                {/* Password Field */}
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Contraseña
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
-                      placeholder="Ingresa tu contraseña"
-                      required
-                    />
-                  </div>
-                </div>
+                 {/* Password Field */}
+                 <div>
+                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                     Contraseña
+                   </label>
+                   <div className="relative">
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <Lock className="h-5 w-5 text-gray-400" />
+                     </div>
+                     <input
+                       id="password"
+                       type="password"
+                       value={password}
+                       onChange={(e) => {
+                         setPassword(e.target.value);
+                         if (erroresCampo.password) {
+                           setErroresCampo(prev => ({ ...prev, password: '' }));
+                         }
+                       }}
+                       className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
+                         erroresCampo.password
+                           ? 'border-red-500 focus:ring-red-500'
+                           : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                       }`}
+                       placeholder="Ingresa tu contraseña"
+                       required
+                     />
+                   </div>
+                   {erroresCampo.password && (
+                     <p className="text-red-600 dark:text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                       <span>⚠</span> {erroresCampo.password}
+                     </p>
+                   )}
+                 </div>
               </>
             )}
 

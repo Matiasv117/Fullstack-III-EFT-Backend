@@ -117,7 +117,14 @@ public class AuthController {
         try {
             return ResponseEntity.ok(authService.loginPaciente(request));
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+            String mensaje = e.getMessage();
+            // Convertir mensajes técnicos a mensajes amigables
+            if (mensaje.contains("RUT")) {
+                return ResponseEntity.status(400).body(Map.of("error", "El RUT ingresado no es válido. Por favor, verifica el formato (ej: 12.345.678-5)"));
+            }
+            return ResponseEntity.status(401).body(Map.of("error", mensaje));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of("error", "Error al procesar los datos. Por favor, verifica que todos los campos estén completos correctamente."));
         }
     }
 }

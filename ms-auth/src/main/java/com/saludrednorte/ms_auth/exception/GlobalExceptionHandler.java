@@ -17,27 +17,25 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> manejarValidacion(MethodArgumentNotValidException ex) {
+        // Extraer el primer mensaje de error de validación
+        String mensaje = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getDefaultMessage())
+                .findFirst()
+                .orElse("Solicitud inválida. Por favor, verifica los datos ingresados.");
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorBody(HttpStatus.BAD_REQUEST.value(), "Solicitud inválida"));
+                .body(Map.of("error", mensaje));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> manejarArgumentoInvalido(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorBody(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+                .body(Map.of("error", ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> manejarErroresGenerales(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorBody(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Ocurrió un error inesperado"));
-    }
-
-    private Map<String, Object> errorBody(int status, String mensaje) {
-        return Map.of(
-                "timestamp", LocalDateTime.now().toString(),
-                "status", status,
-                "mensaje", mensaje
-        );
+                .body(Map.of("error", "Error del servidor. Por favor, intenta nuevamente más tarde."));
     }
 }

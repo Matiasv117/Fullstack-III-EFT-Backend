@@ -41,6 +41,9 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/pacientes/buscar").permitAll()
                         .requestMatchers(HttpMethod.POST, "/pacientes").permitAll()
+                        .requestMatchers("/pacientes/portal/**").authenticated()
+                        .requestMatchers("/pacientes/**").hasAnyRole("FUNCIONARIO", "ADMIN")
+                        .requestMatchers("/lista-espera/**").hasAnyRole("FUNCIONARIO", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
