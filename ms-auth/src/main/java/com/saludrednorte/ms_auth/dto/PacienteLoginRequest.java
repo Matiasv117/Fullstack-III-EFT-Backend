@@ -1,5 +1,6 @@
 package com.saludrednorte.ms_auth.dto;
 
+import com.saludrednorte.ms_auth.validation.RutValid;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -14,6 +15,7 @@ public class PacienteLoginRequest {
     private String apellido;
 
     @NotBlank(message = "El RUT es requerido")
+    @RutValid(message = "RUT chileno inválido. Formato esperado: XX.XXX.XXX-X")
     private String rut;
 
     public PacienteLoginRequest() {}

@@ -14,7 +14,7 @@ public interface PacienteClient {
     PacienteDTO buscarPaciente(
             @RequestParam("nombre") String nombre,
             @RequestParam("apellido") String apellido,
-            @RequestParam("dni") String dni
+            @RequestParam("dni") String rut
     );
 
     @PostMapping("/pacientes")

@@ -9,6 +9,7 @@ import com.saludrednorte.ms_auth.repository.UserRepository;
 import com.saludrednorte.ms_auth.client.PacienteClient;
 import com.saludrednorte.ms_auth.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_auth.security.JwtUtil;
+import com.saludrednorte.ms_auth.util.RutUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import feign.FeignException;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -159,25 +161,40 @@ public class AuthService {
     /**
      * Autentica un paciente usando sus datos personales (nombre, apellido, RUT).
      * Si el paciente no existe, lo crea automáticamente.
+     * El RUT se normaliza automáticamente al formato estándar XX.XXX.XXX-X.
      *
      * @param request datos del paciente (nombre, apellido, RUT)
      * @return respuesta con token JWT y datos del paciente
      */
     public LoginResponse loginPaciente(PacienteLoginRequest request) {
         try {
-            // Buscar paciente en ms-gestionpacientes
-            PacienteDTO paciente = pacienteClient.buscarPaciente(
-                    request.getNombre(),
-                    request.getApellido(),
-                    request.getRut()
-            );
+            // Normalizar y formatear el RUT
+            String rutNormalizado = RutUtil.normalizarRut(request.getRut());
+
+            // Buscar paciente en ms-gestionpacientes (Feign lanza FeignException en 404)
+            PacienteDTO paciente = null;
+            try {
+                paciente = pacienteClient.buscarPaciente(
+                        request.getNombre(),
+                        request.getApellido(),
+                        rutNormalizado
+                );
+            } catch (FeignException fe) {
+                // Si ms-gestionpacientes devuelve 404, Feign lanza excepción con status 404
+                if (fe.status() == 404) {
+                    paciente = null;
+                } else {
+                    // Propagar otras excepciones (500, 400, etc.) hacia arriba
+                    throw fe;
+                }
+            }
 
             // Si el paciente no existe, crearlo
             if (paciente == null) {
                 PacienteDTO nuevoPaciente = new PacienteDTO(
                         request.getNombre(),
                         request.getApellido(),
-                        request.getRut()
+                        rutNormalizado
                 );
                 paciente = pacienteClient.crearPaciente(nuevoPaciente);
                 auditEventPublisher.publicar(
