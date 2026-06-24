@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import Sidebar from './componentes/Sidebar'
 import TopNavBar from './componentes/TopNavBar'
 import Dashboard from './componentes/Dashboard'
+import AdminDashboard from './componentes/AdminDashboard'
+import AdminGestionUsuarios from './componentes/AdminGestionUsuarios'
 import GestionPacientes from './componentes/GestionPacientes'
 import ListaEspera from './componentes/ListaEspera'
 import Notificaciones from './componentes/Notificaciones'
@@ -50,6 +52,23 @@ function App() {
   }
 
   const renderContent = () => {
+    const isAdmin = user?.role === 'ROLE_ADMIN';
+
+    if (isAdmin) {
+      switch (activeSection) {
+        case 'dashboard':
+          return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><AdminDashboard user={user} /></div>
+        case 'usuarios':
+          return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><AdminGestionUsuarios /></div>
+        case 'reportes':
+          return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Reportes y Auditoría</h1></div>
+        case 'ajustes':
+          return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Configuración del Sistema</h1></div>
+        default:
+          return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><AdminDashboard user={user} /></div>
+      }
+    }
+
     switch (activeSection) {
       case 'dashboard':
         return <Dashboard user={user} />

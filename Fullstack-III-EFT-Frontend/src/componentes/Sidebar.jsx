@@ -3,10 +3,18 @@ import logo2Logo from '../assets/logo2.png'
 
 const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDarkMode }) => {
   const isPaciente = user?.role === 'ROLE_PACIENTE';
+  const isAdmin = user?.role === 'ROLE_ADMIN';
 
   const menuItems = isPaciente
     ? [
       { id: 'dashboard', label: 'Mi Portal', icon: 'dashboard' },
+    ]
+    : isAdmin
+    ? [
+      { id: 'dashboard', label: 'Panel Admin', icon: 'admin_panel_settings' },
+      { id: 'usuarios', label: 'Gestión de Usuarios', icon: 'people' },
+      { id: 'reportes', label: 'Reportes y Auditoría', icon: 'analytics' },
+      { id: 'ajustes', label: 'Configuración', icon: 'settings' },
     ]
     : [
       { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -26,7 +34,7 @@ const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDar
         <div>
           <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-dark">RedNorte</h1>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
-            {isPaciente ? 'Portal del Paciente' : 'Administración Médica'}
+            {isPaciente ? 'Portal del Paciente' : isAdmin ? 'Administración del Sistema' : 'Administración Médica'}
           </p>
         </div>
       </div>

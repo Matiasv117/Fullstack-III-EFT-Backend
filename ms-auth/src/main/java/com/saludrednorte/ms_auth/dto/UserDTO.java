@@ -1,53 +1,34 @@
-package com.saludrednorte.ms_auth.entity;
+package com.saludrednorte.ms_auth.dto;
 
-import jakarta.persistence.*;
+import com.saludrednorte.ms_auth.entity.User;
 import java.time.LocalDateTime;
 
 /**
- * Entidad que representa un usuario en el sistema de salud.
+ * DTO para transferir información de usuario sin exponer la contraseña.
  */
-@Entity
-@Table(name = "users")
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class UserDTO {
     private Long id;
-
-    @Column(nullable = false, unique = true)
     private String username;
-
-    @Column(nullable = false)
-    private String password;
-
-    @Column(nullable = false)
-    private String role; // ROLE_PACIENTE, ROLE_FUNCIONARIO, ROLE_ADMIN
-
-    @Column(name = "nombre_completo")
+    private String role;
     private String nombreCompleto;
-
-    @Column(name = "email")
     private String email;
+    private Boolean activo;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaUltimaModificacion;
+    private String creadoPor;
 
-    @Column(name = "activo")
-    private Boolean activo = true;
+    public UserDTO() {}
 
-    @Column(name = "fecha_creacion", updatable = false)
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
-
-    @Column(name = "fecha_ultima_modificacion")
-    private LocalDateTime fechaUltimaModificacion = LocalDateTime.now();
-
-    @Column(name = "creado_por")
-    private String creadoPor = "SYSTEM";
-
-    public User() {}
-
-    public User(String username, String password, String role) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-        this.activo = true;
+    public UserDTO(User user) {
+        this.id = user.getId();
+        this.username = user.getUsername();
+        this.role = user.getRole();
+        this.nombreCompleto = user.getNombreCompleto();
+        this.email = user.getEmail();
+        this.activo = user.getActivo();
+        this.fechaCreacion = user.getFechaCreacion();
+        this.fechaUltimaModificacion = user.getFechaUltimaModificacion();
+        this.creadoPor = user.getCreadoPor();
     }
 
     // Getters y Setters
@@ -65,14 +46,6 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getRole() {
@@ -131,3 +104,4 @@ public class User {
         this.creadoPor = creadoPor;
     }
 }
+

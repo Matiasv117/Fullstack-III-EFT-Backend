@@ -1,7 +1,7 @@
 import httpClient from './httpClient';
 
-const PACIENTES_PATH = '/pacientes';
-const LISTA_ESPERA_PATH = '/lista-espera';
+const PACIENTES_PATH = '/api/pacientes';
+const LISTA_ESPERA_PATH = '/api/lista-espera';
 
 export const obtenerPacientes = async () => {
   const { data } = await httpClient.get(PACIENTES_PATH);

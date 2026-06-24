@@ -1,6 +1,7 @@
 package com.saludrednorte.ms_auth.controller;
 
 import com.saludrednorte.ms_auth.entity.User;
+import com.saludrednorte.ms_auth.dto.UserDTO;
 import com.saludrednorte.ms_auth.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,17 +13,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Controlador REST para administración del sistema.
- * <p>
- * Proporciona endpoints exclusivos para administradores para gestionar
- * usuarios funcionarios (crear, modificar, eliminar, listar).
- * Todos los endpoints requieren rol ADMIN.
- * </p>
  */
 @RestController
 @RequestMapping("/api/admin")
@@ -37,28 +35,24 @@ public class AdminController {
 
     /**
      * Lista todos los funcionarios del sistema (excluye admin).
-     *
-     * @param authorization token JWT del admin
-     * @return lista de funcionarios
      */
     @GetMapping("/funcionarios")
-    @Operation(summary = "Listar funcionarios", description = "Obtiene la lista de todos los funcionarios del sistema (excluye admin)")
+    @Operation(summary = "Listar funcionarios", description = "Obtiene la lista de todos los funcionarios del sistema")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de funcionarios obtenida"),
-            @ApiResponse(responseCode = "401", description = "No autorizado"),
             @ApiResponse(responseCode = "403", description = "Solo administradores pueden acceder")
     })
     public ResponseEntity<?> listarFuncionarios(
             @Parameter(description = "Token JWT del admin") @RequestHeader("Authorization") String authorization) {
         try {
-            // Verificar que sea admin
             if (!esAdmin(authorization)) {
                 return ResponseEntity.status(403).body(Map.of("error", "Solo administradores pueden acceder"));
             }
 
-            List<User> funcionarios = userRepository.findAll().stream()
+            List<UserDTO> funcionarios = userRepository.findAll().stream()
                     .filter(u -> !"ROLE_ADMIN".equals(u.getRole()))
-                    .toList();
+                    .map(UserDTO::new)
+                    .collect(Collectors.toList());
 
             return ResponseEntity.ok(funcionarios);
         } catch (Exception e) {
@@ -68,16 +62,11 @@ public class AdminController {
 
     /**
      * Crea un nuevo funcionario.
-     *
-     * @param authorization token JWT del admin
-     * @param request datos del nuevo funcionario
-     * @return funcionario creado
      */
     @PostMapping("/funcionarios")
     @Operation(summary = "Crear funcionario", description = "Crea un nuevo funcionario en el sistema")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Funcionario creado exitosamente"),
-            @ApiResponse(responseCode = "401", description = "No autorizado"),
             @ApiResponse(responseCode = "403", description = "Solo administradores pueden acceder"),
             @ApiResponse(responseCode = "409", description = "El username ya existe")
     })
@@ -85,25 +74,26 @@ public class AdminController {
             @Parameter(description = "Token JWT del admin") @RequestHeader("Authorization") String authorization,
             @RequestBody FuncionarioRequest request) {
         try {
-            // Verificar que sea admin
             if (!esAdmin(authorization)) {
                 return ResponseEntity.status(403).body(Map.of("error", "Solo administradores pueden acceder"));
             }
 
-            // Verificar que el username no exista
             if (userRepository.existsByUsername(request.getUsername())) {
                 return ResponseEntity.status(409).body(Map.of("error", "El username ya existe"));
             }
 
-            // Crear funcionario
             User funcionario = new User(
                     request.getUsername(),
                     passwordEncoder.encode(request.getPassword()),
                     "ROLE_FUNCIONARIO"
             );
+            funcionario.setNombreCompleto(request.getNombreCompleto());
+            funcionario.setEmail(request.getEmail());
+            funcionario.setCreadoPor(extraerUsernameDelToken(authorization));
+            funcionario.setActivo(true);
 
             User guardado = userRepository.save(funcionario);
-            return ResponseEntity.status(201).body(guardado);
+            return ResponseEntity.status(201).body(new UserDTO(guardado));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("error", "Error de autenticación"));
         }
@@ -111,17 +101,11 @@ public class AdminController {
 
     /**
      * Modifica un funcionario existente.
-     *
-     * @param authorization token JWT del admin
-     * @param id ID del funcionario a modificar
-     * @param request nuevos datos del funcionario
-     * @return funcionario modificado
      */
     @PutMapping("/funcionarios/{id}")
     @Operation(summary = "Modificar funcionario", description = "Modifica los datos de un funcionario existente")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Funcionario modificado exitosamente"),
-            @ApiResponse(responseCode = "401", description = "No autorizado"),
             @ApiResponse(responseCode = "403", description = "Solo administradores pueden acceder"),
             @ApiResponse(responseCode = "404", description = "Funcionario no encontrado")
     })
@@ -130,7 +114,6 @@ public class AdminController {
             @Parameter(description = "ID del funcionario") @PathVariable Long id,
             @RequestBody FuncionarioRequest request) {
         try {
-            // Verificar que sea admin
             if (!esAdmin(authorization)) {
                 return ResponseEntity.status(403).body(Map.of("error", "Solo administradores pueden acceder"));
             }
@@ -142,21 +125,26 @@ public class AdminController {
 
             User funcionario = funcionarioOpt.get();
 
-            // No permitir modificar admin
             if ("ROLE_ADMIN".equals(funcionario.getRole())) {
                 return ResponseEntity.status(403).body(Map.of("error", "No se puede modificar al administrador principal"));
             }
 
-            // Actualizar datos
             if (request.getUsername() != null && !request.getUsername().isEmpty()) {
                 funcionario.setUsername(request.getUsername());
             }
             if (request.getPassword() != null && !request.getPassword().isEmpty()) {
                 funcionario.setPassword(passwordEncoder.encode(request.getPassword()));
             }
-
+            if (request.getNombreCompleto() != null && !request.getNombreCompleto().isEmpty()) {
+                funcionario.setNombreCompleto(request.getNombreCompleto());
+            }
+            if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+                funcionario.setEmail(request.getEmail());
+            }
+            
+            funcionario.setFechaUltimaModificacion(LocalDateTime.now());
             User guardado = userRepository.save(funcionario);
-            return ResponseEntity.ok(guardado);
+            return ResponseEntity.ok(new UserDTO(guardado));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("error", "Error de autenticación"));
         }
@@ -164,16 +152,11 @@ public class AdminController {
 
     /**
      * Elimina un funcionario.
-     *
-     * @param authorization token JWT del admin
-     * @param id ID del funcionario a eliminar
-     * @return respuesta de confirmación
      */
     @DeleteMapping("/funcionarios/{id}")
     @Operation(summary = "Eliminar funcionario", description = "Elimina un funcionario del sistema")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Funcionario eliminado exitosamente"),
-            @ApiResponse(responseCode = "401", description = "No autorizado"),
             @ApiResponse(responseCode = "403", description = "Solo administradores pueden acceder"),
             @ApiResponse(responseCode = "404", description = "Funcionario no encontrado")
     })
@@ -181,7 +164,6 @@ public class AdminController {
             @Parameter(description = "Token JWT del admin") @RequestHeader("Authorization") String authorization,
             @Parameter(description = "ID del funcionario") @PathVariable Long id) {
         try {
-            // Verificar que sea admin
             if (!esAdmin(authorization)) {
                 return ResponseEntity.status(403).body(Map.of("error", "Solo administradores pueden acceder"));
             }
@@ -193,7 +175,6 @@ public class AdminController {
 
             User funcionario = funcionarioOpt.get();
 
-            // No permitir eliminar admin
             if ("ROLE_ADMIN".equals(funcionario.getRole())) {
                 return ResponseEntity.status(403).body(Map.of("error", "No se puede eliminar al administrador principal"));
             }
@@ -206,10 +187,70 @@ public class AdminController {
     }
 
     /**
+     * Cambia el estado activo/inactivo de un usuario.
+     */
+    @PutMapping("/funcionarios/{id}/estado")
+    @Operation(summary = "Cambiar estado del usuario", description = "Activa o desactiva un usuario")
+    public ResponseEntity<?> cambiarEstado(
+            @Parameter(description = "Token JWT del admin") @RequestHeader("Authorization") String authorization,
+            @Parameter(description = "ID del usuario") @PathVariable Long id,
+            @RequestBody Map<String, Boolean> request) {
+        try {
+            if (!esAdmin(authorization)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Solo administradores pueden acceder"));
+            }
+
+            Optional<User> usuarioOpt = userRepository.findById(id);
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "Usuario no encontrado"));
+            }
+
+            User usuario = usuarioOpt.get();
+            usuario.setActivo(request.get("activo"));
+            usuario.setFechaUltimaModificacion(LocalDateTime.now());
+            User guardado = userRepository.save(usuario);
+            return ResponseEntity.ok(new UserDTO(guardado));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Error de autenticación"));
+        }
+    }
+
+    /**
+     * Cambia el rol de un usuario (promoción/degradación).
+     */
+    @PutMapping("/funcionarios/{id}/rol")
+    @Operation(summary = "Cambiar rol del usuario", description = "Cambia el rol de un usuario entre funcionario y admin")
+    public ResponseEntity<?> cambiarRol(
+            @Parameter(description = "Token JWT del admin") @RequestHeader("Authorization") String authorization,
+            @Parameter(description = "ID del usuario") @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        try {
+            if (!esAdmin(authorization)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Solo administradores pueden acceder"));
+            }
+
+            String nuevoRol = request.get("rol");
+            if (!nuevoRol.equals("ROLE_FUNCIONARIO") && !nuevoRol.equals("ROLE_ADMIN")) {
+                return ResponseEntity.status(400).body(Map.of("error", "Rol inválido"));
+            }
+
+            Optional<User> usuarioOpt = userRepository.findById(id);
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "Usuario no encontrado"));
+            }
+
+            User usuario = usuarioOpt.get();
+            usuario.setRole(nuevoRol);
+            usuario.setFechaUltimaModificacion(LocalDateTime.now());
+            User guardado = userRepository.save(usuario);
+            return ResponseEntity.ok(new UserDTO(guardado));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Error de autenticación"));
+        }
+    }
+
+    /**
      * Verifica si el token pertenece a un administrador.
-     *
-     * @param authorization header Authorization
-     * @return true si es admin, false en caso contrario
      */
     private boolean esAdmin(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -234,12 +275,34 @@ public class AdminController {
     }
 
     /**
+     * Extrae el username del token JWT.
+     */
+    private String extraerUsernameDelToken(String authorization) {
+        try {
+            String token = authorization.substring(7);
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) {
+                return "sistema";
+            }
+
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            String sub = payload.substring(payload.indexOf("\"sub\":\"") + 7);
+            return sub.substring(0, sub.indexOf("\""));
+        } catch (Exception e) {
+            return "sistema";
+        }
+    }
+
+    /**
      * DTO para la creación/modificación de funcionarios.
      */
     public static class FuncionarioRequest {
         private String username;
         private String password;
+        private String nombreCompleto;
+        private String email;
 
+        // Getters y Setters
         public String getUsername() {
             return username;
         }
@@ -254,6 +317,22 @@ public class AdminController {
 
         public void setPassword(String password) {
             this.password = password;
+        }
+
+        public String getNombreCompleto() {
+            return nombreCompleto;
+        }
+
+        public void setNombreCompleto(String nombreCompleto) {
+            this.nombreCompleto = nombreCompleto;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
         }
     }
 }
