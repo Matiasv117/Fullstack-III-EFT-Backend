@@ -25,49 +25,49 @@ spring:
             allowedHeaders: "*"
       routes:
         - id: salud-bff
-          uri: http://localhost:8097
+          uri: lb://SALUD-BFF
           predicates:
             - Path=/api/portal/**
           filters:
             - StripPrefix=0
 
         - id: ms-listas-espera
-          uri: http://localhost:8083
+          uri: lb://MS-LISTAS-ESPERA
           predicates:
             - Path=/api/listas-espera/**,/lista-espera/**,/pacientes/**
           filters:
             - StripPrefix=0
 
         - id: ms-notificaciones
-          uri: http://localhost:8085
+          uri: lb://MS-NOTIFICACIONES
           predicates:
             - Path=/api/notificaciones/**
           filters:
             - StripPrefix=0
 
         - id: ms-optimizacion
-          uri: http://localhost:8084
+          uri: lb://MS-OPTIMIZACION
           predicates:
             - Path=/optimizacion/**,/citas/**,/medicos/**,/horarios/**
           filters:
             - StripPrefix=0
 
         - id: ms-progreso
-          uri: http://localhost:8086
+          uri: lb://MS-PROGRESO
           predicates:
             - Path=/progreso/**
           filters:
             - StripPrefix=0
 
         - id: ms-auth
-          uri: http://localhost:8087
+          uri: lb://MS-AUTH
           predicates:
             - Path=/api/auth/**
           filters:
             - StripPrefix=0
 
         - id: ms-auditoria
-          uri: http://localhost:8088
+          uri: lb://MS-AUDITORIA
           predicates:
             - Path=/api/auditoria/**
           filters:

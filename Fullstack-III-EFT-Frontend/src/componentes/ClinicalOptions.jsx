@@ -106,11 +106,11 @@ function ClinicalOptions() {
   return (
     <>
       <ToastContainer toasts={toasts} onRemove={removeToast} />
-      <div className="ml-[260px] pt-24 p-gutter min-h-screen">
+      <div className="ml-[260px] pt-24 p-gutter min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Opciones Clínicas</h1>
-          <p className="text-slate-600">Gestión integral de servicios médicos y clínicos</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Opciones Clínicas</h1>
+          <p className="text-slate-600 dark:text-slate-300">Gestión integral de servicios médicos y clínicos</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -119,7 +119,7 @@ function ClinicalOptions() {
             return (
               <div
                 key={option.id}
-                className={`border rounded-xl p-6 cursor-pointer transition-all duration-200 ${colorClasses[option.color]}`}
+                className={`border rounded-xl p-6 cursor-pointer transition-all duration-200 ${colorClasses[option.color]} dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100`}
                 onClick={() => setSelectedOption(selectedOption?.id === option.id ? null : option)}
               >
                 <div className="flex items-start gap-4">
@@ -157,7 +157,7 @@ function ClinicalOptions() {
           })}
         </div>
 
-        <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-xl">
+        <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-xl dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
           <div className="flex items-start gap-4">
             <Clock className="w-6 h-6 text-blue-600 mt-1" />
             <div>

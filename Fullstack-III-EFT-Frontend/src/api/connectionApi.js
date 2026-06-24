@@ -35,14 +35,14 @@ export const checkOptimizacionService = async () => {
 export const checkAuthService = async () => {
   try {
     // Intentar validar un token — si el server responde (incluso con 401), está vivo
-    await httpClient.post('http://localhost:8097/api/auth/validate', {}, { timeout: 5000 });
-    return { status: 'connected', name: 'Autenticación', port: '8097' };
+    await httpClient.post('http://localhost:8080/api/auth/validate', {}, { timeout: 5000 });
+    return { status: 'connected', name: 'Autenticación', port: '8080' };
   } catch (err) {
     // Si recibimos una respuesta HTTP (cualquier código), el servicio está arriba
     if (err.message && !err.message.includes('Network Error') && !err.message.includes('timeout')) {
-      return { status: 'connected', name: 'Autenticación', port: '8097' };
+      return { status: 'connected', name: 'Autenticación', port: '8080' };
     }
-    return { status: 'disconnected', name: 'Autenticación', port: '8097' };
+    return { status: 'disconnected', name: 'Autenticación', port: '8080' };
   }
 };
 

@@ -53,6 +53,18 @@ function GestionPacientesView({
   recargarPacientes,
   searchTerm = '',
 }) {
+  // Nota: esta vista tiene lógica mock (sin endpoints clínicos disponibles aún).
+  // Este ajuste sólo busca que el modo oscuro funcione correctamente.
+  const darkModalClasses = {
+    panel: 'bg-surface-container-lowest border border-outline-variant',
+    header: 'bg-surface-container-low border-b border-outline-variant',
+    section: 'bg-surface-container-lowest border border-outline-variant',
+    text: 'text-on-surface',
+    subText: 'text-on-surface-variant',
+    muted: 'text-on-surface-variant/70',
+    chipBg: 'bg-surface-container-low border border-outline-variant',
+  };
+
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [clinicalNotes, setClinicalNotes] = useState({});
   const [newNoteText, setNewNoteText] = useState('');
@@ -92,7 +104,7 @@ function GestionPacientesView({
   };
 
   const handleTriggerRefill = (medId) => {
-    setRefillStatus(prev => ({ ...prev, [medId]: 'Requested' }));
+    setRefillStatus(prev => ({ ...prev, [medId]: 'SOLICITADO' }));
     setTimeout(() => {
       setRefillStatus(prev => {
         const copy = { ...prev };
@@ -339,10 +351,10 @@ function GestionPacientesView({
 
         return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex justify-center items-center p-4">
-            <div className="bg-white rounded-2xl border border-slate-100 w-full max-w-5xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="bg-surface-container-lowest dark:bg-surface-container-lowest rounded-2xl border border-outline-variant w-full max-w-5xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
               
               {/* Modal Header */}
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-low dark:bg-surface-container-low">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Historial Clínico del Paciente</h3>
                   <p className="text-xs text-slate-550 text-slate-500 mt-1">Detalle clínico unificado de atención primaria y derivación</p>
@@ -398,8 +410,8 @@ function GestionPacientesView({
                   <div className="lg:col-span-3 space-y-6">
                     
                     {/* Clinical History Timeline */}
-                    <div className="border border-slate-100 p-5 rounded-xl bg-white space-y-4 shadow-2xs">
-                      <h4 className="font-bold text-slate-800 text-sm">Línea de Tiempo Médica</h4>
+                    <div className="border border-outline-variant p-5 rounded-xl bg-surface-container-lowest dark:bg-surface-container-lowest space-y-4 shadow-2xs">
+                      <h4 className="font-bold text-on-surface text-sm">Línea de Tiempo Médica</h4>
                       
                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-4 ml-2 py-1 text-xs">
                         <div className="relative">
@@ -474,7 +486,7 @@ function GestionPacientesView({
                             </div>
                             
                             <div className="flex justify-between items-center bg-slate-50 py-1.5 px-3 rounded-lg border border-slate-100">
-                              <span className="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider">Hist. Trend</span>
+                              <span className="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider">Tendencia</span>
                               <svg width="100" height="24">
                                 <polyline
                                   fill="none"
@@ -495,7 +507,7 @@ function GestionPacientesView({
                             </div>
                             
                             <div className="flex justify-between items-center bg-slate-50 py-1.5 px-3 rounded-lg border border-slate-100">
-                              <span className="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider">Hist. Trend</span>
+                              <span className="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider">Tendencia</span>
                               <svg width="100" height="24">
                                 <polyline
                                   fill="none"

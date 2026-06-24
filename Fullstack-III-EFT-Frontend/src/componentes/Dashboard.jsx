@@ -166,7 +166,7 @@ const Dashboard = ({ user }) => {
       <div className="max-w-[1400px] mx-auto flex flex-col gap-gutter">
         
         {/* Hero Banner */}
-        <section className="fade-in-up stagger-1 relative overflow-hidden rounded-xl bg-primary-fixed-dim min-h-[240px] flex items-center">
+        <section className="fade-in-up stagger-1 relative overflow-hidden rounded-xl bg-primary-fixed-dim min-h-[240px] flex items-center dark:bg-slate-950">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-[#00174b] opacity-95"></div>
           <div className="relative z-10 px-12 py-10 flex justify-between w-full items-center">
             <div className="max-w-2xl">
@@ -177,7 +177,7 @@ const Dashboard = ({ user }) => {
                 Bienvenido, {user?.username || 'Dr. Benjamín Ibañez'}
               </h2>
               <p className="font-body-lg text-body-lg text-white/80">
-                Hoy tienes 12 citas programadas y 4 reportes pendientes de revisión. Tu eficiencia operativa aumentó un 8% esta semana.
+                {`Hoy tienes ${stats.listaEsperaCount} pacientes en lista de espera y ${stats.notificacionesPendientes} notificaciones críticas.`}
               </p>
             </div>
             <div className="hidden lg:block">
@@ -265,7 +265,7 @@ const Dashboard = ({ user }) => {
           </div>
 
           {/* Notifications Card */}
-          <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-tertiary/50 transition-all duration-500 group cursor-pointer hover:scale-105 hover:shadow-xl hover:shadow-tertiary/5">
+          <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-tertiary/50 transition-all duration-500 group cursor-pointer hover:scale-105 hover:shadow-xl hover:shadow-tertiary/5 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
             <div className="flex justify-between items-start mb-4">
               <div className="w-12 h-12 bg-tertiary-fixed rounded-lg flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-white transition-all duration-500">
                 <span className="material-symbols-outlined">notification_important</span>
@@ -384,7 +384,7 @@ const Dashboard = ({ user }) => {
           {/* Sidebar Content: Health Insights */}
           <div className="flex flex-col gap-gutter">
             <ConnectionStatus compact={true} />
-            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:shadow-lg transition-shadow duration-300 h-full group cursor-pointer">
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:shadow-lg transition-shadow duration-300 h-full group cursor-pointer dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-primary">
                   <span className="material-symbols-outlined">analytics</span>
