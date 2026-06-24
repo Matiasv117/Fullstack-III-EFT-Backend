@@ -9,10 +9,13 @@ import com.saludrednorte.ms_auth.repository.UserRepository;
 import com.saludrednorte.ms_auth.client.PacienteClient;
 import com.saludrednorte.ms_auth.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_auth.security.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,8 @@ import java.util.Map;
  */
 @Service
 public class AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -55,14 +60,12 @@ public class AuthService {
      */
     public LoginResponse login(LoginRequest loginRequest) {
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
-
             UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+
+            if (!passwordEncoder.matches(loginRequest.getPassword(), userDetails.getPassword())) {
+                throw new BadCredentialsException("Credenciales inválidas");
+            }
+
             String token = jwtUtil.generateToken(userDetails);
             String role = userDetails.getAuthorities().stream()
                     .findFirst()
@@ -74,6 +77,13 @@ public class AuthService {
         } catch (BadCredentialsException e) {
             auditEventPublisher.publicar(loginRequest.getUsername(), "LOGIN_FALLIDO", "Credenciales inválidas");
             throw e;
+        } catch (AuthenticationException e) {
+            auditEventPublisher.publicar(loginRequest.getUsername(), "LOGIN_FALLIDO", "Credenciales inválidas");
+            throw new BadCredentialsException("Credenciales inválidas");
+        } catch (Exception e) {
+            logger.error("Error inesperado en login para usuario {}", loginRequest.getUsername(), e);
+            auditEventPublisher.publicar(loginRequest.getUsername(), "LOGIN_FALLIDO", "Error inesperado: " + e.getMessage());
+            throw new BadCredentialsException("Credenciales inválidas");
         }
     }
 

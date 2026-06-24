@@ -16,8 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -70,6 +72,7 @@ class AuthServiceTest {
         LoginRequest request = new LoginRequest("admin", "admin123");
 
         when(userDetailsService.loadUserByUsername("admin")).thenReturn(userDetails);
+        when(passwordEncoder.matches("admin123", "encoded")).thenReturn(true);
         when(jwtUtil.generateToken(userDetails)).thenReturn("jwt-token");
 
         LoginResponse response = authService.login(request);
@@ -77,7 +80,20 @@ class AuthServiceTest {
         assertThat(response.getToken()).isEqualTo("jwt-token");
         assertThat(response.getUsername()).isEqualTo("admin");
         assertThat(response.getRole()).isEqualTo("ROLE_ADMIN");
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(passwordEncoder).matches("admin123", "encoded");
+    }
+
+    @Test
+    void login_debeConvertirErroresDeAutenticacionEnBadCredentials() {
+        LoginRequest request = new LoginRequest("admin", "wrong");
+        when(userDetailsService.loadUserByUsername("admin")).thenReturn(userDetails);
+        when(passwordEncoder.matches("wrong", "encoded")).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Credenciales inválidas");
+
+        verify(auditEventPublisher).publicar("admin", "LOGIN_FALLIDO", "Credenciales inválidas");
     }
 
     @Test

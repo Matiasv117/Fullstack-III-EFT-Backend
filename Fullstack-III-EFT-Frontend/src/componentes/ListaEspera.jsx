@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useListaEspera } from '../hooks/useListaEspera';
 import { 
   ClipboardList, RefreshCw, Filter, Trash2, Edit3, 
-  AlertCircle, Activity, ShieldAlert
+  AlertCircle, Activity, ShieldAlert, Save, X
 } from 'lucide-react';
+import { actualizarListaEspera } from '../api/gestionPacientesApi';
 
 function ListaEsperaView({
   listaEspera,
+  pacientes,
   cargando,
   mensaje,
   error,
@@ -16,6 +18,44 @@ function ListaEsperaView({
 }) {
   const [filtroGravedad, setFiltroGravedad] = useState('TODOS');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
+  const [editandoId, setEditandoId] = useState(null);
+  const [editandoGravedad, setEditandoGravedad] = useState('');
+  const [editandoInterconsulta, setEditandoInterconsulta] = useState('');
+
+  const obtenerNombrePaciente = (pacienteId) => {
+    const paciente = pacientes.find(p => p.id === pacienteId);
+    if (paciente) {
+      return `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim() || `Paciente ${pacienteId}`;
+    }
+    return `Paciente ${pacienteId}`;
+  };
+
+  const iniciarEdicion = (item) => {
+    setEditandoId(item.id);
+    setEditandoGravedad(item.gravedad || 'NORMAL');
+    setEditandoInterconsulta(item.interconsulta || '');
+  };
+
+  const cancelarEdicion = () => {
+    setEditandoId(null);
+    setEditandoGravedad('');
+    setEditandoInterconsulta('');
+  };
+
+  const guardarEdicion = async (id) => {
+    try {
+      await actualizarListaEspera(id, {
+        gravedad: editandoGravedad,
+        interconsulta: editandoInterconsulta,
+      });
+      await recargarListaEspera();
+      setEditandoId(null);
+      setEditandoGravedad('');
+      setEditandoInterconsulta('');
+    } catch (error) {
+      console.error('Error al guardar cambios:', error);
+    }
+  };
 
   const listaFiltrada = listaEspera.filter((item) => {
     if (filtroGravedad !== 'TODOS' && (item.gravedad || 'NORMAL') !== filtroGravedad) {
@@ -147,7 +187,7 @@ function ListaEsperaView({
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <strong className="text-sm text-on-surface font-bold">Paciente ID: {item.pacienteId ?? 'N/A'}</strong>
+                    <strong className="text-sm text-on-surface font-bold">{obtenerNombrePaciente(item.pacienteId)}</strong>
                     
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${gravedadStyles(item.gravedad)}`}>
                       {item.gravedad || 'NORMAL'}
@@ -159,40 +199,92 @@ function ListaEsperaView({
 
                   <div className="text-xs text-on-surface-variant space-y-1">
                     <p className="font-semibold text-on-surface">Interconsulta: <span className="text-primary font-bold">{item.interconsulta || 'Sin especificar'}</span></p>
-                    <p className="font-mono text-[10px] text-on-surface-variant/70">ID Registro: {item.id}</p>
+                    <p className="font-mono text-[10px] text-on-surface-variant/70">ID Registro: {item.id} | Paciente ID: {item.pacienteId}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-3 border-t border-outline-variant/30">
-                  <select
-                    className="flex-1 bg-surface-container-low text-on-surface border border-outline-variant rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        actualizarEstado(item.id, e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                    disabled={cargando}
-                  >
-                    <option value="">Cambiar estado</option>
-                    <option value="PENDIENTE">Pendiente</option>
-                    <option value="ATENDIDO">Atendido</option>
-                    <option value="CANCELADO">Cancelado</option>
-                  </select>
-                  
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm('¿Estás seguro de que deseas eliminar este registro?')) {
-                        eliminarDeListaEspera(item.id);
-                      }
-                    }}
-                    disabled={cargando}
-                    className="p-2 bg-error-container/20 hover:bg-error-container/40 border border-error/20 text-error rounded-lg transition-colors cursor-pointer shrink-0"
-                    title="Eliminar registro"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {editandoId === item.id ? (
+                    <>
+                      <select
+                        className="flex-1 bg-surface-container-low text-on-surface border border-outline-variant rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                        value={editandoGravedad}
+                        onChange={(e) => setEditandoGravedad(e.target.value)}
+                        disabled={cargando}
+                      >
+                        <option value="NORMAL">Normal</option>
+                        <option value="BAJA">Baja</option>
+                        <option value="MEDIA">Media</option>
+                        <option value="ALTA">Alta</option>
+                      </select>
+                      <input
+                        type="text"
+                        className="flex-1 bg-surface-container-low text-on-surface border border-outline-variant rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
+                        value={editandoInterconsulta}
+                        onChange={(e) => setEditandoInterconsulta(e.target.value)}
+                        placeholder="Interconsulta"
+                        disabled={cargando}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => guardarEdicion(item.id)}
+                        disabled={cargando}
+                        className="p-2 bg-primary/20 hover:bg-primary/40 border border-primary/20 text-primary rounded-lg transition-colors cursor-pointer shrink-0"
+                        title="Guardar cambios"
+                      >
+                        <Save className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelarEdicion}
+                        disabled={cargando}
+                        className="p-2 bg-surface-container-low hover:bg-surface-container-high border border-outline-variant text-on-surface-variant rounded-lg transition-colors cursor-pointer shrink-0"
+                        title="Cancelar"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <select
+                        className="flex-1 bg-surface-container-low text-on-surface border border-outline-variant rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            actualizarEstado(item.id, e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                        disabled={cargando}
+                      >
+                        <option value="">Cambiar estado</option>
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="ATENDIDO">Atendido</option>
+                        <option value="CANCELADO">Cancelado</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => iniciarEdicion(item)}
+                        disabled={cargando}
+                        className="p-2 bg-tertiary-container/20 hover:bg-tertiary-container/40 border border-tertiary/20 text-tertiary rounded-lg transition-colors cursor-pointer shrink-0"
+                        title="Editar paciente"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('¿Estás seguro de que deseas eliminar este registro?')) {
+                            eliminarDeListaEspera(item.id);
+                          }
+                        }}
+                        disabled={cargando}
+                        className="p-2 bg-error-container/20 hover:bg-error-container/40 border border-error/20 text-error rounded-lg transition-colors cursor-pointer shrink-0"
+                        title="Eliminar registro"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </li>
             ))}
@@ -207,6 +299,7 @@ function ListaEsperaView({
 function ListaEspera() {
   const {
     listaEspera,
+    pacientes,
     cargando,
     mensaje,
     error,
@@ -218,6 +311,7 @@ function ListaEspera() {
   return (
     <ListaEsperaView
       listaEspera={listaEspera}
+      pacientes={pacientes}
       cargando={cargando}
       mensaje={mensaje}
       error={error}

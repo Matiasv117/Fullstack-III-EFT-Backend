@@ -46,6 +46,14 @@ export const actualizarEstadoListaEspera = async (id, nuevoEstado) => {
   return data;
 };
 
+export const actualizarListaEspera = async (id, { gravedad, interconsulta }) => {
+  const { data } = await httpClient.put(`${LISTA_ESPERA_PATH}/${id}`, {
+    gravedad,
+    interconsulta,
+  });
+  return data;
+};
+
 export const obtenerPacientesPorEstado = async (estado) => {
   const { data } = await httpClient.get(`${LISTA_ESPERA_PATH}/estado/${estado}`);
   return data;

@@ -1,5 +1,7 @@
 package com.saludrednorte.ms_auth.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.saludrednorte.ms_auth.dto.LoginRequest;
 import com.saludrednorte.ms_auth.dto.LoginResponse;
 import com.saludrednorte.ms_auth.dto.PacienteLoginRequest;
@@ -11,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -22,6 +25,8 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @Tag(name = "Autenticación", description = "Endpoints para inicio de sesión, registro y validación de tokens")
 public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private AuthService authService;
@@ -38,7 +43,14 @@ public class AuthController {
         try {
             return ResponseEntity.ok(authService.login(loginRequest));
         } catch (BadCredentialsException e) {
+            logger.warn("Login rechazado para usuario {}: {}", loginRequest.getUsername(), e.getMessage());
             return ResponseEntity.status(401).body(Map.of("error", "Credenciales inválidas"));
+        } catch (AuthenticationException e) {
+            logger.warn("Login rechazado para usuario {}: {}", loginRequest.getUsername(), e.getMessage());
+            return ResponseEntity.status(401).body(Map.of("error", "Credenciales inválidas"));
+        } catch (Exception e) {
+            logger.error("Error inesperado al procesar login para usuario {}", loginRequest.getUsername(), e);
+            return ResponseEntity.status(500).body(Map.of("error", "Error inesperado"));
         }
     }
 

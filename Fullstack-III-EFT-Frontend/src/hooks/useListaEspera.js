@@ -3,10 +3,12 @@ import {
   obtenerListaEspera,
   eliminarDelListaEspera,
   actualizarEstadoListaEspera,
+  obtenerPacientes,
 } from '../api/gestionPacientesApi';
 
 export function useListaEspera() {
   const [listaEspera, setListaEspera] = useState([]);
+  const [pacientes, setPacientes] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
@@ -21,8 +23,12 @@ export function useListaEspera() {
     limpiarMensajes();
 
     try {
-      const datos = await obtenerListaEspera();
-      setListaEspera(Array.isArray(datos) ? datos : []);
+      const [listaDatos, pacientesDatos] = await Promise.all([
+        obtenerListaEspera(),
+        obtenerPacientes(),
+      ]);
+      setListaEspera(Array.isArray(listaDatos) ? listaDatos : []);
+      setPacientes(Array.isArray(pacientesDatos) ? pacientesDatos : []);
     } catch (errorCapturado) {
       setError(errorCapturado.message || 'No fue posible cargar la lista de espera');
     } finally {
@@ -72,6 +78,7 @@ export function useListaEspera() {
 
   return {
     listaEspera,
+    pacientes,
     cargando,
     mensaje,
     error,

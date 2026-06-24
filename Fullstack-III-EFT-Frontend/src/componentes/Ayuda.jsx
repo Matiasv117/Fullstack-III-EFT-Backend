@@ -89,20 +89,20 @@ function Ayuda() {
     <div className="ml-[260px] pt-24 p-gutter min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Centro de Ayuda</h1>
-          <p className="text-slate-600">Encuentra respuestas a tus preguntas y obtén soporte técnico</p>
+          <h1 className="text-3xl font-bold text-on-surface mb-2">Centro de Ayuda</h1>
+          <p className="text-on-surface-variant">Encuentra respuestas a tus preguntas y obtén soporte técnico</p>
         </div>
 
         {/* Search Bar */}
         <div className="mb-8">
           <div className="relative max-w-2xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant w-5 h-5" />
             <input
               type="text"
               placeholder="Buscar en la ayuda..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 border border-outline-variant bg-surface-container-low text-on-surface rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
         </div>
@@ -112,9 +112,9 @@ function Ayuda() {
           {helpResources.map((resource, index) => {
             const Icon = resource.icon;
             const colorClasses = {
-              blue: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100',
-              purple: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100',
-              green: 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100',
+              blue: 'bg-secondary-container border-primary text-primary hover:bg-secondary-container-high',
+              purple: 'bg-tertiary-container border-tertiary text-tertiary hover:bg-tertiary-container-high',
+              green: 'bg-primary-container border-primary text-primary hover:bg-primary-container-high',
             };
             return (
               <button
@@ -133,24 +133,24 @@ function Ayuda() {
 
         {/* FAQ Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Preguntas Frecuentes</h2>
+          <h2 className="text-2xl font-bold text-on-surface mb-4">Preguntas Frecuentes</h2>
           <div className="space-y-3">
             {filteredFaqs.map((faq) => (
-              <div key={faq.id} className="border border-slate-200 rounded-xl overflow-hidden">
+              <div key={faq.id} className="border border-outline-variant rounded-xl overflow-hidden">
                 <button
                   onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
-                  className="w-full px-6 py-4 flex justify-between items-left bg-white hover:bg-slate-50 transition-colors"
+                  className="w-full px-6 py-4 flex justify-between items-left bg-surface-container-lowest hover:bg-surface-container-low transition-colors"
                 >
-                  <span className="font-semibold text-left flex-1">{faq.question}</span>
+                  <span className="font-semibold text-left flex-1 text-on-surface">{faq.question}</span>
                   {expandedFaq === faq.id ? (
-                    <ChevronUp className="w-5 h-5 text-slate-400 ml-4 flex-shrink-0" />
+                    <ChevronUp className="w-5 h-5 text-on-surface-variant ml-4 flex-shrink-0" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-400 ml-4 flex-shrink-0" />
+                    <ChevronDown className="w-5 h-5 text-on-surface-variant ml-4 flex-shrink-0" />
                   )}
                 </button>
                 {expandedFaq === faq.id && (
-                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-200">
-                    <p className="text-slate-700">{faq.answer}</p>
+                  <div className="px-6 py-4 bg-surface-container-low border-t border-outline-variant">
+                    <p className="text-on-surface-variant">{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -159,20 +159,20 @@ function Ayuda() {
         </div>
 
         {/* Contact Section */}
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Contacto de Soporte</h2>
+        <div className="bg-surface-container-low border border-outline-variant rounded-xl p-6">
+          <h2 className="text-2xl font-bold text-on-surface mb-4">Contacto de Soporte</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {contactMethods.map((method, index) => {
               const Icon = method.icon;
               return (
                 <div key={index} className="flex items-start gap-4">
-                  <div className="p-3 bg-white rounded-lg border border-slate-200">
-                    <Icon className="w-6 h-6 text-blue-600" />
+                  <div className="p-3 bg-surface-container-lowest rounded-lg border border-outline-variant">
+                    <Icon className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900">{method.title}</h3>
-                    <p className="text-slate-700 font-medium">{method.value}</p>
-                    <p className="text-sm text-slate-500">{method.description}</p>
+                    <h3 className="font-semibold text-on-surface">{method.title}</h3>
+                    <p className="text-on-surface font-medium">{method.value}</p>
+                    <p className="text-sm text-on-surface-variant">{method.description}</p>
                   </div>
                 </div>
               );
@@ -181,12 +181,12 @@ function Ayuda() {
         </div>
 
         {/* System Status */}
-        <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-xl">
+        <div className="mt-8 p-6 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-xl">
           <div className="flex items-start gap-4">
-            <CheckCircle className="w-6 h-6 text-green-600 mt-1" />
+            <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400 mt-1" />
             <div>
-              <h3 className="font-bold text-green-900 mb-2">Estado del Sistema</h3>
-              <p className="text-sm text-green-800">
+              <h3 className="font-bold text-emerald-900 dark:text-emerald-300 mb-2">Estado del Sistema</h3>
+              <p className="text-sm text-emerald-800 dark:text-emerald-400">
                 Todos los servicios están operativos. Si experimentas problemas, verifica tu conexión a internet o intenta recargar la página.
               </p>
             </div>
