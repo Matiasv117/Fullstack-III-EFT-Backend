@@ -1,0 +1,96 @@
+name: Deploy to EKS
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_FRONTEND: university/frontend
+  ECR_REPOSITORY_GESTION: university/gestionpacientes
+  ECR_REPOSITORY_NOTIFICACIONES: university/notificaciones
+  ECR_REPOSITORY_AUDITORIA: university/auditoria
+  EKS_CLUSTER_NAME: university-prod
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # -------- Frontend --------
+      - name: Build and push frontend image (multi-stage Dockerfile)
+        run: |
+          docker build \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }} \
+            ./frontend
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }}
+
+      # -------- Microservicios --------
+      - name: Build and push gestionpacientes image (Backend)
+        run: |
+          docker build \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_GESTION }}:${{ github.sha }} \
+            ./services/gestionpacientes
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_GESTION }}:${{ github.sha }}
+
+      - name: Build and push notificaciones image (Backend)
+        run: |
+          docker build \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_NOTIFICACIONES }}:${{ github.sha }} \
+            ./services/notificaciones
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_NOTIFICACIONES }}:${{ github.sha }}
+
+      - name: Build and push auditoria image (Backend)
+        run: |
+          docker build \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_AUDITORIA }}:${{ github.sha }} \
+            ./services/auditoria
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_AUDITORIA }}:${{ github.sha }}
+
+      # -------- Deploy --------
+      - name: Set up kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Render manifests with image tags
+        run: |
+          export REGISTRY='${{ steps.login-ecr.outputs.registry }}'
+          export FRONTEND_IMG="$REGISTRY/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }}"
+          export GESTION_IMG="$REGISTRY/${{ env.ECR_REPOSITORY_GESTION }}:${{ github.sha }}"
+          export NOTIF_IMG="$REGISTRY/${{ env.ECR_REPOSITORY_NOTIFICACIONES }}:${{ github.sha }}"
+          export AUD_IMG="$REGISTRY/${{ env.ECR_REPOSITORY_AUDITORIA }}:${{ github.sha }}"
+
+          # Aplica todo primero
+          kubectl apply -f k8s/manifest/
+
+          # Reinicia para forzar pull de imagen (y que se use el tag renderizado)
+          kubectl rollout restart deployment/frontend || true
+          kubectl rollout restart deployment/ms-gestionpacientes || true
+
+          # Sustituye IMAGE_PLACEHOLDER si tus manifests lo tienen (tolerante)
+          kubectl -n default set image deployment/frontend frontend=$FRONTEND_IMG --record || true
+          kubectl -n default set image deployment/ms-gestionpacientes ms-gestionpacientes=$GESTION_IMG --record || true
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/ms-gestionpacientes --timeout=180s || true
+

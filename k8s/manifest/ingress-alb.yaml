@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+spec:
+  rules:
+    - http:
+        paths:
+          # Frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+
+          # Microservicios
+          - path: /api/pacientes
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-gestionpacientes
+                port:
+                  number: 80
+
+          - path: /api/notificaciones
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-notificaciones
+                port:
+                  number: 80
+
+          - path: /api/auditoria
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-auditoria
+                port:
+                  number: 80
+

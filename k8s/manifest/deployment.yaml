@@ -1,0 +1,54 @@
+# Deployment del microservicio gestionpacientes (con requests/limits obligatorios)
+# Se ajusta nombres a lo requerido por la rúbrica.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-gestionpacientes
+  labels:
+    app: ms-gestionpacientes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ms-gestionpacientes
+  template:
+    metadata:
+      labels:
+        app: ms-gestionpacientes
+    spec:
+      containers:
+        - name: ms-gestionpacientes
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 20
+

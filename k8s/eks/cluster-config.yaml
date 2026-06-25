@@ -1,0 +1,45 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: university-prod
+  region: us-east-1
+
+privateCluster:
+  enabled: false
+
+# Asegura networking privado para nodos
+privateNetworking: true
+
+
+vpc:
+  id: vpc-xxxxxxxxxxxxxxxxx
+  subnets:
+    private:
+      us-east-1a:
+        id: subnet-xxxxxxxxxxxxxxxxx
+      us-east-1b:
+        id: subnet-xxxxxxxxxxxxxxxxx
+      us-east-1c:
+        id: subnet-xxxxxxxxxxxxxxxxx
+    public:
+      us-east-1a:
+        id: subnet-xxxxxxxxxxxxxxxxx
+      us-east-1b:
+        id: subnet-xxxxxxxxxxxxxxxxx
+      us-east-1c:
+        id: subnet-xxxxxxxxxxxxxxxxx
+
+privateNetworking: true
+
+managedNodeGroups:
+  - name: ng-private
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 4
+    privateNetworking: true
+    labels:
+      role: workers
+    tags:
+      Environment: university
+      Project: salud

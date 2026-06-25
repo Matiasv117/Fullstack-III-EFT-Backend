@@ -1,0 +1,4 @@
+# (Alternativa) Archivo de configuración para eksctl.
+# Recomendado por tu rúbrica: k8s/eks/cluster-config.yaml
+# Este archivo existe solo como respaldo; aplica el que ya tienes en k8s/eks/cluster-config.yaml.
+

@@ -1,0 +1,31 @@
+# Dockerfile multi-stage - Microservicio Backend genérico (Node.js)
+# Uso: build context en la carpeta del microservicio (p.ej. ./services/gestionpacientes)
+
+# Etapa 1: build
+FROM node:20-alpine AS build
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+# Si el microservicio no tiene build, esto puede fallar; en evaluación universitaria suele estar
+# definido como "build". Puedes cambiarlo por "npm run start" si tu app lo requiere.
+RUN npm run build
+
+# Etapa 2: runtime
+FROM node:20-alpine AS runtime
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copia solo el artefacto
+# Convención: build -> dist
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package*.json ./
+
+RUN npm ci --omit=dev || npm ci --only=production
+
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+

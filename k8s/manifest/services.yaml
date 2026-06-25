@@ -1,0 +1,55 @@
+# Servicios requeridos para que el Ingress (ALB) enrute a los pods.
+# (No estaba en tu rúbrica, pero es necesario para que el despliegue funcione.)
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-gestionpacientes
+spec:
+  selector:
+    app: ms-gestionpacientes
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-notificaciones
+spec:
+  selector:
+    app: ms-notificaciones
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-auditoria
+spec:
+  selector:
+    app: ms-auditoria
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
+
