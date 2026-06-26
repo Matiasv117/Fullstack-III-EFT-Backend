@@ -5,20 +5,24 @@ spring:
   application:
     name: ms-progreso
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:progreso;DB_CLOSE_DELAY=-1}
-    driver-class-name: ${DB_DRIVER:org.h2.Driver}
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:}
+    url: ${DB_URL:jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    username: ${DB_USERNAME:neondb_owner}
+    password: ${DB_PASSWORD:npg_Viz5aYF6NSuO}
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
       connection-timeout: 30000
       idle-timeout: 600000
   jpa:
-    database-platform: ${DB_DIALECT:org.hibernate.dialect.H2Dialect}
+    database-platform: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
     hibernate:
       ddl-auto: update
     show-sql: false
+  flyway:
+    enabled: true
+    table: flyway_ms_progreso
+    baseline-on-migrate: true
 
 springdoc:
   api-docs:

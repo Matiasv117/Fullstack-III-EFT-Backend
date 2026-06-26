@@ -5,23 +5,24 @@ spring:
   application:
     name: ms-optimizacion
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:testdb}
-    driverClassName: ${DB_DRIVER:org.h2.Driver}
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:password}
+    url: ${DB_URL:jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    username: ${DB_USERNAME:neondb_owner}
+    password: ${DB_PASSWORD:npg_Viz5aYF6NSuO}
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
       connection-timeout: 30000
       idle-timeout: 600000
-  h2:
-    console:
-      enabled: ${H2_CONSOLE_ENABLED:true}
   jpa:
-    database-platform: ${DB_DIALECT:org.hibernate.dialect.H2Dialect}
+    database-platform: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:update}
     show-sql: ${JPA_SHOW_SQL:true}
+  flyway:
+    enabled: true
+    table: flyway_ms_optimizacion
+    baseline-on-migrate: true
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}

@@ -23,12 +23,18 @@ import * as portalApi from './api/portalApi';
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem('token', 'fake-token');
+    localStorage.setItem('user', JSON.stringify({ username: 'test', role: 'ROLE_USER' }));
     portalApi.obtenerResumenPortal.mockResolvedValue({
       resumen: {
         totalPacientes: 10,
         totalNotificacionesPendientes: 3,
       },
     });
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it('should render the app', async () => {

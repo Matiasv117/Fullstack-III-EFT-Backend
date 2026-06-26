@@ -29,7 +29,7 @@ describe('gestionPacientesApi', () => {
       const result = await obtenerPacientes();
 
       expect(result).toEqual(mockPacientes);
-      expect(httpClient.get).toHaveBeenCalledWith('/pacientes');
+      expect(httpClient.get).toHaveBeenCalledWith('/api/pacientes');
     });
 
     it('should handle error when fetching patients', async () => {
@@ -58,7 +58,7 @@ describe('gestionPacientesApi', () => {
       const result = await registrarPaciente(nuevoPaciente);
 
       expect(result).toEqual(mockResponse);
-      expect(httpClient.post).toHaveBeenCalledWith('/pacientes', nuevoPaciente);
+      expect(httpClient.post).toHaveBeenCalledWith('/api/pacientes', nuevoPaciente);
     });
 
     it('should handle error when registering patient', async () => {
@@ -74,7 +74,7 @@ describe('gestionPacientesApi', () => {
 
       await registrarPaciente(paciente);
 
-      expect(httpClient.post).toHaveBeenCalledWith('/pacientes', paciente);
+      expect(httpClient.post).toHaveBeenCalledWith('/api/pacientes', paciente);
     });
   });
 
@@ -86,7 +86,7 @@ describe('gestionPacientesApi', () => {
 
       await agregarPacienteAListaEspera(pacienteId);
 
-      expect(httpClient.post).toHaveBeenCalledWith('/lista-espera', {
+      expect(httpClient.post).toHaveBeenCalledWith('/api/lista-espera', {
         paciente: { id: pacienteId },
         gravedad: 'MEDIA',
         interconsulta: null,
@@ -101,7 +101,7 @@ describe('gestionPacientesApi', () => {
 
       await agregarPacienteAListaEspera(pacienteId, params);
 
-      expect(httpClient.post).toHaveBeenCalledWith('/lista-espera', {
+      expect(httpClient.post).toHaveBeenCalledWith('/api/lista-espera', {
         paciente: { id: pacienteId },
         ...params,
       });
@@ -123,7 +123,7 @@ describe('gestionPacientesApi', () => {
       const result = await eliminarPaciente(pacienteId);
 
       expect(result).toEqual({ success: true });
-      expect(httpClient.delete).toHaveBeenCalledWith(`/pacientes/${pacienteId}`);
+      expect(httpClient.delete).toHaveBeenCalledWith(`/api/pacientes/${pacienteId}`);
     });
 
     it('should handle error when deleting patient', async () => {
@@ -142,7 +142,7 @@ describe('gestionPacientesApi', () => {
       const result = await obtenerListaEspera();
 
       expect(result).toEqual(mockLista);
-      expect(httpClient.get).toHaveBeenCalledWith('/lista-espera');
+      expect(httpClient.get).toHaveBeenCalledWith('/api/lista-espera');
     });
 
     it('should handle error when fetching waiting list', async () => {
@@ -160,7 +160,7 @@ describe('gestionPacientesApi', () => {
 
       await eliminarDelListaEspera(registroId);
 
-      expect(httpClient.delete).toHaveBeenCalledWith(`/lista-espera/${registroId}`);
+      expect(httpClient.delete).toHaveBeenCalledWith(`/api/lista-espera/${registroId}`);
     });
 
     it('should handle error when deleting from waiting list', async () => {
@@ -179,7 +179,7 @@ describe('gestionPacientesApi', () => {
 
       await actualizarEstadoListaEspera(registroId, nuevoEstado);
 
-      expect(httpClient.put).toHaveBeenCalledWith(`/lista-espera/${registroId}/estado/${nuevoEstado}`);
+      expect(httpClient.put).toHaveBeenCalledWith(`/api/lista-espera/${registroId}/estado/${nuevoEstado}`);
     });
   });
 
@@ -191,7 +191,7 @@ describe('gestionPacientesApi', () => {
 
       await obtenerPacientesPorEstado(estado);
 
-      expect(httpClient.get).toHaveBeenCalledWith(`/lista-espera/estado/${estado}`);
+      expect(httpClient.get).toHaveBeenCalledWith(`/api/lista-espera/estado/${estado}`);
     });
   });
 
@@ -203,7 +203,7 @@ describe('gestionPacientesApi', () => {
 
       await obtenerPacientesPorGravedad(gravedad);
 
-      expect(httpClient.get).toHaveBeenCalledWith(`/lista-espera/gravedad/${gravedad}`);
+      expect(httpClient.get).toHaveBeenCalledWith(`/api/lista-espera/gravedad/${gravedad}`);
     });
   });
 });

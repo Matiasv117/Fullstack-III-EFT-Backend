@@ -33,9 +33,33 @@
       "workdir": "Fullstack-III-EFT-Frontend"
     },
     {
+      "name": "eureka:start",
+      "description": "Iniciar eureka-server",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "eureka-server"
+    },
+    {
+      "name": "gateway:start",
+      "description": "Iniciar api-gateway",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "api-gateway"
+    },
+    {
+      "name": "bff:start",
+      "description": "Iniciar bff (salud-bff)",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "bff"
+    },
+    {
       "name": "ms-auth:start",
       "description": "Iniciar ms-auth",
       "command": "./mvnw spring-boot:run",
+      "workdir": "ms-auth"
+    },
+    {
+      "name": "ms-auth:test",
+      "description": "Tests de ms-auth",
+      "command": "./mvnw test",
       "workdir": "ms-auth"
     },
     {
@@ -51,9 +75,67 @@
       "workdir": "ms-gestionpacientes"
     },
     {
+      "name": "ms-optimizacion:start",
+      "description": "Iniciar ms-optimizacion",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "ms-optimizacion"
+    },
+    {
+      "name": "ms-optimizacion:test",
+      "description": "Tests de ms-optimizacion",
+      "command": "./mvnw test",
+      "workdir": "ms-optimizacion"
+    },
+    {
+      "name": "ms-notificaciones:start",
+      "description": "Iniciar ms-notificaciones",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "ms-notificaciones"
+    },
+    {
+      "name": "ms-notificaciones:test",
+      "description": "Tests de ms-notificaciones",
+      "command": "./mvnw test",
+      "workdir": "ms-notificaciones"
+    },
+    {
+      "name": "ms-progreso:start",
+      "description": "Iniciar ms-progreso",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "ms-progreso"
+    },
+    {
+      "name": "ms-progreso:test",
+      "description": "Tests de ms-progreso",
+      "command": "./mvnw test",
+      "workdir": "ms-progreso"
+    },
+    {
+      "name": "ms-auditoria:start",
+      "description": "Iniciar ms-auditoria",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "ms-auditoria"
+    },
+    {
+      "name": "ms-auditoria:test",
+      "description": "Tests de ms-auditoria",
+      "command": "./mvnw test",
+      "workdir": "ms-auditoria"
+    },
+    {
       "name": "project:start-all",
       "description": "Iniciar todos los servicios con Docker",
       "command": "scripts/start-all.ps1"
+    },
+    {
+      "name": "project:start-no-docker",
+      "description": "Iniciar servicios sin Docker",
+      "command": "scripts/start-no-docker.ps1"
+    },
+    {
+      "name": "project:stop-all",
+      "description": "Detener todos los servicios",
+      "command": "scripts/stop-all.ps1"
     },
     {
       "name": "project:smoke-test",
@@ -71,5 +153,12 @@
       "glob": "**/node_modules/**"
     }
   ],
-  "agentInstructions": "Leer AGENTS.md al inicio de cada sesión para contexto completo del proyecto. Archivos .md de documentación pueden estar desactualizados; priorizar código fuente y AGENTS.md."
+  "agentInstructions": "Leer AGENTS.md al inicio de cada sesión para contexto completo del proyecto. Archivos .md de documentación pueden estar desactualizados; priorizar código fuente y AGENTS.md.",
+  "mcp": {
+    "neon": {
+      "type": "remote",
+      "url": "https://mcp.neon.tech/mcp",
+      "enabled": true
+    }
+  }
 }

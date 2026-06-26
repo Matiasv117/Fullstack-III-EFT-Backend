@@ -17,7 +17,7 @@ describe('optimizacionApi', () => {
       const result = await obtenerListaEsperaOptimizada();
 
       expect(result).toEqual(mockLista);
-      expect(httpClient.get).toHaveBeenCalledWith('/optimizacion/lista-espera');
+      expect(httpClient.get).toHaveBeenCalledWith('/api/optimizacion/lista-espera');
     });
 
     it('should handle error', async () => {
@@ -35,7 +35,7 @@ describe('optimizacionApi', () => {
 
       await cancelarCitaConEstrategia(citaId);
 
-      expect(httpClient.post).toHaveBeenCalledWith(`/optimizacion/cancelar/${citaId}`, null, {
+      expect(httpClient.post).toHaveBeenCalledWith(`/api/optimizacion/cancelar/${citaId}`, null, {
         params: { estrategia: 'fifo' },
       });
     });
@@ -47,7 +47,7 @@ describe('optimizacionApi', () => {
 
       await cancelarCitaConEstrategia(citaId, estrategia);
 
-      expect(httpClient.post).toHaveBeenCalledWith(`/optimizacion/cancelar/${citaId}`, null, {
+      expect(httpClient.post).toHaveBeenCalledWith(`/api/optimizacion/cancelar/${citaId}`, null, {
         params: { estrategia },
       });
     });

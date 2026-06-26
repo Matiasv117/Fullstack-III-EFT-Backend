@@ -68,7 +68,10 @@ describe('GestionPacientesView', () => {
 
   it('should call registrar when button clicked', async () => {
     const user = userEvent.setup();
-    const props = { ...mockProps, formValido: true };
+    const props = {
+      ...mockProps,
+      nuevoPaciente: { nombre: 'Juan', apellido: 'Pérez', dni: '12345678', telefono: '', email: '' },
+    };
     render(<GestionPacientesView {...props} />);
 
     const registerButton = screen.getByRole('button', { name: /Registrar paciente/i });
