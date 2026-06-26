@@ -1,0 +1,75 @@
+{
+  "$schema": "https://opencode.ai/schema/opencode.json",
+  "description": "InsForge (RedNorte) - Fullstack Healthcare Platform",
+  "customCommands": [
+    {
+      "name": "frontend:dev",
+      "description": "Iniciar servidor de desarrollo frontend",
+      "command": "npm run dev",
+      "workdir": "Fullstack-III-EFT-Frontend"
+    },
+    {
+      "name": "frontend:test",
+      "description": "Correr tests del frontend",
+      "command": "npm test",
+      "workdir": "Fullstack-III-EFT-Frontend"
+    },
+    {
+      "name": "frontend:test:watch",
+      "description": "Tests en modo watch",
+      "command": "npm test -- --watch",
+      "workdir": "Fullstack-III-EFT-Frontend"
+    },
+    {
+      "name": "frontend:lint",
+      "description": "Ejecutar ESLint",
+      "command": "npm run lint",
+      "workdir": "Fullstack-III-EFT-Frontend"
+    },
+    {
+      "name": "frontend:build",
+      "description": "Build de producción",
+      "command": "npm run build",
+      "workdir": "Fullstack-III-EFT-Frontend"
+    },
+    {
+      "name": "ms-auth:start",
+      "description": "Iniciar ms-auth",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "ms-auth"
+    },
+    {
+      "name": "ms-gestionpacientes:start",
+      "description": "Iniciar ms-gestionpacientes",
+      "command": "./mvnw spring-boot:run",
+      "workdir": "ms-gestionpacientes"
+    },
+    {
+      "name": "ms-gestionpacientes:test",
+      "description": "Tests de ms-gestionpacientes",
+      "command": "./mvnw test",
+      "workdir": "ms-gestionpacientes"
+    },
+    {
+      "name": "project:start-all",
+      "description": "Iniciar todos los servicios con Docker",
+      "command": "scripts/start-all.ps1"
+    },
+    {
+      "name": "project:smoke-test",
+      "description": "Smoke test E2E",
+      "command": "scripts/smoke-test-e2e.ps1"
+    }
+  ],
+  "rules": [
+    {
+      "description": "No modificar archivos .md sin preguntar",
+      "glob": "*.md"
+    },
+    {
+      "description": "No modificar node_modules",
+      "glob": "**/node_modules/**"
+    }
+  ],
+  "agentInstructions": "Leer AGENTS.md al inicio de cada sesión para contexto completo del proyecto. Archivos .md de documentación pueden estar desactualizados; priorizar código fuente y AGENTS.md."
+}

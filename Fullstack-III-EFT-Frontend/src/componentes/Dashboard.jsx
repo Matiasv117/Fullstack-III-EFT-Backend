@@ -14,25 +14,23 @@ const Dashboard = ({ user }) => {
   }
 
   useEffect(() => {
-    const buttons = document.querySelectorAll('button')
-    buttons.forEach(btn => {
-      btn.addEventListener('mousedown', () => {
-        btn.classList.add('scale-95', 'opacity-80')
-      })
-      btn.addEventListener('mouseup', () => {
-        btn.classList.remove('scale-95', 'opacity-80')
-      })
-      btn.addEventListener('mouseleave', () => {
-        btn.classList.remove('scale-95', 'opacity-80')
-      })
-    })
+    const handleMouseDown = (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        e.target.classList.add('scale-95', 'opacity-80')
+      }
+    }
+    const handleMouseUp = (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        e.target.classList.remove('scale-95', 'opacity-80')
+      }
+    }
+
+    document.addEventListener('mousedown', handleMouseDown)
+    document.addEventListener('mouseup', handleMouseUp)
 
     return () => {
-      buttons.forEach(btn => {
-        btn.removeEventListener('mousedown', () => {})
-        btn.removeEventListener('mouseup', () => {})
-        btn.removeEventListener('mouseleave', () => {})
-      })
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [])
 

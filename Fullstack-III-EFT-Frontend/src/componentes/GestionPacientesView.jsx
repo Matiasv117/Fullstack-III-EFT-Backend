@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { 
-  Plus, RefreshCw, Trash2, Eye, UserPlus, FileText, 
-  Calendar, User, CreditCard, Phone, Mail, MapPin, 
-  Pill, X, ChevronDown, Check
+  RefreshCw, Trash2, Eye, UserPlus, FileText, 
+  Pill, X, Check
 } from 'lucide-react'
 import { validarNombre, validarApellido, validarDNI, validarEmail, validarTelefono } from '../utils/validations'
 
@@ -46,7 +45,6 @@ function GestionPacientesView({
   cargando,
   mensaje,
   error,
-  formValido,
   actualizarCampo,
   registrar,
   agregarALista,
@@ -69,7 +67,7 @@ function GestionPacientesView({
     const author = "Dr. Elena Cruz";
     const date = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
     const newNote = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       doctor: author,
       date,
       content: newNoteText
@@ -148,13 +146,13 @@ function GestionPacientesView({
       {/* Alert Feedbacks */}
       <div className="space-y-3">
         {mensaje && (
-          <div className="bg-emerald-50 border border-emerald-150 border-emerald-250/20 text-emerald-800 p-4 rounded-xl text-sm font-semibold flex items-center gap-2">
+          <div className="bg-emerald-50 border border-emerald-200/20 text-emerald-800 p-4 rounded-xl text-sm font-semibold flex items-center gap-2">
             <Check className="w-4 h-4 shrink-0" />
             <span>{mensaje}</span>
           </div>
         )}
         {error && (
-          <div className="bg-rose-55 bg-rose-50 border border-rose-150 border-rose-250/20 text-rose-800 p-4 rounded-xl text-sm font-semibold flex items-center gap-2">
+          <div className="bg-rose-50 border border-rose-200/20 text-rose-800 p-4 rounded-xl text-sm font-semibold flex items-center gap-2">
             <X className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -292,10 +290,10 @@ function GestionPacientesView({
                  }}
                  placeholder="Nombre *"
                  autoComplete="given-name"
-                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm transition-all ${
-                   erroresCampo.nombre
-                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
-                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                  className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 text-sm transition-all ${
+                    erroresCampo.nombre
+                      ? 'border-red-500 focus:ring-red-300'
+                      : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
                  }`}
                />
                {erroresCampo.nombre && (
@@ -317,10 +315,10 @@ function GestionPacientesView({
                  }}
                  placeholder="Apellido *"
                  autoComplete="family-name"
-                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm transition-all ${
-                   erroresCampo.apellido
-                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
-                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                  className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 text-sm transition-all ${
+                    erroresCampo.apellido
+                      ? 'border-red-500 focus:ring-red-300'
+                      : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
                  }`}
                />
                {erroresCampo.apellido && (
@@ -342,10 +340,10 @@ function GestionPacientesView({
                  }}
                  placeholder="DNI *"
                  autoComplete="off"
-                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm font-mono transition-all ${
-                   erroresCampo.dni
-                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
-                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                  className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 text-sm font-mono transition-all ${
+                    erroresCampo.dni
+                      ? 'border-red-500 focus:ring-red-300'
+                      : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
                  }`}
                />
                {erroresCampo.dni && (
@@ -367,10 +365,10 @@ function GestionPacientesView({
                  }}
                  placeholder="Teléfono (opcional)"
                  autoComplete="tel"
-                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm transition-all ${
-                   erroresCampo.telefono
-                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
-                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                  className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 text-sm transition-all ${
+                    erroresCampo.telefono
+                      ? 'border-red-500 focus:ring-red-300'
+                      : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
                  }`}
                />
                {erroresCampo.telefono && (
@@ -393,10 +391,10 @@ function GestionPacientesView({
                  }}
                  placeholder="Correo electrónico (opcional)"
                  autoComplete="email"
-                 className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:border text-sm transition-all ${
-                   erroresCampo.email
-                     ? 'border-red-500 focus:ring-red-300 focus:ring-red-500'
-                     : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
+                  className={`w-full border rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 text-sm transition-all ${
+                    erroresCampo.email
+                      ? 'border-red-500 focus:ring-red-300'
+                      : 'border-outline-variant focus:ring-primary/10 focus:border-primary'
                  }`}
                />
                {erroresCampo.email && (
@@ -437,7 +435,7 @@ function GestionPacientesView({
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Historial Clínico del Paciente</h3>
-                  <p className="text-xs text-slate-550 text-slate-500 mt-1">Detalle clínico unificado de atención primaria y derivación</p>
+                  <p className="text-xs text-slate-500 mt-1">Detalle clínico unificado de atención primaria y derivación</p>
                 </div>
                 <button
                   onClick={() => setSelectedPatient(null)}
@@ -452,7 +450,7 @@ function GestionPacientesView({
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   
                   {/* Left demographics card */}
-                  <div className="lg:col-span-1 bg-slate-50/50 p-5 rounded-xl border border-slate-150 border-slate-200/50 flex flex-col items-center text-center text-xs space-y-4">
+                  <div className="lg:col-span-1 bg-slate-50/50 p-5 rounded-xl border border-slate-200/50 flex flex-col items-center text-center text-xs space-y-4">
                     <img src={extra.photoUrl} alt={selectedPatient.nombre} className="w-28 h-28 rounded-xl border border-slate-200 object-cover shadow-xs" />
                     
                     <div>
@@ -619,7 +617,7 @@ function GestionPacientesView({
                               <span>{n.doctor}</span>
                               <span className="text-[10px] text-slate-400 font-mono">{n.date}</span>
                             </div>
-                            <p className="text-slate-655 text-slate-600 italic leading-relaxed">"{n.content}"</p>
+                            <p className="text-slate-600 italic leading-relaxed">"{n.content}"</p>
                           </div>
                         ))}
                       </div>
