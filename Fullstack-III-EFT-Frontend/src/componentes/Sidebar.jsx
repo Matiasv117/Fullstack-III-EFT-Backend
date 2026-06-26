@@ -22,7 +22,7 @@ const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDar
   return (
     <aside className="fixed left-0 top-0 h-full flex flex-col p-gutter bg-surface dark:bg-surface-dim w-sidebar-width z-50">
       <div className="flex items-center gap-3 mb-10 px-2">
-        <img src={logo2Logo} alt="RedNorte Logo" className="w-25 h20 rounded-lg object-cover" />
+        <img src={logo2Logo} alt="RedNorte Logo" className="w-24 h-20 rounded-lg object-cover" />
         <div>
           <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-dark">RedNorte</h1>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
