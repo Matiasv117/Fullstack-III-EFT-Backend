@@ -162,6 +162,8 @@ scripts/stop-all.ps1                 # Detener todo
   - Ahora extraen username/role directamente del token JWT, igual que el filter de ms-auditoria
 - **`eureka.instance.prefer-ip-address: true`** agregado a ms-auth, ms-auditoria, ms-progreso, api-gateway (ms-gestionpacientes, ms-notificaciones, ms-optimizacion ya lo tenían). Sin esto los servicios se registran con el hostname de Windows (`LAPTOP-5OQAK09E.mshome.net`) que no se resuelve por DNS.
 - **`PacienteClient.java`**: corregido `@FeignClient(name = "ms-gestionpacientes")` → `"ms-listas-espera"` para que coincida con el `spring.application.name` real del servicio.
+- **`ListaEsperaController.java`** y **`PacientesController.java`** en BFF: cambiado `lb://ms-gestionpacientes` → `lb://ms-listas-espera`.
+- **API Gateway route**: cambiado `uri: lb://ms-gestionpacientes` → `lb://ms-listas-espera`.
 - `start-all.ps1` y `start-no-docker.ps1`: optimizados para arranque paralelo (Eureka primero, resto simultáneo).
 
 ## Base de Datos
@@ -186,6 +188,8 @@ scripts/stop-all.ps1                 # Detener todo
 13. ~~Fix Eureka hostname resolution: agregar `prefer-ip-address: true`~~ — Completado
 14. ~~Fix PacienteClient Feign name: ms-gestionpacientes → ms-listas-espera~~ — Completado
 15. ~~Optimizar scripts de arranque (start-all.ps1, start-no-docker.ps1)~~ — Completado
+16. ~~Fix BFF controllers y API Gateway: lb://ms-gestionpacientes → ms-listas-espera~~ — Completado
+17. **Mejorar vista de paciente y funcionario** — pendiente (darles utilidades reales)
 
 ## Bugs / Notas
 - ~~Los tests de API esperan rutas sin prefijo `/api` pero el código real las usa con `/api`~~ — Corregido
