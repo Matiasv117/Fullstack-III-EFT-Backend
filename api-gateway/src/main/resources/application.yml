@@ -32,7 +32,7 @@ spring:
             - StripPrefix=0
 
         - id: ms-listas-espera
-          uri: lb://ms-gestionpacientes
+          uri: lb://ms-listas-espera
           predicates:
             - Path=/api/listas-espera/**,/lista-espera/**,/pacientes/**
           filters:
