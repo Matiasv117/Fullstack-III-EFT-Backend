@@ -155,6 +155,15 @@ scripts/stop-all.ps1                 # Detener todo
 - **docker-compose.full.yml**: Removido `version: '3.8'` (deprecado)
 - **eureka-server/Dockerfile**: Agregado curl para healthcheck
 
+### Fase 6 — Fixes posteriores al merge (27 Jun 2026)
+- **JwtAuthenticationFilter** en ms-gestionpacientes, ms-notificaciones, ms-optimizacion, ms-auditoria:
+  - Eliminada dependencia de `UserDetailsService` (no existe bean en microservicios downstream)
+  - Eliminado método `authenticateFromLegacyToken()` (fallback Base64 obsoleto)
+  - Ahora extraen username/role directamente del token JWT, igual que el filter de ms-auditoria
+- **`eureka.instance.prefer-ip-address: true`** agregado a ms-auth, ms-auditoria, ms-progreso, api-gateway (ms-gestionpacientes, ms-notificaciones, ms-optimizacion ya lo tenían). Sin esto los servicios se registran con el hostname de Windows (`LAPTOP-5OQAK09E.mshome.net`) que no se resuelve por DNS.
+- **`PacienteClient.java`**: corregido `@FeignClient(name = "ms-gestionpacientes")` → `"ms-listas-espera"` para que coincida con el `spring.application.name` real del servicio.
+- `start-all.ps1` y `start-no-docker.ps1`: optimizados para arranque paralelo (Eureka primero, resto simultáneo).
+
 ## Base de Datos
 - Hosteada en Neon (no local) — todos los microservicios apuntan a Neon ahora
 - MCP server configurado en `opencode.json` para consultas directas (requiere `NEON_API_KEY`)
@@ -172,8 +181,11 @@ scripts/stop-all.ps1                 # Detener todo
 8. ~~Agregar tests a eureka-server (no tiene tests)~~ — Completado
 9. ~~Verificar docker-compose.full.yml para despliegue completo~~ — Completado
 10. ~~Probar inicio con `scripts/start-all.ps1`~~ — Completado
-11. Ejecutar `mvn verify` en todos los servicios (verificar cobertura post-cambio)
-12. Verificar tests frontend (`npm test` en Frontend)
+11. ~~Fix ms-auditoria startup: UserDetailsService missing~~ — Completado
+12. ~~Fix ms-gestionpacientes, ms-notificaciones, ms-optimizacion: mismo problema UserDetailsService~~ — Completado
+13. ~~Fix Eureka hostname resolution: agregar `prefer-ip-address: true`~~ — Completado
+14. ~~Fix PacienteClient Feign name: ms-gestionpacientes → ms-listas-espera~~ — Completado
+15. ~~Optimizar scripts de arranque (start-all.ps1, start-no-docker.ps1)~~ — Completado
 
 ## Bugs / Notas
 - ~~Los tests de API esperan rutas sin prefijo `/api` pero el código real las usa con `/api`~~ — Corregido
@@ -181,3 +193,5 @@ scripts/stop-all.ps1                 # Detener todo
 - `docker-compose.yml` levanta solo Redis + RabbitMQ (PostgreSQL es Neon cloud)
 - Al hacer `git add` en Windows pueden aparecer warnings de `LF will be replaced by CRLF` — es normal, no afecta
 - ~~Los 11 tests de App.test.jsx fueron corregidos~~
+- En Windows con WSL/Hyper-V, los servicios se registran en Eureka con IP virtual (172.x.x.x). Siempre agregar `eureka.instance.prefer-ip-address: true` en nuevos microservicios.
+- El nombre del `@FeignClient` debe coincidir exactamente con `spring.application.name` del servicio destino.

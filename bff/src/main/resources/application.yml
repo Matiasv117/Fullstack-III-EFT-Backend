@@ -7,7 +7,7 @@ bff:
   downstream:
     base-url: ${BFF_DOWNSTREAM_BASE_URL:http://localhost:8080}
   auth:
-    base-url: ${BFF_AUTH_BASE_URL:http://localhost:8087}
+    base-url: ${BFF_AUTH_BASE_URL:lb://ms-auth}
 
 spring:
   application:
@@ -22,6 +22,13 @@ management:
     health:
       probes:
         enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
 
 logging:
   level:

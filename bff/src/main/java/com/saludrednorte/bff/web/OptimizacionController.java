@@ -18,7 +18,7 @@ public class OptimizacionController {
     @Autowired
     private WebClient.Builder webClientBuilder;
 
-    private static final String MS_OPTIMIZACION_URL = "http://localhost:8084";
+    private static final String MS_OPTIMIZACION_URL = "lb://ms-optimizacion";
 
     private WebClient getWebClient() {
         return webClientBuilder.build();

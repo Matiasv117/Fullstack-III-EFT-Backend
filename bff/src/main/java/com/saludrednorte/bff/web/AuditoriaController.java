@@ -15,7 +15,7 @@ public class AuditoriaController {
     @Autowired
     private WebClient.Builder webClientBuilder;
 
-    private static final String MS_AUDITORIA_URL = "http://localhost:8088";
+    private static final String MS_AUDITORIA_URL = "lb://ms-auditoria";
 
     private WebClient getWebClient() {
         return webClientBuilder.build();

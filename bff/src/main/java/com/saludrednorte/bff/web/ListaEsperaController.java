@@ -18,7 +18,7 @@ public class ListaEsperaController {
     @Autowired
     private WebClient.Builder webClientBuilder;
 
-    private static final String MS_GESTION_PACIENTES_URL = "http://localhost:8083";
+    private static final String MS_GESTION_PACIENTES_URL = "lb://ms-gestionpacientes";
 
     private WebClient getWebClient() {
         return webClientBuilder.build();

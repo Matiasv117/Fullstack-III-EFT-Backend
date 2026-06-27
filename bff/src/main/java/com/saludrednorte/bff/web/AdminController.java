@@ -18,7 +18,7 @@ public class AdminController {
     @Autowired
     private WebClient.Builder webClientBuilder;
 
-    private static final String MS_AUTH_URL = "http://localhost:8087";
+    private static final String MS_AUTH_URL = "lb://ms-auth";
 
     private WebClient getWebClient() {
         return webClientBuilder.build();

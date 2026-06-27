@@ -18,7 +18,7 @@ public class NotificacionesController {
     @Autowired
     private WebClient.Builder webClientBuilder;
 
-    private static final String MS_NOTIFICACIONES_URL = "http://localhost:8085";
+    private static final String MS_NOTIFICACIONES_URL = "lb://ms-notificaciones";
 
     private WebClient getWebClient() {
         return webClientBuilder.build();

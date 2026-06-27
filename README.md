@@ -26,28 +26,37 @@ La aplicación permite la gestión integral de datos, ofreciendo una interfaz de
 ### **Frontend**
 | Tecnología | Descripción |
 | :--- | :--- |
-| **React.js** | Biblioteca principal para la interfaz. |
-| **Vite** | Herramienta de construcción rápida. |
-| **Bootstrap** | Para el diseño responsivo. |
+| **React 19** | Biblioteca principal para la interfaz. |
+| **Vite 8** | Herramienta de construcción rápida. |
+| **Tailwind CSS v4** | Framework de estilos utility-first. |
+| **Lucide React** | Iconos vectoriales. |
+| **Vitest 4 + Testing Library** | Tests unitarios y de integración. |
 
 ### **Backend & Database**
 | Tecnología | Descripción |
 | :--- | :--- |
 | **Java 17** | Lenguaje y runtime del backend. |
-| **Spring Boot 3** | Microservicios, BFF y API Gateway. |
-| **Spring Cloud Gateway** | Punto de entrada HTTP y enrutado. |
-| **Eureka** | Descubrimiento de servicios. |
-| **PostgreSQL / H2** | PostgreSQL (perfil `postgres`, p. ej. Insforge) o H2 en memoria por defecto. |
+| **Spring Boot 3.4.1** | Microservicios, BFF y API Gateway. |
+| **Spring Cloud Gateway** | Punto de entrada HTTP y enrutado (puerto 8080). |
+| **Eureka** | Descubrimiento de servicios (puerto 8761). |
+| **Spring Cloud OpenFeign** | Comunicación síncrona entre microservicios. |
+| **RabbitMQ** | Mensajería asíncrona (auditoría y notificaciones). |
+| **Redis** | Caché distribuida. |
+| **PostgreSQL / H2 / Neon** | PostgreSQL local o Neon cloud (perfil `postgres`), H2 en memoria por defecto. |
+| **JUnit 5 + Mockito + JaCoCo** | Tests y cobertura (~90%+ en servicios principales). |
 
 ### **Componentes backend (carpetas)**
-| Carpeta | Rol |
-| :--- | :--- |
-| `bff` | **Backend for Frontend**: agrega respuestas para el portal (ej. `/api/portal/resumen`). |
-| `api-gateway` | Enruta peticiones a microservicios y al BFF. |
-| `ms-gestionpacientes` | Pacientes y lista de espera. |
-| `ms-notificaciones` | Notificaciones. |
-| `ms-optimizacion` | Citas, médicos, horarios y optimización. |
-| `eureka-server` | Registro de servicios. |
+| Carpeta | Rol | Puerto |
+| :--- | :--- | :--- |
+| `eureka-server` | Registro y descubrimiento de servicios. | 8761 |
+| `api-gateway` | Enruta peticiones a microservicios y al BFF. | 8080 |
+| `bff` | **Backend for Frontend**: agrega respuestas para el portal (ej. `/api/portal/resumen`). | 8097 |
+| `ms-auth` | Autenticación JWT (HMAC-SHA), registro y gestión de funcionarios. | 8087 |
+| `ms-gestionpacientes` | Pacientes y lista de espera. | 8083 |
+| `ms-notificaciones` | Notificaciones push/email. | 8085 |
+| `ms-optimizacion` | Citas, médicos, horarios y optimización (Strategy Pattern). | 8084 |
+| `ms-progreso` | Progreso de pacientes. | 8086 |
+| `ms-auditoria` | Auditoría de eventos (RabbitMQ). | 8088 |
 
 ---
 
@@ -74,6 +83,24 @@ git clone https://github.com/Matiasv117/Fullstack-III-EFT.git
 | Matías Vargas | [@Matiasv117](https://github.com/Matiasv117) |
 | Benjamín Ibañez | [@beibanezv](https://github.com/beibanezv) |
 | Fabián Reyes | [@FabianReyes02](https://github.com/FabianReyes02) |
+
+## Tests
+
+### Backend (434 tests, 0 fallas)
+```bash
+# Cada microservicio
+cd ms-auth; .\mvnw test
+cd bff; .\mvnw test
+# Todos los servicios con cobertura
+.\mvnw verify
+```
+Cobertura JaCoCo: ms-auditoria 100%, ms-progreso 96%, ms-optimizacion 94%, bff 91%, ms-notificaciones 91%, ms-auth 87%, ms-gestionpacientes ≥85%.
+
+### Frontend (159 tests)
+```bash
+npm test        # Vitest
+npm run lint    # ESLint
+```
 
 ## Smoke Test E2E (microservicios)
 
@@ -102,10 +129,11 @@ Set-Location "ruta\a\Fullstack-III-EFT"
 .\scripts\stop-all.ps1
 ```
 
-### Insforge / PostgreSQL
+### Neon (PostgreSQL cloud)
 
+Todos los microservicios usan una misma instancia Neon con esquemas separados por servicio (Flyway).
 
-1. Copiá `config/local-insforge.env.example` a `config/local-insforge.env` y pegá la **contraseña** (ese archivo no se sube a git).
+1. Copiá `config/local-insforge.env.example` a `config/local-insforge.env` y pegá la **contraseña** de Neon (ese archivo no se sube a git).
 2. En PowerShell, desde la raíz del repo: **punto espacio** script (carga variables en esa ventana):
 
    ```powershell
@@ -116,9 +144,9 @@ Set-Location "ruta\a\Fullstack-III-EFT"
 
 Más detalle y la URI JDBC de ejemplo: `config/ejemplo-insforge.env`.
 
-**API de notificaciones:** las rutas REST pasan a **`/api/notificaciones`** (español); la tabla JPA es **`notificaciones`**. Con perfil `postgres`, Flyway en `ms-notificaciones` renombra `notifications` → `notificaciones` si aún existe la tabla antigua en la base. Si en Insforge ves `flyway_ms_*`, esas son **tablas de historial de migraciones** de cada microservicio, no tablas de negocio. Si ves `notifications` y `notificaciones` a la vez, la migración `V2__cleanup_legacy_notifications_table.sql` deja solo la versión actual en español.
+**API de notificaciones:** las rutas REST pasan a **`/api/notificaciones`** (español); la tabla JPA es **`notificaciones`**. Con perfil `postgres`, Flyway en `ms-notificaciones` renombra `notifications` → `notificaciones` si aún existe la tabla antigua en la base. Si en Neon ves `flyway_ms_*`, esas son **tablas de historial de migraciones** de cada microservicio, no tablas de negocio. Si ves `notifications` y `notificaciones` a la vez, la migración `V2__cleanup_legacy_notifications_table.sql` deja solo la versión actual en español.
 
-**Qué tabla mirar:** al pulsar **Registrar** se inserta en **`paciente`**. Al pulsar **Agregar a lista** se inserta en **`lista_espera`** (referencia al paciente por id). Si Insforge sigue en 0 filas, casi siempre es porque los servicios siguen en **H2** (revisá el log al arrancar: debe decir `jdbc:postgresql://...insforge...`). Usá `config/local-insforge.env` + `start-all.ps1` o cargá variables antes de `mvnw`.
+**Qué tabla mirar:** al pulsar **Registrar** se inserta en **`paciente`**. Al pulsar **Agregar a lista** se inserta en **`lista_espera`** (referencia al paciente por id). Si la BD sigue en 0 filas, casi siempre es porque los servicios siguen en **H2** (revisá el log al arrancar: debe decir `jdbc:postgresql://...`). Usá `config/local-insforge.env` + `start-all.ps1` o cargá variables antes de `mvnw`.
 
 ## Documentación de apoyo para la entrega
 
@@ -127,28 +155,28 @@ Más detalle y la URI JDBC de ejemplo: `config/ejemplo-insforge.env`.
 - `arquetipo-maven-salud-ms/`: arquetipo base mínimo para nuevos microservicios Spring Boot.
 - `repositorios.txt`: índice de repositorios y componentes del monorepo.
 
-## Actividad Clase 3 — autenticación temporal
+## Autenticación
 
-Implementación educativa y temporal realizada en la rama `feature/jwt-test`.
+El sistema usa autenticación JWT con clave HMAC-SHA compartida.
 
-### Flujo agregado
+### Flujo actual
 
-1. `POST /login/admin` → genera un token Base64 para `ADMIN`.
-2. `POST /login/user` → genera un token Base64 para `USER`.
-3. `Authorization: Bearer <token>` → el `api-gateway` valida el rol con un filtro.
-4. `GET /productos` → endpoint demo protegido, accesible solo con `ADMIN`.
-5. `GET /api/portal/resumen` → el BFF reenvía el token al gateway para mantener el flujo.
+1. `POST /api/auth/login` (BFF 8097 o Gateway 8080) → valida credenciales contra `ms-auth` → devuelve `{ token, type: "Bearer" }`.
+2. El frontend almacena el token en `localStorage` y lo envía como `Authorization: Bearer <token>`.
+3. El `api-gateway` valida el token con `JwtTokenValidator` (filtro global).
+4. El BFF reenvía el token a los microservicios para mantener la sesión.
 
-### Reglas simples
+### Usuarios por defecto (creados automáticamente al iniciar con BD vacía)
+
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `admin` | `admin123` | `ROLE_ADMIN` |
+| `funcionario` | `funcionario123` | `ROLE_FUNCIONARIO` |
+| `paciente` | `paciente123` | `ROLE_PACIENTE` |
+
+### Reglas de acceso
 
 - Sin token: `401 Unauthorized`.
-- Con `USER` en un endpoint restringido: `403 Forbidden`.
-- Con `ADMIN`: acceso completo.
-
-### Evidencias sugeridas para la entrega
-
-- Captura del login en Postman.
-- Captura de `401`, `403` y `200` en los endpoints de prueba.
-- Captura del token decodificado en https://www.jwt.io/.
-- Captura o nota de la rama `feature/jwt-test`.
+- `ROLE_USER` o `ROLE_FUNCIONARIO` en endpoint de admin: `403 Forbidden`.
+- `ROLE_ADMIN`: acceso completo a gestión de funcionarios y administración.
 

@@ -63,7 +63,7 @@ public class JwtTokenValidator {
         String normalized = jwtRole.toUpperCase(Locale.ROOT);
         return switch (normalized) {
             case "ROLE_ADMIN", "ADMIN" -> SimpleAuthService.ROLE_ADMIN;
-            case "ROLE_FUNCIONARIO", "FUNCIONARIO" -> SimpleAuthService.ROLE_ADMIN;
+            case "ROLE_FUNCIONARIO", "FUNCIONARIO" -> SimpleAuthService.ROLE_USER;
             default -> SimpleAuthService.ROLE_USER;
         };
     }

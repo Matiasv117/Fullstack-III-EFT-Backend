@@ -3,6 +3,7 @@ package com.saludrednorte.ms_auth.controller;
 import com.saludrednorte.ms_auth.entity.User;
 import com.saludrednorte.ms_auth.dto.UserDTO;
 import com.saludrednorte.ms_auth.repository.UserRepository;
+import com.saludrednorte.ms_auth.security.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,6 +33,9 @@ public class AdminController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     /**
      * Lista todos los funcionarios y administradores del sistema (excluye pacientes).
@@ -249,7 +253,7 @@ public class AdminController {
     }
 
     /**
-     * Verifica si el token pertenece a un administrador.
+     * Verifica si el token pertenece a un administrador usando JwtUtil.
      */
     private boolean esAdmin(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -258,35 +262,20 @@ public class AdminController {
 
         try {
             String token = authorization.substring(7);
-            String[] parts = token.split("\\.");
-            if (parts.length < 2) {
-                return false;
-            }
-
-            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
-            String sub = payload.substring(payload.indexOf("\"sub\":\"") + 7);
-            sub = sub.substring(0, sub.indexOf("\""));
-
-            return "admin".equals(sub);
+            String role = jwtUtil.extractRole(token);
+            return "ROLE_ADMIN".equals(role);
         } catch (Exception e) {
             return false;
         }
     }
 
     /**
-     * Extrae el username del token JWT.
+     * Extrae el username del token JWT usando JwtUtil.
      */
     private String extraerUsernameDelToken(String authorization) {
         try {
             String token = authorization.substring(7);
-            String[] parts = token.split("\\.");
-            if (parts.length < 2) {
-                return "sistema";
-            }
-
-            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
-            String sub = payload.substring(payload.indexOf("\"sub\":\"") + 7);
-            return sub.substring(0, sub.indexOf("\""));
+            return jwtUtil.extractUsername(token);
         } catch (Exception e) {
             return "sistema";
         }

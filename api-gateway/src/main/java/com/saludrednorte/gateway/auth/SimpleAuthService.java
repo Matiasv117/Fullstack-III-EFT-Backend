@@ -3,15 +3,12 @@ package com.saludrednorte.gateway.auth;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 /**
  * Servicio de autenticacion del API Gateway.
- * Valida JWT emitidos por ms-auth y mantiene compatibilidad con tokens legacy Base64.
+ * Valida JWT emitidos por ms-auth.
  */
 @Service
 public class SimpleAuthService {
@@ -41,15 +38,7 @@ public class SimpleAuthService {
     }
 
     /**
-     * Genera un token legacy Base64 (solo para desarrollo / retrocompatibilidad).
-     */
-    public String generarToken(String usuario, String rol) {
-        String datos = usuario + ":" + rol.toUpperCase(Locale.ROOT);
-        return Base64.getEncoder().encodeToString(datos.getBytes(StandardCharsets.UTF_8));
-    }
-
-    /**
-     * Decodifica y valida el Bearer token: primero JWT de ms-auth, luego legacy Base64.
+     * Valida el Bearer token JWT emitido por ms-auth.
      */
     public Optional<TokenData> decodeBearerToken(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
@@ -61,25 +50,7 @@ public class SimpleAuthService {
             return Optional.empty();
         }
 
-        Optional<TokenData> jwtData = jwtTokenValidator.validate(token);
-        if (jwtData.isPresent()) {
-            return jwtData;
-        }
-
-        return decodeLegacyToken(token);
-    }
-
-    private Optional<TokenData> decodeLegacyToken(String token) {
-        try {
-            String decoded = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
-            String[] partes = decoded.split(":", 2);
-            if (partes.length != 2 || partes[0].isBlank() || partes[1].isBlank()) {
-                return Optional.empty();
-            }
-            return Optional.of(new TokenData(partes[0], partes[1].toUpperCase(Locale.ROOT)));
-        } catch (IllegalArgumentException ex) {
-            return Optional.empty();
-        }
+        return jwtTokenValidator.validate(token);
     }
 
     public boolean isPublicPath(String path) {

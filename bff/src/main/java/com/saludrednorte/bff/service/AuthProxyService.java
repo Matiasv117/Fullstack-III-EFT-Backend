@@ -21,7 +21,7 @@ public class AuthProxyService {
     private final WebClient authWebClient;
 
     public AuthProxyService(WebClient.Builder builder,
-                            @Value("${bff.auth.base-url:http://localhost:8087}") String authBaseUrl) {
+                            @Value("${bff.auth.base-url:lb://ms-auth}") String authBaseUrl) {
         this.authWebClient = builder
                 .baseUrl(authBaseUrl.endsWith("/") ? authBaseUrl.substring(0, authBaseUrl.length() - 1) : authBaseUrl)
                 .build();
