@@ -182,28 +182,50 @@ Write-Host "[WARN] RabbitMQ y Redis no se iniciarán (requieren Docker)" -Foregr
 Write-Host "[INFO] Los servicios que dependen de RabbitMQ/Redis pueden fallar" -ForegroundColor Yellow
 Write-Host ""
 
-foreach ($service in $services) {
-    $process = Start-ServiceWindow -Service $service
-    Start-Sleep -Seconds 10
+# 1) Arrancar Eureka primero (obligatorio, todos dependen de él)
+$eurekaSvc = $services | Where-Object { $_.Name -eq 'eureka-server' }
+$eurekaProcess = Start-ServiceWindow -Service $eurekaSvc
+Start-Sleep -Seconds 10
+if ($null -ne $eurekaProcess -and $eurekaProcess.HasExited) {
+    throw "eureka-server termino inmediatamente tras iniciar (exit code: $($eurekaProcess.ExitCode))."
+}
+Wait-ForHttp -Url $eurekaSvc.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $eurekaSvc.Name -Process $eurekaProcess
+Wait-ForHttp -Url 'http://localhost:8761/eureka/apps' -TimeoutSeconds 60 -ServiceName 'eureka-registry' -Process $eurekaProcess
+Start-Sleep -Seconds 5
 
-    if ($null -ne $process -and $process.HasExited) {
-        throw "$($service.Name) termino inmediatamente tras iniciar (exit code: $($process.ExitCode))."
+# 2) Arrancar el resto de servicios en paralelo
+$otherServices = $services | Where-Object { $_.Name -ne 'eureka-server' }
+$launched = @{}
+foreach ($service in $otherServices) {
+    $proc = Start-ServiceWindow -Service $service
+    if ($proc) {
+        $launched[$service.Name] = @{ Process = $proc; Service = $service }
     }
+}
 
-    if ($service.Name -eq 'eureka-server') {
-        Wait-ForHttp -Url $service.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $service.Name -Process $process
-        # Evita carrera: el dashboard puede responder antes de que /eureka/apps acepte registros.
-        Wait-ForHttp -Url 'http://localhost:8761/eureka/apps' -TimeoutSeconds 60 -ServiceName 'eureka-registry' -Process $process
-        Start-Sleep -Seconds 5
-        continue
+# 3) Pequeña pausa para que los procesos se estabilicen antes de verificar
+Start-Sleep -Seconds 5
+
+# 4) Verificar que ningún proceso haya muerto inmediatamente
+foreach ($entry in $launched.GetEnumerator()) {
+    $name = $entry.Key
+    $proc = $entry.Value.Process
+    if ($proc.HasExited) {
+        throw "$name termino inmediatamente tras iniciar (exit code: $($proc.ExitCode))."
     }
+}
 
-    if ($service.Ready -eq 'Port') {
-        Wait-ForPort -Port $service.Port -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $service.Name -Process $process
-        continue
+# 5) Esperar por cada servicio (health checks rápidos, ya están corriendo en paralelo)
+foreach ($entry in $launched.GetEnumerator()) {
+    $name = $entry.Key
+    $proc = $entry.Value.Process
+    $svc = $entry.Value.Service
+
+    if ($svc.Ready -eq 'Port') {
+        Wait-ForPort -Port $svc.Port -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $name -Process $proc
+    } else {
+        Wait-ForHttp -Url $svc.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $name -Process $proc
     }
-
-    Wait-ForHttp -Url $service.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $service.Name -Process $process
 }
 
 if ($RunSmokeTest) {
