@@ -46,6 +46,27 @@ public class ListaEsperaController {
     }
 
     /**
+     * Obtener métricas de lista de espera.
+     */
+    @GetMapping("/metricas")
+    public ResponseEntity<?> obtenerMetricas(@RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            WebClient webClient = getWebClient();
+            String response = webClient.get()
+                    .uri(MS_GESTION_PACIENTES_URL + "/lista-espera/metricas")
+                    .header("Authorization", token)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            return ResponseEntity.ok(response);
+        } catch (WebClientResponseException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error al obtener métricas"));
+        }
+    }
+
+    /**
      * Agregar paciente a lista de espera.
      */
     @PostMapping

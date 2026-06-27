@@ -3,6 +3,7 @@ package com.saludrednorte.ms_auth.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.saludrednorte.ms_auth.dto.LoginRequest;
 import com.saludrednorte.ms_auth.dto.LoginResponse;
+import com.saludrednorte.ms_auth.dto.PacienteLoginRequest;
 import com.saludrednorte.ms_auth.dto.RegisterRequest;
 import com.saludrednorte.ms_auth.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,6 +84,53 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("nuevo"));
+    }
+
+    @Test
+    void loginPaciente_debeRetornar200CuandoDatosSonValidos() throws Exception {
+        PacienteLoginRequest request = new PacienteLoginRequest("Juan", "Perez", "12.345.678-5");
+        when(authService.loginPaciente(any(PacienteLoginRequest.class)))
+                .thenReturn(new LoginResponse("token", "PACIENTE_1", "ROLE_PACIENTE"));
+
+        mockMvc.perform(post("/api/auth/login-paciente")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("token"));
+    }
+
+    @Test
+    void loginPaciente_debeRetornar400CuandoRutEsInvalido() throws Exception {
+        PacienteLoginRequest request = new PacienteLoginRequest("Juan", "Perez", "12.345.678-0");
+
+        mockMvc.perform(post("/api/auth/login-paciente")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void loginPaciente_debeRetornar401CuandoErrorGenerico() throws Exception {
+        PacienteLoginRequest request = new PacienteLoginRequest("Juan", "Perez", "12.345.678-5");
+        when(authService.loginPaciente(any(PacienteLoginRequest.class)))
+                .thenThrow(new BadCredentialsException("Error al autenticar paciente"));
+
+        mockMvc.perform(post("/api/auth/login-paciente")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void loginPaciente_debeRetornar400CuandoExcepcionGenerica() throws Exception {
+        PacienteLoginRequest request = new PacienteLoginRequest("Juan", "Perez", "12.345.678-5");
+        when(authService.loginPaciente(any(PacienteLoginRequest.class)))
+                .thenThrow(new RuntimeException("Error interno"));
+
+        mockMvc.perform(post("/api/auth/login-paciente")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

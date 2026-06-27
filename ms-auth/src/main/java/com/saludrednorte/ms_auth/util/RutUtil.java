@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public class RutUtil {
 
     private static final Pattern RUT_PATTERN = Pattern.compile("^[0-9]+-[0-9Kk]$");
-    private static final Pattern RUT_CLEAN_PATTERN = Pattern.compile("^[0-9]+$");
+    private static final Pattern RUT_CLEAN_PATTERN = Pattern.compile("^[0-9]+[0-9Kk]$");
 
     /**
      * Limpia un RUT removiendo puntos y guiones, dejando solo números y dígito verificador.

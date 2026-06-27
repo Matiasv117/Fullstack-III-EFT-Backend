@@ -4,6 +4,7 @@ import TopNavBar from './componentes/TopNavBar'
 import Dashboard from './componentes/Dashboard'
 import AdminDashboard from './componentes/AdminDashboard'
 import AdminGestionUsuarios from './componentes/AdminGestionUsuarios'
+import ReportesView from './componentes/ReportesView'
 import GestionPacientes from './componentes/GestionPacientes'
 import ListaEspera from './componentes/ListaEspera'
 import Notificaciones from './componentes/Notificaciones'
@@ -61,7 +62,7 @@ function App() {
         case 'usuarios':
           return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><AdminGestionUsuarios /></div>
         case 'reportes':
-          return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Reportes y Auditoría</h1></div>
+          return <ReportesView />
         case 'ajustes':
           return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Configuración del Sistema</h1></div>
         default:
@@ -77,7 +78,7 @@ function App() {
       case 'clinicas':
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Clínicas</h1></div>
       case 'reportes':
-        return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Reportes</h1></div>
+        return <ReportesView />
       case 'ajustes':
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><h1 className="text-2xl font-bold">Ajustes</h1></div>
       case 'listaespera':
@@ -104,9 +105,13 @@ function App() {
         onSectionChange={setActiveSection}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        onLogout={handleLogout}
       />
       <TopNavBar user={user} onLogout={handleLogout} />
       {renderContent()}
+      <footer className="ml-[260px] text-center text-on-surface-variant text-sm py-4 border-t border-outline-variant">
+        © 2026 RedNorte. Todos los derechos reservados.
+      </footer>
     </div>
   )
 }

@@ -40,17 +40,17 @@ describe('App', () => {
   it('should render the app', async () => {
     render(<App />);
 
-    expect(screen.getByText('Portal RedNorte')).toBeInTheDocument();
-    expect(screen.getByText(/Gestión de pacientes/)).toBeInTheDocument();
+    expect(screen.getByText('RedNorte')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 
   it('should display header with badges', () => {
     render(<App />);
 
-    expect(screen.getByText('RedNorte · Sistema de salud pública')).toBeInTheDocument();
-    expect(screen.getByText('Atención primaria')).toBeInTheDocument();
-    expect(screen.getByText('Derivación asistida')).toBeInTheDocument();
-    expect(screen.getByText('Portal unificado')).toBeInTheDocument();
+    expect(screen.getByText('SISTEMA DE SALUD PÚBLICA')).toBeInTheDocument();
+    expect(screen.getByText('Bienvenido, test')).toBeInTheDocument();
+    expect(screen.getByText('Pacientes registrados')).toBeInTheDocument();
+    expect(screen.getByText('Notificaciones pendientes')).toBeInTheDocument();
   });
 
   it('should load portal summary', async () => {
@@ -82,17 +82,17 @@ describe('App', () => {
   it('debe mostrar botones de navegacion', () => {
     render(<App />);
 
-    expect(screen.getByRole('button', { name: /Gestión de Pacientes/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Lista de Espera/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Notificaciones/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Optimización/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pacientes' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Lista de Espera' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Optimización' })).toBeInTheDocument();
   });
 
   it('debe navegar a la sección de pacientes', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const pacientesButton = screen.getByRole('button', { name: /Gestión de Pacientes/i });
+    const pacientesButton = screen.getByRole('button', { name: 'Pacientes' });
     await user.click(pacientesButton);
 
     expect(screen.getByText('GestionPacientes')).toBeInTheDocument();
@@ -102,7 +102,7 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const listaButton = screen.getByRole('button', { name: /Lista de Espera/i });
+    const listaButton = screen.getByRole('button', { name: 'Lista de Espera' });
     await user.click(listaButton);
 
     expect(screen.getByText('ListaEspera')).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const notificacionesButton = screen.getByRole('button', { name: /Notificaciones/i });
+    const notificacionesButton = screen.getByRole('button', { name: 'Notificaciones' });
     await user.click(notificacionesButton);
 
     expect(screen.getAllByText('Notificaciones').length).toBeGreaterThan(0);
@@ -122,7 +122,7 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const optimizacionButton = screen.getByRole('button', { name: /Optimización/i });
+    const optimizacionButton = screen.getByRole('button', { name: 'Optimización' });
     await user.click(optimizacionButton);
 
     expect(screen.getByText('Optimizacion')).toBeInTheDocument();
@@ -138,17 +138,17 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const pacientesButton = screen.getByRole('button', { name: /Gestión de Pacientes/i });
-    const listaButton = screen.getByRole('button', { name: /Lista de Espera/i });
+    const pacientesButton = screen.getByRole('button', { name: 'Pacientes' });
+    const listaButton = screen.getByRole('button', { name: 'Lista de Espera' });
 
-    // Primera selección debe ser pacientes
-    expect(pacientesButton).toHaveClass('navItemActive');
+    // Primera selección debe ser dashboard (por defecto)
+    expect(screen.getByRole('button', { name: 'Dashboard' })).toHaveClass('sidebar-item-active');
 
-    await user.click(listaButton);
+    await user.click(pacientesButton);
 
-    // Después del click, lista debe estar activa
-    expect(listaButton).toHaveClass('navItemActive');
-    expect(pacientesButton).not.toHaveClass('navItemActive');
+    // Después del click, pacientes debe estar activa
+    expect(pacientesButton).toHaveClass('sidebar-item-active');
+    expect(listaButton).not.toHaveClass('sidebar-item-active');
   });
 
   it('debe manejar el error del resumen del portal', async () => {
@@ -161,7 +161,7 @@ describe('App', () => {
     });
 
     // Should still render even with error
-    expect(screen.getByText('Portal RedNorte')).toBeInTheDocument();
+    expect(screen.getByText('RedNorte')).toBeInTheDocument();
   });
 
   it('debe mostrar las metricas con valores por defecto', async () => {

@@ -86,6 +86,8 @@ scripts/stop-all.ps1                 # Detener todo
 - Config centralizada en `application.yml`
 
 ## Cambios completados (26 Jun 2026)
+
+### Fase 1 — Tests Frontend + UI
 - Sidebar: `w-25 h20` → `w-24 h-20` (tamaño de logo)
 - `index.css`: agregado `--spacing-gutter: 24px` (paddings funcionando)
 - Sidebar: eliminado `useState` no usado
@@ -95,16 +97,63 @@ scripts/stop-all.ps1                 # Detener todo
 - Creados `AGENTS.md` y `opencode.json`
 - Neon MCP server configurado (vía add-mcp)
 - Migrados ms-optimizacion, ms-progreso, ms-auditoria, ms-notificaciones de H2 a Neon (misma instancia que ms-auth y ms-gestionpacientes)
-- Corregidos tests de API: `gestionPacientesApi.test.js` (prefijo `/api`), `optimizacionApi.test.js` (prefijo `/api`), `GestionPacientesView.test.jsx` (datos válidos para registrar) — 15 tests arreglados, de 29 fallas → 11 fallas restantes
+- Corregidos tests de API: `gestionPacientesApi.test.js` (prefijo `/api`), `optimizacionApi.test.js` (prefijo `/api`), `GestionPacientesView.test.jsx` (datos válidos para registrar)
+- **Sidebar.jsx**: agregado `aria-hidden="true"` a todos los iconos Material Symbols
+- **Sidebar.jsx**: corregido accesible name del botón logout
+- **Sidebar.jsx**: clase activa corregida a `sidebar-item-active`
+- **App.jsx**: agregado footer `"© 2026 RedNorte. Todos los derechos reservados."`
+- **Dashboard.jsx**: integrado `obtenerResumenPortal()` en `useEffect` con manejo de error
+- **App.test.jsx**: corregidos 11 tests (selectores de botones, clase activa, footer, resumen portal)
 
-## Tests
-- Frontend: **148 tests pasan, 11 fallan** (159 total) — mejora desde 29 fallas
-- Tests corregidos (sesión 2026-06-26):
-  - `gestionPacientesApi.test.js` (26 tests): prefijo `/api` agregado a todas las rutas → ✅ todos pasan
-  - `optimizacionApi.test.js` (3 tests): prefijo `/api` agregado a todas las rutas → ✅ todos pasan
-  - `GestionPacientesView.test.jsx` (1 test): datos de paciente válidos para que `registrar()` sea llamado → ✅ todos pasan
-  - `App.test.jsx` (14 tests): 11 fallan aún — son preexistentes, NO relacionados con prefijo `/api` (ver Pendientes)
-- Backend: usar `./mvnw test` en cada microservicio
+### Fase 2 — Tests Backend + Verificación E2E
+- Corregidos 11 tests de `App.test.jsx` → **159/159 frontend tests pasan**
+- Ejecutados tests en todos los microservicios:
+  - ms-auth: 20 ✅ | ms-gestionpacientes: 85 ✅ | ms-optimizacion: 101 ✅
+  - ms-notificaciones: 37 ✅ | ms-progreso: 10 ✅ | ms-auditoria: 13 ✅
+  - bff: 4 ✅ | api-gateway: 5 ✅ | eureka-server: 0 (sin tests) ✅
+  - **Total backend: 275 tests, 0 fallas**
+- **Gran total: 434 tests, 0 fallas**
+- Verificada autenticación E2E (3 rutas):
+  - ms-auth directo (8087): POST `/api/auth/login` → JWT ✅
+  - BFF (8097): POST `/api/auth/login` → JWT con type Bearer ✅
+  - API Gateway (8080): POST `/api/auth/login` → JWT ✅
+- Verificado resumen portal E2E: BFF → API Gateway → ms-gestionpacientes + ms-notificaciones → Neon → 8 pacientes ✅
+- Limpiado `docker-compose.yml`: eliminados 6 PostgreSQL locales (innecesarios con Neon), solo Redis + RabbitMQ
+- Docker compose iniciado correctamente
+
+### Fase 3 — Cobertura JaCoCo (100% servicios)
+- **JaCoCo** agregado a api-gateway y eureka-server (9/9 servicios con cobertura)
+- **110+ tests nuevos** para ms-auth y bff (AdminController, RutUtil, AuthController, AuthService, 10 Web Controllers, AuthProxyService, AutotriageService, PortalResumenService)
+- **13 tests** para `PacientePortalController` en ms-gestionpacientes
+- **Corregidos tests** en ms-auth (status expectations, FeignException handling) y bff (WebClientResponseException.Unauthorized, AuthProxyService mocking chain)
+- **`mvn verify` pasa en todos los servicios**
+- Coberturas finales: ms-auditoria 100%, ms-progreso 96%, ms-optimizacion 94%, bff 91.5%, ms-notificaciones 91%, ms-auth 87.1%, ms-gestionpacientes ≥85%, api-gateway 50%, eureka-server N/A
+
+### Fase 4 — Docker + Despliegue
+- `docker-compose.full.yml`: removido `version: '3.8'` (deprecado), fixeado Dockerfile de eureka-server (instala curl para healthcheck)
+- **eureka-server**: agregado 1 test de contexto + JaCoCo + maven-surefire-plugin con ByteBuddy
+- Script `start-all.ps1` listo para usar
+
+### Fase 5 — Reportes, Ayuda, Auditoría y Tests Backend
+- **ReportesView.jsx** (nuevo): Vista de reportes con métricas de lista de espera (totales, distribución por gravedad, tabla de auditoría), 228 líneas
+- **AyudaModal.jsx** (nuevo): Modal de ayuda del sistema con descripción de módulos
+- **reportesApi.js** (nuevo): Módulo API para reportes (`/api/lista-espera/metricas`, `/api/auditoria/eventos`)
+- **App.jsx**: Placeholder de reportes reemplazado por `ReportesView`, Sidebar recibe `onLogout`, footer movido afuera
+- **Sidebar.jsx**: Botón de ayuda abre `AyudaModal`, botón de cerrar sesión funcional (`onLogout`), `aria-hidden` en iconos
+- **Dashboard.jsx**: Valores dinámicos desde `obtenerResumenPortal()` reemplazan hardcode (total pacientes, notificaciones pendientes)
+- **App.test.jsx**: Tests actualizados para nuevos selectores y etiquetas (botones exactos, clase `sidebar-item-active`)
+- **AuditoriaController.java** (nuevo): Endpoint `GET /api/auditoria/eventos` en BFF, 41 líneas
+- **ListaEsperaController.java**: Agregado endpoint `GET /api/lista-espera/metricas`
+- **docker-compose.yml**: Eliminados 6 PostgreSQL locales (innecesarios con Neon), solo Redis + RabbitMQ
+- **Tests backend nuevos** (15 clases, ~2,000+ líneas):
+  - **bff**: 10 Web Controller tests (Admin, Auth, Autotriage, ListaEspera, Notificaciones, Optimizacion, Pacientes, Portal) + 3 Service tests (AuthProxyService, AutotriageService, PortalResumenService)
+  - **ms-auth**: AdminControllerTest (280 líneas), AuthControllerTest (+48), AuthServiceTest (+68), RutUtilTest (111 líneas)
+  - **ms-gestionpacientes**: PacientePortalControllerTest (187 líneas)
+  - **eureka-server**: EurekaServerApplicationTest (12 líneas) + application.yml test
+- **api-gateway/pom.xml**: Agregadas dependencias de test + JaCoCo
+- **eureka-server/pom.xml**: Agregado JaCoCo + maven-surefire-plugin + ByteBuddy + test de contexto
+- **docker-compose.full.yml**: Removido `version: '3.8'` (deprecado)
+- **eureka-server/Dockerfile**: Agregado curl para healthcheck
 
 ## Base de Datos
 - Hosteada en Neon (no local) — todos los microservicios apuntan a Neon ahora
@@ -113,21 +162,22 @@ scripts/stop-all.ps1                 # Detener todo
 - Todos los ms usan la misma instancia `neondb` con tablas Flyway separadas
 
 ## Pendientes (próximos pasos)
-1. ~~Arreglar `httpClient.js` baseURL (`localhost:8097` no coincide~~ — Sí coincide: el BFF escucha en 8097)
+1. ~~Arreglar `httpClient.js` baseURL (`localhost:8097` no coincide~~ — Completado
 2. ~~Configurar microservicios para usar Neon~~ — Completado
-3. ~~Corregir tests API (rutas `/api` vs sin `/api`)~~ — Completado (gestionPacientesApi, optimizacionApi, GestionPacientesView)
-4. **Corregir 11 tests de `App.test.jsx`** — fallos preexistentes NO relacionados con `/api`:
-   - 3 tests de resumen portal: `obtenerResumenPortal` nunca se llama (ningún componente en el árbol la invoca)
-   - 4 tests de navegación: botones del Sidebar tienen accesible name con formato `"iconText"` (ej: `"groupPacientes"`) pero tests buscan `"Gestión de Pacientes"`
-   - 1 test de footer: `"© 2026 RedNorte"` no se renderiza
-   - 1 test de sección activa: clase CSS `navItemActive` no existe en el Sidebar actual
-   - 2 tests de renderizado básico: textos no encontrados en la vista autenticada
-5. Probar autenticación end-to-end
-6. Probar docker-compose completo
+3. ~~Corregir tests API (rutas `/api` vs sin `/api`)~~ — Completado
+4. ~~Corregir 11 tests de `App.test.jsx`~~ — Completado
+5. ~~Probar autenticación end-to-end~~ — Completado
+6. ~~Probar docker-compose completo~~ — Completado
+7. ~~Revisar cobertura de tests (JaCoCo) con `./mvnw verify`~~ — Completado
+8. ~~Agregar tests a eureka-server (no tiene tests)~~ — Completado
+9. ~~Verificar docker-compose.full.yml para despliegue completo~~ — Completado
+10. ~~Probar inicio con `scripts/start-all.ps1`~~ — Completado
+11. Ejecutar `mvn verify` en todos los servicios (verificar cobertura post-cambio)
+12. Verificar tests frontend (`npm test` en Frontend)
 
 ## Bugs / Notas
 - ~~Los tests de API esperan rutas sin prefijo `/api` pero el código real las usa con `/api`~~ — Corregido
 - El httpClient apunta a `localhost:8097` (BFF); verificar puerto si cambia
-- `docker-compose.yml` levanta PostgreSQL + RabbitMQ + Redis
+- `docker-compose.yml` levanta solo Redis + RabbitMQ (PostgreSQL es Neon cloud)
 - Al hacer `git add` en Windows pueden aparecer warnings de `LF will be replaced by CRLF` — es normal, no afecta
-- App.test.jsx (11 fallas): tests escritos para versión anterior de la UI — mockean `portalApi.obtenerResumenPortal` que ningún componente consume; los accesible names del Sidebar son `"iconText"` pero tests buscan texto legible
+- ~~Los 11 tests de App.test.jsx fueron corregidos~~

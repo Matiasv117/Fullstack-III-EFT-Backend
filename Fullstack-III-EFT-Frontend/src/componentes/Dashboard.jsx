@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react'
+import { obtenerResumenPortal } from '../api/portalApi'
 
 const Dashboard = ({ user }) => {
   const isPaciente = user?.role === 'ROLE_PACIENTE';
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncErrorResolved, setSyncErrorResolved] = useState(false)
+  const [resumen, setResumen] = useState(null)
+
+  useEffect(() => {
+    obtenerResumenPortal()
+      .then(data => setResumen(data?.resumen ?? null))
+      .catch(() => setResumen(null))
+  }, [])
 
   const handleSyncRetry = () => {
     setIsSyncing(true)
@@ -217,7 +225,7 @@ const Dashboard = ({ user }) => {
             </div>
             <h3 className="text-on-surface-variant font-label-bold mb-1">Pacientes registrados</h3>
             <div className="flex items-baseline gap-2">
-              <span className="font-display-hero text-display-hero text-on-surface">1,284</span>
+              <span className="font-display-hero text-display-hero text-on-surface">{resumen?.totalPacientes ?? 0}</span>
               <span className="text-on-surface-variant text-body-md">total</span>
             </div>
             <div className="mt-4 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
@@ -235,7 +243,7 @@ const Dashboard = ({ user }) => {
             </div>
             <h3 className="text-on-surface-variant font-label-bold mb-1">Notificaciones pendientes</h3>
             <div className="flex items-baseline gap-2">
-              <span className="font-display-hero text-display-hero text-on-surface">04</span>
+              <span className="font-display-hero text-display-hero text-on-surface">{resumen?.totalNotificacionesPendientes ?? 0}</span>
               <span className="text-on-surface-variant text-body-md">mensajes</span>
             </div>
             <p className="mt-4 text-on-surface-variant font-body-md flex items-center gap-1">

@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import logo2Logo from '../assets/logo2.png'
+import AyudaModal from './AyudaModal';
 
-const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDarkMode }) => {
+const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDarkMode, onLogout }) => {
+  const [ayudaOpen, setAyudaOpen] = useState(false);
   const isPaciente = user?.role === 'ROLE_PACIENTE';
   const isAdmin = user?.role === 'ROLE_ADMIN';
 
@@ -50,6 +53,7 @@ const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDar
           >
             <span
               className="material-symbols-outlined"
+              aria-hidden="true"
               style={{ fontVariationSettings: activeSection === item.id ? "'FILL' 1" : "'FILL' 0" }}
             >
               {item.icon}
@@ -64,19 +68,20 @@ const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDar
           onClick={onToggleDarkMode}
           className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg"
         >
-          <span className="material-symbols-outlined">
+          <span className="material-symbols-outlined" aria-hidden="true">
             {isDarkMode ? 'light_mode' : 'dark_mode'}
           </span>
           <span className="font-body-md text-body-md">
             {isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
           </span>
         </button>
-        <button className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg">
-          <span className="material-symbols-outlined">help</span>
+        <button onClick={() => setAyudaOpen(true)} className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg">
+          <span className="material-symbols-outlined" aria-hidden="true">help</span>
           <span className="font-body-md text-body-md">Ayuda</span>
         </button>
-        <button className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg">
-          <span className="material-symbols-outlined text-error">logout</span>
+        <AyudaModal isOpen={ayudaOpen} onClose={() => setAyudaOpen(false)} />
+        <button onClick={onLogout} className="flex items-center gap-4 p-3 text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg">
+          <span className="material-symbols-outlined text-error" aria-hidden="true">logout</span>
           <span className="font-body-md text-body-md">Cerrar Sesión</span>
         </button>
       </div>

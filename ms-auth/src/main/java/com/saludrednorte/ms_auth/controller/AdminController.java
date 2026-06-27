@@ -34,7 +34,7 @@ public class AdminController {
     private PasswordEncoder passwordEncoder;
 
     /**
-     * Lista todos los funcionarios del sistema (excluye admin).
+     * Lista todos los funcionarios y administradores del sistema (excluye pacientes).
      */
     @GetMapping("/funcionarios")
     @Operation(summary = "Listar funcionarios", description = "Obtiene la lista de todos los funcionarios del sistema")
@@ -50,7 +50,6 @@ public class AdminController {
             }
 
             List<UserDTO> funcionarios = userRepository.findAll().stream()
-                    .filter(u -> !"ROLE_ADMIN".equals(u.getRole()))
                     .map(UserDTO::new)
                     .collect(Collectors.toList());
 

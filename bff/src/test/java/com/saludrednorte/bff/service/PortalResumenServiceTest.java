@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
+import reactor.core.publisher.Mono;
 
 class PortalResumenServiceTest {
 
@@ -87,6 +88,57 @@ class PortalResumenServiceTest {
         } finally {
             server.stop(0);
         }
+    }
+
+    @Test
+    void construirResumen_degradaCuandoFallanAmbosServicios() throws Exception {
+        WebClient webClient = mock(WebClient.class, RETURNS_DEEP_STUBS);
+
+        when(webClient.get().uri("/pacientes").retrieve().bodyToMono(JsonNode.class))
+                .thenThrow(new IllegalStateException("servicio caído"));
+        when(webClient.get().uri("/api/notificaciones/pendientes").retrieve().bodyToMono(JsonNode.class))
+                .thenThrow(new IllegalStateException("servicio caído"));
+
+        PortalResumenService service = new PortalResumenService(webClient, objectMapper);
+        JsonNode resumen = service.construirResumen();
+
+        assertThat(resumen.get("resumen").get("totalPacientes").asInt()).isEqualTo(0);
+        assertThat(resumen.get("resumen").get("totalNotificacionesPendientes").asInt()).isEqualTo(0);
+        assertThat(resumen.get("errores")).hasSize(2);
+    }
+
+    @Test
+    void construirResumen_degradaCuandoFallaPacientes() throws Exception {
+        WebClient webClient = mock(WebClient.class, RETURNS_DEEP_STUBS);
+        JsonNode notificaciones = objectMapper.readTree("[{\"id\":10}]");
+
+        when(webClient.get().uri("/pacientes").retrieve().bodyToMono(JsonNode.class))
+                .thenThrow(new IllegalStateException("servicio caído"));
+        when(webClient.get().uri("/api/notificaciones/pendientes").retrieve().bodyToMono(JsonNode.class))
+                .thenReturn(Mono.just(notificaciones));
+
+        PortalResumenService service = new PortalResumenService(webClient, objectMapper);
+        JsonNode resumen = service.construirResumen();
+
+        assertThat(resumen.get("resumen").get("totalNotificacionesPendientes").asInt()).isEqualTo(1);
+        assertThat(resumen.get("errores")).hasSize(1);
+    }
+
+    @Test
+    void construirResumen_respuestasVacias() throws Exception {
+        WebClient webClient = mock(WebClient.class, RETURNS_DEEP_STUBS);
+
+        when(webClient.get().uri("/pacientes").retrieve().bodyToMono(JsonNode.class))
+                .thenReturn(Mono.just(objectMapper.readTree("[]")));
+        when(webClient.get().uri("/api/notificaciones/pendientes").retrieve().bodyToMono(JsonNode.class))
+                .thenReturn(Mono.just(objectMapper.readTree("[]")));
+
+        PortalResumenService service = new PortalResumenService(webClient, objectMapper);
+        JsonNode resumen = service.construirResumen();
+
+        assertThat(resumen.get("resumen").get("totalPacientes").asInt()).isEqualTo(0);
+        assertThat(resumen.get("resumen").get("totalNotificacionesPendientes").asInt()).isEqualTo(0);
+        assertThat(resumen.get("errores")).isEmpty();
     }
 
     private static void responderJson(HttpExchange exchange, String json, AtomicReference<String> authHolder) throws IOException {

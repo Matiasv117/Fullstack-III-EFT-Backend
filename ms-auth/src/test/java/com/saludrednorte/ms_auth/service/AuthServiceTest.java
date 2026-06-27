@@ -1,8 +1,12 @@
 package com.saludrednorte.ms_auth.service;
 
+import com.saludrednorte.ms_auth.client.PacienteClient;
 import com.saludrednorte.ms_auth.dto.LoginRequest;
 import com.saludrednorte.ms_auth.dto.LoginResponse;
+import com.saludrednorte.ms_auth.dto.PacienteDTO;
+import com.saludrednorte.ms_auth.dto.PacienteLoginRequest;
 import com.saludrednorte.ms_auth.dto.RegisterRequest;
+import feign.FeignException;
 import com.saludrednorte.ms_auth.entity.User;
 import com.saludrednorte.ms_auth.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_auth.repository.UserRepository;
@@ -27,8 +31,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -50,6 +55,9 @@ class AuthServiceTest {
 
     @Mock
     private AuditEventPublisher auditEventPublisher;
+
+    @Mock
+    private PacienteClient pacienteClient;
 
     @InjectMocks
     private AuthService authService;
@@ -173,5 +181,61 @@ class AuthServiceTest {
 
         assertThat(result).containsEntry("username", "admin");
         assertThat(result).containsEntry("role", "ROLE_ADMIN");
+    }
+
+    @Test
+    void loginPaciente_debeRetornarTokenCuandoExistePaciente() {
+        PacienteLoginRequest request = new PacienteLoginRequest("Juan", "Perez", "12.345.678-5");
+        PacienteDTO paciente = new PacienteDTO("Juan", "Perez", "12.345.678-5");
+        paciente.setId(1L);
+
+        when(pacienteClient.buscarPaciente("Juan", "Perez", "12.345.678-5")).thenReturn(paciente);
+        when(jwtUtil.generateToken(any())).thenReturn("jwt-token");
+
+        LoginResponse response = authService.loginPaciente(request);
+
+        assertThat(response.getToken()).isEqualTo("jwt-token");
+    }
+
+    @Test
+    void loginPaciente_debeCrearPacienteSiNoExiste() {
+        PacienteLoginRequest request = new PacienteLoginRequest("Juan", "Perez", "12.345.678-5");
+        PacienteDTO nuevoPaciente = new PacienteDTO("Juan", "Perez", "12.345.678-5");
+        nuevoPaciente.setId(1L);
+
+        FeignException.NotFound notFound = mock(FeignException.NotFound.class);
+        when(notFound.status()).thenReturn(404);
+
+        when(pacienteClient.buscarPaciente("Juan", "Perez", "12.345.678-5"))
+                .thenThrow(notFound);
+        when(pacienteClient.crearPaciente(any(PacienteDTO.class))).thenReturn(nuevoPaciente);
+        when(jwtUtil.generateToken(any())).thenReturn("jwt-token");
+
+        LoginResponse response = authService.loginPaciente(request);
+
+        assertThat(response.getToken()).isEqualTo("jwt-token");
+    }
+
+    @Test
+    void loginPaciente_debePropagarFeignErrorNo404() {
+        PacienteLoginRequest request = new PacienteLoginRequest("Juan", "Perez", "12.345.678-5");
+
+        FeignException.InternalServerError ise = mock(FeignException.InternalServerError.class);
+        when(ise.status()).thenReturn(500);
+
+        when(pacienteClient.buscarPaciente("Juan", "Perez", "12.345.678-5"))
+                .thenThrow(ise);
+
+        assertThatThrownBy(() -> authService.loginPaciente(request))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessageContaining("Error al autenticar paciente");
+    }
+
+    @Test
+    void loginPaciente_debeLanzarBadCredentialsCuandoRutEsInvalido() {
+        PacienteLoginRequest request = new PacienteLoginRequest("Juan", "Perez", "xx");
+
+        assertThatThrownBy(() -> authService.loginPaciente(request))
+                .isInstanceOf(BadCredentialsException.class);
     }
 }
