@@ -23,12 +23,16 @@ public class PortalResumenService {
     private static final Logger log = LoggerFactory.getLogger(PortalResumenService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(12);
 
-    private final WebClient downstream;
+    private final WebClient.Builder webClientBuilder;
     private final ObjectMapper objectMapper;
 
-    public PortalResumenService(WebClient downstreamWebClient, ObjectMapper objectMapper) {
-        this.downstream = downstreamWebClient;
+    public PortalResumenService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
+        this.webClientBuilder = webClientBuilder;
         this.objectMapper = objectMapper;
+    }
+
+    private WebClient getClient() {
+        return webClientBuilder.build();
     }
 
     /**
@@ -69,7 +73,8 @@ public class PortalResumenService {
 
     private JsonNode fetchPacientes(ArrayNode errores, String authorizationHeader) {
         try {
-            WebClient.RequestHeadersSpec<?> request = downstream.get().uri("/pacientes");
+            WebClient client = getClient();
+            WebClient.RequestHeadersSpec<?> request = client.get().uri("lb://ms-listas-espera/pacientes");
             if (authorizationHeader != null && !authorizationHeader.isBlank()) {
                 request = request.header(HttpHeaders.AUTHORIZATION, authorizationHeader);
             }
@@ -91,7 +96,8 @@ public class PortalResumenService {
 
     private JsonNode fetchNotificacionesPendientes(ArrayNode errores, String authorizationHeader) {
         try {
-            WebClient.RequestHeadersSpec<?> request = downstream.get().uri("/api/notificaciones/pendientes");
+            WebClient client = getClient();
+            WebClient.RequestHeadersSpec<?> request = client.get().uri("lb://ms-notificaciones/api/notificaciones/pendientes");
             if (authorizationHeader != null && !authorizationHeader.isBlank()) {
                 request = request.header(HttpHeaders.AUTHORIZATION, authorizationHeader);
             }

@@ -1,13 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 vi.mock('../api/portalApi', () => ({
   obtenerResumenPortal: vi.fn(),
 }));
 
+vi.mock('../api/reportesApi', () => ({
+  default: {
+    obtenerMetricasListaEspera: vi.fn(),
+  },
+}));
+
+vi.mock('../api/gestionPacientesApi', () => ({
+  obtenerPacientes: vi.fn(),
+}));
+
+vi.mock('../api/notificacionesApi', () => ({
+  obtenerNotificacionesPendientes: vi.fn(),
+}));
+
 import Dashboard from './Dashboard';
 import * as portalApi from '../api/portalApi';
+import reportesApi from '../api/reportesApi';
+import { obtenerPacientes } from '../api/gestionPacientesApi';
+import { obtenerNotificacionesPendientes } from '../api/notificacionesApi';
 
 describe('Dashboard', () => {
   beforeEach(() => {
@@ -18,6 +34,20 @@ describe('Dashboard', () => {
         totalNotificacionesPendientes: 3,
       },
     });
+    reportesApi.obtenerMetricasListaEspera.mockResolvedValue({
+      totalPendientes: 5,
+      pacientesGravedadAlta: 2,
+      pacientesGravedadMedia: 2,
+      pacientesGravedadBaja: 1,
+    });
+    obtenerPacientes.mockResolvedValue([
+      { id: 1, nombre: 'Ana', apellido: 'Pérez', dni: '12345678-9' },
+      { id: 2, nombre: 'Luis', apellido: 'González', dni: '98765432-1' },
+    ]);
+    obtenerNotificacionesPendientes.mockResolvedValue([
+      { id: 1, tipo: 'CITA_CONFIRMADA', mensaje: 'Su cita ha sido confirmada', estado: 'PENDIENTE' },
+      { id: 2, tipo: 'RECORDATORIO_CITA', mensaje: 'Recuerde su cita mañana', estado: 'PENDIENTE' },
+    ]);
   });
 
   it('should render hero banner for funcionario', async () => {
@@ -37,7 +67,7 @@ describe('Dashboard', () => {
     expect(screen.getByText('Mensajes Recientes')).toBeInTheDocument();
   });
 
-  it('should show loading text when resumen is null', async () => {
+  it('should show loading text when data is null', async () => {
     portalApi.obtenerResumenPortal.mockResolvedValue(null);
     render(<Dashboard user={{ username: 'test', role: 'ROLE_FUNCIONARIO' }} />);
     await waitFor(() => {
@@ -47,22 +77,49 @@ describe('Dashboard', () => {
 
   it('should handle API error gracefully', async () => {
     portalApi.obtenerResumenPortal.mockRejectedValue(new Error('Network error'));
+    reportesApi.obtenerMetricasListaEspera.mockRejectedValue(new Error('Network error'));
+    obtenerPacientes.mockRejectedValue(new Error('Network error'));
+    obtenerNotificacionesPendientes.mockRejectedValue(new Error('Network error'));
     render(<Dashboard user={{ username: 'test', role: 'ROLE_FUNCIONARIO' }} />);
     await waitFor(() => {
       expect(screen.getByText('SISTEMA DE SALUD PÚBLICA')).toBeInTheDocument();
     });
   });
 
-  it('should show sync error alert', () => {
+  it('should render quick stats row with real data', async () => {
     render(<Dashboard user={{ username: 'test', role: 'ROLE_FUNCIONARIO' }} />);
-    expect(screen.getByText('Error de sincronización detectado')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Total Pacientes')).toBeInTheDocument();
+      expect(screen.getByText('En Lista de Espera')).toBeInTheDocument();
+      expect(screen.getByText('Prioridad ALTA')).toBeInTheDocument();
+      expect(screen.getByText('Notificaciones Pendientes')).toBeInTheDocument();
+    });
   });
 
-  it('should handle sync retry click', async () => {
-    const user = userEvent.setup();
+  it('should render lista de espera severity cards', async () => {
     render(<Dashboard user={{ username: 'test', role: 'ROLE_FUNCIONARIO' }} />);
-    const retryButton = screen.getByText('Reintentar Sincronización');
-    await user.click(retryButton);
-    expect(screen.getByText('Sincronizando...')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Lista de Espera por Gravedad')).toBeInTheDocument();
+    });
   });
+
+  it('should render ultimos pacientes registrados', async () => {
+    render(<Dashboard user={{ username: 'test', role: 'ROLE_FUNCIONARIO' }} />);
+    await waitFor(() => {
+      expect(screen.getByText('Últimos Pacientes Registrados')).toBeInTheDocument();
+      expect(screen.getByText('Ana Pérez')).toBeInTheDocument();
+      expect(screen.getByText('Luis González')).toBeInTheDocument();
+    });
+  });
+
+  it('should render notificaciones recientes', async () => {
+    render(<Dashboard user={{ username: 'test', role: 'ROLE_FUNCIONARIO' }} />);
+    await waitFor(() => {
+      expect(screen.getByText('Notificaciones Recientes')).toBeInTheDocument();
+      expect(screen.getByText('CITA CONFIRMADA')).toBeInTheDocument();
+      expect(screen.getByText('RECORDATORIO CITA')).toBeInTheDocument();
+    });
+  });
+
+
 });

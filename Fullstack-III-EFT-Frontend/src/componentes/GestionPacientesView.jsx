@@ -25,6 +25,7 @@ function GestionPacientesView({
   const [clinicalNotes, setClinicalNotes] = useState({});
   const [newNoteText, setNewNoteText] = useState('');
   const [erroresCampo, setErroresCampo] = useState({});
+  const [modalLista, setModalLista] = useState({ abierto: false, paciente: null, gravedad: 'MEDIA', interconsulta: '' });
 
   const handleOpenProfile = (paciente) => {
     setSelectedPatient(paciente);
@@ -177,7 +178,7 @@ function GestionPacientesView({
                           <div className="flex items-center gap-2 justify-center">
                             <button
                               type="button"
-                              onClick={() => agregarALista(paciente.id)}
+                              onClick={() => setModalLista({ abierto: true, paciente, gravedad: 'MEDIA', interconsulta: '' })}
                               disabled={cargando}
                               className="inline-flex items-center justify-center py-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shadow-blue-100 cursor-pointer"
                             >
@@ -476,6 +477,71 @@ function GestionPacientesView({
                 </button>
               </div>
 
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Agregar a Lista de Espera Modal */}
+      {modalLista.abierto && (() => {
+        const p = modalLista.paciente;
+        return (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex justify-center items-center p-4">
+            <div className="bg-white rounded-2xl border border-slate-100 w-full max-w-md shadow-2xl relative overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Agregar a Lista de Espera</h3>
+                  <p className="text-xs text-slate-500 mt-1">{p.nombre} {p.apellido} — {p.dni}</p>
+                </div>
+                <button
+                  onClick={() => setModalLista({ ...modalLista, abierto: false })}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-full transition-all shadow-xs cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Gravedad</label>
+                  <select
+                    value={modalLista.gravedad}
+                    onChange={(e) => setModalLista({ ...modalLista, gravedad: e.target.value })}
+                    className="appearance-none w-full border border-slate-200 rounded-lg p-2.5 text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-semibold transition-all cursor-pointer"
+                  >
+                    <option value="BAJA">Baja</option>
+                    <option value="MEDIA">Media</option>
+                    <option value="ALTA">Alta</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Interconsulta / Motivo</label>
+                  <textarea
+                    value={modalLista.interconsulta}
+                    onChange={(e) => setModalLista({ ...modalLista, interconsulta: e.target.value })}
+                    placeholder="Ej: Cardiología, Neurología, Medicina General..."
+                    rows={3}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all resize-none"
+                  />
+                </div>
+              </div>
+              <div className="p-4 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
+                <button
+                  onClick={() => setModalLista({ ...modalLista, abierto: false })}
+                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold rounded-lg cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    agregarALista(p.id, { gravedad: modalLista.gravedad, interconsulta: modalLista.interconsulta || null });
+                    setModalLista({ ...modalLista, abierto: false });
+                  }}
+                  disabled={cargando}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {cargando ? 'Agregando…' : 'Agregar a lista'}
+                </button>
+              </div>
             </div>
           </div>
         );

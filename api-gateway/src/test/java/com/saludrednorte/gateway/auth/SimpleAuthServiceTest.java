@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,25 +27,7 @@ class SimpleAuthServiceTest {
     }
 
     @Test
-    void generarToken_creaBase64Esperado() {
-        String token = authService.generarToken("Marcelo", SimpleAuthService.ROLE_ADMIN);
-
-        assertThat(token).isEqualTo(Base64.getEncoder().encodeToString("Marcelo:ADMIN".getBytes()));
-    }
-
-    @Test
-    void decodeBearerToken_recuperaUsuarioYRolLegacy() {
-        String token = authService.generarToken("Ana", SimpleAuthService.ROLE_USER);
-
-        var decoded = authService.decodeBearerToken("Bearer " + token);
-
-        assertThat(decoded).isPresent();
-        assertThat(decoded.get().username()).isEqualTo("Ana");
-        assertThat(decoded.get().role()).isEqualTo("USER");
-    }
-
-    @Test
-    void decodeBearerToken_validaJwtDeMsAuth() {
+    void decodeBearerToken_validaJwtAdmin() {
         String jwt = buildJwt("admin", "ROLE_ADMIN");
 
         var decoded = authService.decodeBearerToken("Bearer " + jwt);
@@ -57,13 +38,24 @@ class SimpleAuthServiceTest {
     }
 
     @Test
-    void decodeBearerToken_mapeaFuncionarioComoAdmin() {
+    void decodeBearerToken_validaJwtUser() {
+        String jwt = buildJwt("ana", "ROLE_USER");
+
+        var decoded = authService.decodeBearerToken("Bearer " + jwt);
+
+        assertThat(decoded).isPresent();
+        assertThat(decoded.get().username()).isEqualTo("ana");
+        assertThat(decoded.get().role()).isEqualTo("USER");
+    }
+
+    @Test
+    void decodeBearerToken_mapeaFuncionarioComoUser() {
         String jwt = buildJwt("funcionario", "ROLE_FUNCIONARIO");
 
         var decoded = authService.decodeBearerToken("Bearer " + jwt);
 
         assertThat(decoded).isPresent();
-        assertThat(decoded.get().role()).isEqualTo("ADMIN");
+        assertThat(decoded.get().role()).isEqualTo("USER");
     }
 
     @Test

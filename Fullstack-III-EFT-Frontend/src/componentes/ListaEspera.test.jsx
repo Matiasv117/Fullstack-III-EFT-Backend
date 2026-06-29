@@ -8,8 +8,8 @@ vi.mock('../api/gestionPacientesApi');
 
 describe('ListaEspera', () => {
   const mockLista = [
-    { id: 1, pacienteId: 1, gravedad: 'ALTA', estado: 'PENDIENTE', interconsulta: 'Cardiología' },
-    { id: 2, pacienteId: 2, gravedad: 'MEDIA', estado: 'ATENDIDO', interconsulta: 'Neurología' },
+    { id: 1, paciente: { id: 1, nombre: 'Juan', apellido: 'Pérez' }, gravedad: 'ALTA', estado: 'PENDIENTE', interconsulta: 'Cardiología' },
+    { id: 2, paciente: { id: 2, nombre: 'María', apellido: 'García' }, gravedad: 'MEDIA', estado: 'ATENDIDO', interconsulta: 'Neurología' },
   ];
 
   beforeEach(() => {
@@ -42,8 +42,8 @@ describe('ListaEspera', () => {
     render(<ListaEspera />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Paciente ID: 1/)).toBeInTheDocument();
-      expect(screen.getByText(/Paciente ID: 2/)).toBeInTheDocument();
+      expect(screen.getByText(/Juan Pérez/)).toBeInTheDocument();
+      expect(screen.getByText(/María García/)).toBeInTheDocument();
     });
   });
 

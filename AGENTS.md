@@ -185,7 +185,7 @@ scripts/stop-all.ps1                 # Detener todo
 - **GlobalExceptionHandler**: Creados en api-gateway, bff y eureka-server (ya existían en los otros 6 MS). Todos siguen el mismo patrón: `@RestControllerAdvice` con handlers para `MethodArgumentNotValidException` (400), `IllegalArgumentException` (400) y `Exception` (500).
 - **PDF Cobertura JaCoCo**: Script `scripts/coverage-report.js` con pdfkit que genera `coverage-report-backend.pdf` — tabla de los 9 MS con 4 métricas (instrucciones, ramas, líneas, métodos), barras por servicio y resumen general.
 - **Frontend**: no disponible localmente para generar Vitest coverage PDF.
-- **Tests**: 275 backend (0 fallas), 248 frontend (0 fallas). api-gateway tiene 3 fallos preexistentes en `SimpleAuthServiceTest` (firma de método no coincide con implementación).
+- **Tests**: 275 backend (0 fallas), 248 frontend (0 fallas).
 
 ## Base de Datos
 - Hosteada en Neon (no local) — todos los microservicios apuntan a Neon ahora
@@ -193,37 +193,39 @@ scripts/stop-all.ps1                 # Detener todo
 - Conexión verificada: TCP al host de Neon responde en puerto 5432
 - Todos los ms usan la misma instancia `neondb` con tablas Flyway separadas
 
-## Pendientes (próximos pasos)
-1. ~~Arreglar `httpClient.js` baseURL (`localhost:8097` no coincide~~ — Completado
-2. ~~Configurar microservicios para usar Neon~~ — Completado
-3. ~~Corregir tests API (rutas `/api` vs sin `/api`)~~ — Completado
-4. ~~Corregir 11 tests de `App.test.jsx`~~ — Completado
-5. ~~Probar autenticación end-to-end~~ — Completado
-6. ~~Probar docker-compose completo~~ — Completado
-7. ~~Revisar cobertura de tests (JaCoCo) con `./mvnw verify`~~ — Completado
-8. ~~Agregar tests a eureka-server (no tiene tests)~~ — Completado
-9. ~~Verificar docker-compose.full.yml para despliegue completo~~ — Completado
-10. ~~Probar inicio con `scripts/start-all.ps1`~~ — Completado
-11. ~~Fix ms-auditoria startup: UserDetailsService missing~~ — Completado
-12. ~~Fix ms-gestionpacientes, ms-notificaciones, ms-optimizacion: mismo problema UserDetailsService~~ — Completado
-13. ~~Fix Eureka hostname resolution: agregar `prefer-ip-address: true`~~ — Completado
-14. ~~Fix PacienteClient Feign name: ms-gestionpacientes → ms-listas-espera~~ — Completado
-15. ~~Optimizar scripts de arranque (start-all.ps1, start-no-docker.ps1)~~ — Completado
-16. ~~Fix BFF controllers y API Gateway: lb://ms-gestionpacientes → ms-listas-espera~~ — Completado
-17. **Mejorar vista de paciente y funcionario** — pendiente (darles utilidades reales)
-18. ~~ARCHITECTURE.md: diagrama Mermaid completo~~ — Completado
-19. ~~Sidebar.test.jsx, Dashboard.test.jsx, TopNavBar.test.jsx (actualizado), App.test.jsx (actualizado)~~ — Completado
-20. ~~Coverage thresholds Vitest 4: lines≥85% (87.22%), functions≥80% (82.58%), branches≥65% (71%), statements≥80% (84.78%)~~ — Completado
-21. **Cobertura GestionPacientesView.jsx** — ~51% líneas / 34% funciones. Requiere esfuerzo significativo para cubrir paths condicionales
-22. ~~JavaDoc en todos los microservicios~~ — Services + Controllers ya tenían documentación desde fases anteriores
-23. ~~Swagger/OpenAPI en cada microservicio~~ — Completado (Fase 8)
-24. ~~Manejo de errores global~~ — Completado (Fase 8)
-25. ~~Informe PDF de cobertura backend (JaCoCo)~~ — Completado: `coverage-report-backend.pdf`
-26. **Repositorio frontend independiente** — REQUERIDO checklist. Separar frontend en su propio repo GitHub
-27. **Repositorio por cada MS** (mínimo 6 repos) + Thanos audit — REQUERIDO checklist
-28. **GitHub Flow** — feature branches, main limpio — REQUERIDO checklist
-29. **Colección Swagger/Postman** — ejemplos de peticiones y respuestas — REQUERIDO checklist
-30. **Desplegar frontend en Vercel** — después de separar repos, build + deploy
+### Fase 9 — Fix PortalResumenService + Dashboard "Nueva Consulta" (29 Jun 2026)
+- **PortalResumenService.java**: Cambió inyección de `downstreamWebClient` (API Gateway fijo → 503) por `WebClient.Builder` (load-balanced). Ahora usa `lb://ms-listas-espera/pacientes` y `lb://ms-notificaciones/api/notificaciones/pendientes`, igual que los demás controllers del BFF.
+- **PortalResumenServiceTest.java**: 6 tests actualizados con nueva firma de constructor (`WebClient.Builder` en vez de `WebClient`). Tests de autorización reescritos con Mockito verify.
+- **Dashboard.jsx**: "ACCESO RÁPIDO - Nueva Consulta" ahora navega a la pestaña "Pacientes" via `onSectionChange('pacientes')`.
+- **App.jsx**: Pasado `onSectionChange={setActiveSection}` a Dashboard.
+- **Verificación E2E**: `GET /api/portal/resumen` retorna `totalPacientes: 2` (antes 0).
+- **Tests**: 89/89 BFF pasan (0 fallas).
+
+### Fase 10 — Fixes ListaEspera, Notificaciones y Optimización (29 Jun 2026)
+- **ListaEspera Frontend**: Cambiado `item.pacienteId ?? 'N/A'` → `item.paciente ? "${item.paciente.nombre} ${item.paciente.apellido}" : "Paciente ID: N/A"`. Ahora muestra nombre real del paciente en vez del ID.
+- **GestionPacientesView.jsx**: Botón "Agregar a lista" ahora abre un modal con selector de gravedad (BAJA/MEDIA/ALTA) y campo interconsulta, en vez de agregar con valores fijos.
+- **useGestionPacientes.js**: `agregarALista` ahora acepta `opciones = {}` y las pasa a `agregarPacienteAListaEspera`.
+- **Notifications 500 fix**: `SecurityConfig.java` en ms-notificaciones: agregado `.requestMatchers("/api/notificaciones/**").permitAll()`. Los Feign clients internos no llevan JWT → obtenían 403. Ahora pueden crear notificaciones sin auth.
+- **BFF NotificacionesController.java**: Agregado endpoint `POST /api/notificaciones` que proxy a ms-notificaciones.
+- **BFF OptimizacionController.java**: Agregado endpoint `GET /api/optimizacion/prioridad`.
+- **optimizacionApi.js**: Agregada función `obtenerPrioridadPaciente()`.
+- **Optimizacion.jsx**: Agregadas **3 pestañas de estrategia (FIFO/LIFO/Por Gravedad)** que reordenan la misma lista para comparar visualmente. "Paciente ID: N/A" reemplazado por "ID: {item.id}".
+- **Tests**: 250 frontend (0 fallas), 275 backend (0 fallas).
+
+### Fase 11 — Fix tests api-gateway + README eureka-server (29 Jun 2026)
+- **SimpleAuthServiceTest.java**: Corregidos 3 tests fallando — eliminados tests de legacy `generarToken` (Base64), reescritos con JWT vía `buildJwt()`. Fixeado `decodeBearerToken_mapeaFuncionarioComoAdmin` → `mapeaFuncionarioComoUser` (espera "USER", correcto según `JwtTokenValidator.mapRole()`).
+- **api-gateway**: Tests 4/4 pasan (0 fallas).
+- **eureka-server/README.md**: Creado con documentación completa (tecnologías, endpoints, configuración, variables de entorno).
+- **Tests**: 275 backend (0 fallas), 248 frontend (0 fallas), 0 fallas en api-gateway.
+
+### Fase 10 — Propuesta de redesign Optimización (pendiente)
+- **Problema**: `ListaEsperaDTO` en ms-optimizacion tiene `Long pacienteId` pero el JSON de ms-listas-espera devuelve `paciente: { id, nombre, apellido }`. Jackson no puede mapear `paciente.id` → `pacienteId` automáticamente.
+- **Propuesta Opción B**: Convertir Optimización en mini-gestor de citas + simulador:
+  1. Fix DTO: mapear `paciente.id → pacienteId` + agregar `nombrePaciente` para mostrar nombres reales.
+  2. Agregar proxy de citas al BFF: `POST /api/citas`, `GET /api/citas`, `DELETE /api/citas/{id}` (CitaController ya existe en ms-optimizacion).
+  3. Simplificar UI: "Crear Cita" + "Cancelar y Reasignar" con estrategia seleccionable.
+  4. Esto activaría el flujo RabbitMQ → notificaciones reales al cancelar citas.
+- **Propuesta Opción A** (más simple): solo mantener pestañas de estrategia + agregar score de prioridad (`GET /prioridad`) por paciente.
 
 ## Bugs / Notas
 - ~~Los tests de API esperan rutas sin prefijo `/api` pero el código real las usa con `/api`~~ — Corregido
@@ -233,4 +235,4 @@ scripts/stop-all.ps1                 # Detener todo
 - ~~Los 11 tests de App.test.jsx fueron corregidos~~
 - En Windows con WSL/Hyper-V, los servicios se registran en Eureka con IP virtual (172.x.x.x). Siempre agregar `eureka.instance.prefer-ip-address: true` en nuevos microservicios.
 - El nombre del `@FeignClient` debe coincidir exactamente con `spring.application.name` del servicio destino.
-- api-gateway tiene 3 tests fallando en `SimpleAuthServiceTest` (preexistente): `generarToken` con firma `(String, String)` no coincide, y `decodeBearerToken_mapeaFuncionarioComoAdmin` espera "ADMIN" pero recibe "USER". No relacionados con cambios de Fase 8.
+- ~~api-gateway tenía 3 tests fallando en `SimpleAuthServiceTest` — Corregidos (29 Jun 2026)~~

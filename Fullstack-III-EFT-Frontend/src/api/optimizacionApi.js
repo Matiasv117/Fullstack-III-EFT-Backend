@@ -12,3 +12,10 @@ export const cancelarCitaConEstrategia = async (citaId, estrategia = 'fifo') => 
   return data;
 };
 
+export const obtenerPrioridadPaciente = async (gravedad, distanciaKm, diasEspera) => {
+  const { data } = await httpClient.get('/api/optimizacion/prioridad', {
+    params: { gravedad, distanciaKm, diasEspera },
+  });
+  return data;
+};
+

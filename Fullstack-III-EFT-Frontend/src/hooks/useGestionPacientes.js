@@ -89,12 +89,12 @@ export function useGestionPacientes() {
     }
   }, [formValido, limpiarMensajes, nuevoPaciente.apellido, nuevoPaciente.dni, nuevoPaciente.email, nuevoPaciente.nombre, nuevoPaciente.telefono]);
 
-  const agregarALista = useCallback(async (pacienteId) => {
+  const agregarALista = useCallback(async (pacienteId, opciones = {}) => {
     setCargando(true);
     limpiarMensajes();
 
     try {
-      await agregarPacienteAListaEspera(pacienteId);
+      await agregarPacienteAListaEspera(pacienteId, opciones);
       setMensaje(`Paciente ${pacienteId} agregado a lista de espera.`);
     } catch (errorCapturado) {
       setError(errorCapturado.message || 'No fue posible agregar el paciente a la lista de espera');

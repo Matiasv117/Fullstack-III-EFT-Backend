@@ -5,6 +5,17 @@ import userEvent from '@testing-library/user-event';
 vi.mock('./api/portalApi', () => ({
   obtenerResumenPortal: vi.fn(),
 }));
+vi.mock('./api/reportesApi', () => ({
+  default: {
+    obtenerMetricasListaEspera: vi.fn(),
+  },
+}));
+vi.mock('./api/gestionPacientesApi', () => ({
+  obtenerPacientes: vi.fn(),
+}));
+vi.mock('./api/notificacionesApi', () => ({
+  obtenerNotificacionesPendientes: vi.fn(),
+}));
 vi.mock('./componentes/Login', () => ({
   default: ({ onLoginSuccess }) => <div data-testid="login-component">Login</div>,
 }));
@@ -22,6 +33,9 @@ vi.mock('./componentes/Optimizacion', () => ({
 }))
 import App from './App';
 import * as portalApi from './api/portalApi';
+import reportesApi from './api/reportesApi';
+import { obtenerPacientes } from './api/gestionPacientesApi';
+import { obtenerNotificacionesPendientes } from './api/notificacionesApi';
 
 describe('App', () => {
   beforeEach(() => {
@@ -34,6 +48,18 @@ describe('App', () => {
         totalNotificacionesPendientes: 3,
       },
     });
+    reportesApi.obtenerMetricasListaEspera.mockResolvedValue({
+      totalPendientes: 5,
+      pacientesGravedadAlta: 2,
+      pacientesGravedadMedia: 2,
+      pacientesGravedadBaja: 1,
+    });
+    obtenerPacientes.mockResolvedValue([
+      { id: 1, nombre: 'Ana', apellido: 'Pérez', dni: '12345678-9' },
+    ]);
+    obtenerNotificacionesPendientes.mockResolvedValue([
+      { id: 1, tipo: 'CITA_CONFIRMADA', mensaje: 'Su cita ha sido confirmada', estado: 'PENDIENTE' },
+    ]);
   });
 
   afterEach(() => {
@@ -47,13 +73,17 @@ describe('App', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 
-  it('should display header with badges', () => {
+  it('should display header with stats', async () => {
     render(<App />);
 
     expect(screen.getByText('SISTEMA DE SALUD PÚBLICA')).toBeInTheDocument();
     expect(screen.getByText('Bienvenido, test')).toBeInTheDocument();
-    expect(screen.getByText('Pacientes registrados')).toBeInTheDocument();
-    expect(screen.getByText('Notificaciones pendientes')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Total Pacientes')).toBeInTheDocument();
+      expect(screen.getByText('En Lista de Espera')).toBeInTheDocument();
+      expect(screen.getByText('Prioridad ALTA')).toBeInTheDocument();
+      expect(screen.getByText('Notificaciones Pendientes')).toBeInTheDocument();
+    });
   });
 
   it('should load portal summary', async () => {

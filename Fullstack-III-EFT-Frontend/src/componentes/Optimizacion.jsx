@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
 import { obtenerListaEsperaOptimizada, cancelarCitaConEstrategia } from '../api/optimizacionApi';
 import { 
-  Zap, Play, Filter, AlertTriangle, RefreshCw, ClipboardList, Info, ChevronDown
+  Zap, Play, Filter, AlertTriangle, RefreshCw, Info, ChevronDown, ListOrdered, Layers, ClipboardList
 } from 'lucide-react';
+
+const ESTRATEGIAS = [
+  { id: 'fifo', label: 'FIFO', desc: 'Primera en llegar — paciente con más tiempo en espera' },
+  { id: 'lifo', label: 'LIFO', desc: 'Última en llegar — paciente más reciente en la lista' },
+  { id: 'gravedad', label: 'Por Gravedad', desc: 'Mayor gravedad primero — criterio clínico' },
+];
+
+const PESO_GRAVEDAD = { ALTA: 3, MEDIA: 2, BAJA: 1, NORMAL: 1 };
 
 function Optimizacion() {
   const [listaEspera, setListaEspera] = useState([]);
@@ -14,6 +22,7 @@ function Optimizacion() {
   const [simulandoCancelacion, setSimulandoCancelacion] = useState(false);
   const [citaAnclarId, setCitaAnclarId] = useState(null);
   const [estrategia, setEstrategia] = useState('fifo');
+  const [vistaEstrategia, setVistaEstrategia] = useState('lista');
 
   useEffect(() => {
     const fetchLista = async () => {
@@ -33,6 +42,25 @@ function Optimizacion() {
     void fetchLista();
   }, []);
 
+  const ordenarLista = (lista, estrategiaId) => {
+    const copia = [...lista];
+    switch (estrategiaId) {
+      case 'fifo':
+        return copia.sort((a, b) => (a.id || 0) - (b.id || 0));
+      case 'lifo':
+        return copia.sort((a, b) => (b.id || 0) - (a.id || 0));
+      case 'gravedad':
+        return copia.sort((a, b) => {
+          const gA = PESO_GRAVEDAD[a.gravedad] || 1;
+          const gB = PESO_GRAVEDAD[b.gravedad] || 1;
+          if (gB !== gA) return gB - gA;
+          return (a.id || 0) - (b.id || 0);
+        });
+      default:
+        return copia;
+    }
+  };
+
   useEffect(() => {
     let filtrada = [...listaEspera];
 
@@ -44,8 +72,9 @@ function Optimizacion() {
       filtrada = filtrada.filter((item) => (item.estado || 'PENDIENTE') === filtroEstado);
     }
 
+    filtrada = ordenarLista(filtrada, estrategia);
     setListaFiltrada(filtrada);
-  }, [listaEspera, filtroGravedad, filtroEstado]);
+  }, [listaEspera, filtroGravedad, filtroEstado, estrategia]);
 
   const manejarCancelacion = async () => {
     if (!citaAnclarId) {
@@ -58,11 +87,9 @@ function Optimizacion() {
 
     try {
       await cancelarCitaConEstrategia(citaAnclarId, estrategia);
-      // Recargar la lista después de la cancelación
       const datos = await obtenerListaEsperaOptimizada();
       setListaEspera(Array.isArray(datos) ? datos : []);
       setCitaAnclarId(null);
-      // Mostrar mensaje de éxito
       alert(`Cita ${citaAnclarId} cancelada y reasignada con estrategia ${estrategia}`);
     } catch (errorCapturado) {
       setError(
@@ -149,9 +176,9 @@ function Optimizacion() {
                   disabled={simulandoCancelacion}
                   className="appearance-none w-full border border-outline-variant rounded-lg p-2.5 pr-8 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm font-semibold transition-all cursor-pointer"
                 >
-                  <option value="fifo">FIFO (Primera En Llegar)</option>
-                  <option value="lifo">LIFO (Última En Llegar)</option>
-                  <option value="gravedad">Por Gravedad</option>
+                  {ESTRATEGIAS.map((e) => (
+                    <option key={e.id} value={e.id}>{e.label}</option>
+                  ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 pointer-events-none" />
               </div>
@@ -178,7 +205,7 @@ function Optimizacion() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-outline-variant">
               <div className="flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-primary shrink-0" />
-                <h3 className="font-bold text-on-surface">Lista de Espera Actual</h3>
+                <h3 className="font-bold text-on-surface">Lista de Espera</h3>
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
@@ -217,6 +244,54 @@ function Optimizacion() {
               </div>
             </div>
 
+            {/* Strategy Tabs */}
+            <div className="flex gap-1 bg-surface-container-low rounded-lg p-1">
+              <button
+                onClick={() => { setVistaEstrategia('lista'); setEstrategia('fifo'); }}
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                  vistaEstrategia === 'lista' && estrategia === 'fifo'
+                    ? 'bg-white dark:bg-surface-container-lowest text-primary shadow-xs'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1.5">
+                  <ListOrdered className="w-3.5 h-3.5" />
+                  <span>FIFO</span>
+                </div>
+              </button>
+              <button
+                onClick={() => { setVistaEstrategia('lista'); setEstrategia('lifo'); }}
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                  vistaEstrategia === 'lista' && estrategia === 'lifo'
+                    ? 'bg-white dark:bg-surface-container-lowest text-primary shadow-xs'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1.5">
+                  <ListOrdered className="w-3.5 h-3.5 rotate-180" />
+                  <span>LIFO</span>
+                </div>
+              </button>
+              <button
+                onClick={() => { setVistaEstrategia('lista'); setEstrategia('gravedad'); }}
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                  vistaEstrategia === 'lista' && estrategia === 'gravedad'
+                    ? 'bg-white dark:bg-surface-container-lowest text-primary shadow-xs'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Gravedad</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Active strategy description */}
+            <p className="text-[10px] text-on-surface-variant/70 italic -mt-4">
+              Ordenando por: {ESTRATEGIAS.find((e) => e.id === estrategia)?.desc}
+            </p>
+
             {/* List */}
             {cargando ? (
               <div className="py-12 text-center text-on-surface-variant/70">
@@ -229,13 +304,14 @@ function Optimizacion() {
               </div>
             ) : (
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 list-none p-0 m-0">
-                {listaFiltrada.map((item) => (
+                {listaFiltrada.map((item, idx) => (
                   <li 
                     key={item.id} 
                     className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm hover:shadow-md transition-all hover:border-primary/50 flex flex-col justify-between gap-3 text-left"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <strong className="text-xs text-on-surface font-bold">Paciente ID: {item.pacienteId ?? 'N/A'}</strong>
+                      <span className="text-[9px] font-mono text-on-surface-variant/50 min-w-[1.5rem]">#{idx + 1}</span>
+                      <strong className="text-xs text-on-surface font-bold">ID: {item.id}</strong>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${gravedadColor(item.gravedad)}`}>
                         {item.gravedad || 'NORMAL'}
                       </span>
@@ -246,7 +322,6 @@ function Optimizacion() {
 
                     <div className="text-xs text-on-surface-variant space-y-0.5">
                       <p className="font-semibold text-on-surface">Interconsulta: <span className="text-primary font-bold">{item.interconsulta || 'Sin especificar'}</span></p>
-                      <p className="font-mono text-[9px]">ID Registro: {item.id}</p>
                     </div>
                   </li>
                 ))}
@@ -263,7 +338,7 @@ function Optimizacion() {
       <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xs p-6 text-left">
         <h3 className="font-bold text-on-surface text-sm flex items-center gap-2 pb-4 border-b border-outline-variant">
           <Info className="w-5 h-5 text-primary shrink-0" />
-          <span>📋 Estrategias de Optimización</span>
+          Estrategias de Optimización
         </h3>
         
         <ul className="grid grid-cols-1 md:grid-cols-3 gap-6 list-none p-0 pt-4 m-0 text-xs">

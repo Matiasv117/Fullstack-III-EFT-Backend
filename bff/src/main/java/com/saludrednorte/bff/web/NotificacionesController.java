@@ -25,6 +25,30 @@ public class NotificacionesController {
     }
 
     /**
+     * Crear una nueva notificación.
+     */
+    @PostMapping
+    public ResponseEntity<?> crearNotificacion(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            WebClient webClient = getWebClient();
+            String response = webClient.post()
+                    .uri(MS_NOTIFICACIONES_URL + "/api/notificaciones")
+                    .header("Authorization", token != null ? token : "")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            return ResponseEntity.ok(response);
+        } catch (WebClientResponseException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error al crear notificación"));
+        }
+    }
+
+    /**
      * Obtener notificaciones pendientes.
      */
     @GetMapping("/pendientes")

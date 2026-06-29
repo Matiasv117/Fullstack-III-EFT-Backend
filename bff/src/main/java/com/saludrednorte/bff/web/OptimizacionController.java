@@ -68,4 +68,29 @@ public class OptimizacionController {
             return ResponseEntity.status(500).body(Map.of("error", "Error al cancelar cita"));
         }
     }
+
+    /**
+     * Calcular prioridad de paciente.
+     */
+    @GetMapping("/prioridad")
+    public ResponseEntity<?> calcularPrioridad(
+            @RequestParam int gravedad,
+            @RequestParam double distanciaKm,
+            @RequestParam int diasEspera,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            WebClient webClient = getWebClient();
+            String response = webClient.get()
+                    .uri(MS_OPTIMIZACION_URL + "/optimizacion/prioridad?gravedad=" + gravedad + "&distanciaKm=" + distanciaKm + "&diasEspera=" + diasEspera)
+                    .header("Authorization", token)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            return ResponseEntity.ok(response);
+        } catch (WebClientResponseException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error al calcular prioridad"));
+        }
+    }
 }

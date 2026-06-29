@@ -41,8 +41,8 @@ describe('Optimizacion', () => {
     render(<Optimizacion />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Paciente ID: 1/)).toBeInTheDocument();
-      expect(screen.getByText(/Paciente ID: 2/)).toBeInTheDocument();
+      expect(screen.getByText(/ID: 1/)).toBeInTheDocument();
+      expect(screen.getByText(/ID: 2/)).toBeInTheDocument();
     });
   });
 

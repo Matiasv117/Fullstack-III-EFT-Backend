@@ -1,25 +1,37 @@
 import { useState, useEffect } from 'react'
 import { obtenerResumenPortal } from '../api/portalApi'
+import reportesApi from '../api/reportesApi'
+import { obtenerPacientes } from '../api/gestionPacientesApi'
+import { obtenerNotificacionesPendientes } from '../api/notificacionesApi'
 
-const Dashboard = ({ user }) => {
+const Dashboard = ({ user, onSectionChange }) => {
   const isPaciente = user?.role === 'ROLE_PACIENTE';
-  const [isSyncing, setIsSyncing] = useState(false)
-  const [syncErrorResolved, setSyncErrorResolved] = useState(false)
   const [resumen, setResumen] = useState(null)
+  const [metricas, setMetricas] = useState(null)
+  const [ultimosPacientes, setUltimosPacientes] = useState([])
+  const [notificaciones, setNotificaciones] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    obtenerResumenPortal()
-      .then(data => setResumen(data?.resumen ?? null))
-      .catch(() => setResumen(null))
+    Promise.all([
+      obtenerResumenPortal(),
+      reportesApi.obtenerMetricasListaEspera(),
+      obtenerPacientes(),
+      obtenerNotificacionesPendientes(),
+    ])
+      .then(([res, met, pac, notif]) => {
+        setResumen(res?.resumen ?? null)
+        setMetricas(met ?? null)
+        const sorted = Array.isArray(pac) ? pac.slice(-5).reverse() : []
+        setUltimosPacientes(sorted)
+        setNotificaciones(Array.isArray(notif) ? notif.slice(0, 4) : [])
+      })
+      .catch(() => {
+        setResumen(null)
+        setMetricas(null)
+      })
+      .finally(() => setLoading(false))
   }, [])
-
-  const handleSyncRetry = () => {
-    setIsSyncing(true)
-    setTimeout(() => {
-      setIsSyncing(false)
-      setSyncErrorResolved(true)
-    }, 1500)
-  }
 
   useEffect(() => {
     const handleMouseDown = (e) => {
@@ -140,11 +152,20 @@ const Dashboard = ({ user }) => {
                 Bienvenido, {user?.username || 'Dr. Benjamín Ibañez'}
               </h2>
               <p className="font-body-lg text-body-lg text-white/80">
-                {resumen ? `Tienes ${resumen.totalPacientes} pacientes registrados y ${resumen.totalNotificacionesPendientes} notificaciones pendientes.` : 'Cargando indicadores del sistema...'}
+                {resumen
+                  ? `Resumen del sistema — ${resumen.totalPacientes} pacientes registrados, ${
+                      metricas?.totalPendientes ?? 0
+                    } en lista de espera, ${resumen.totalNotificacionesPendientes} notificaciones pendientes.`
+                  : loading
+                    ? 'Cargando indicadores del sistema...'
+                    : 'Bienvenido al sistema de salud.'}
               </p>
             </div>
             <div className="hidden lg:block">
-              <div className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 hover:scale-105 transition-transform duration-300 cursor-pointer">
+              <div
+                className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 hover:scale-105 transition-transform duration-300 cursor-pointer"
+                onClick={() => onSectionChange?.('pacientes')}
+              >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-primary-container/40 rounded-full flex items-center justify-center">
                     <span className="material-symbols-outlined text-white">bolt</span>
@@ -166,86 +187,131 @@ const Dashboard = ({ user }) => {
           </div>
         </section>
 
-        {/* Alert Section */}
-        {!syncErrorResolved && (
-          <section className="fade-in-up stagger-2">
-            <div className="bg-error-container border border-error/10 p-4 rounded-lg flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-300">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center text-error">
-                  <span className="material-symbols-outlined">sync_problem</span>
+        {/* Quick Stats Row */}
+        {!loading && (
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-gutter fade-in-up stagger-2">
+            <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-center">
+              <span className="material-symbols-outlined text-primary text-2xl">people</span>
+              <p className="font-display-hero text-display-hero text-on-surface mt-1">{resumen?.totalPacientes ?? 0}</p>
+              <p className="text-on-surface-variant font-label-bold text-label-bold">Total Pacientes</p>
+            </div>
+            <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-center">
+              <span className="material-symbols-outlined text-tertiary text-2xl">list_alt</span>
+              <p className="font-display-hero text-display-hero text-on-surface mt-1">{metricas?.totalPendientes ?? 0}</p>
+              <p className="text-on-surface-variant font-label-bold text-label-bold">En Lista de Espera</p>
+            </div>
+            <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-center">
+              <span className="material-symbols-outlined text-error text-2xl">priority_high</span>
+              <p className="font-display-hero text-display-hero text-on-surface mt-1">{metricas?.pacientesGravedadAlta ?? 0}</p>
+              <p className="text-on-surface-variant font-label-bold text-label-bold">Prioridad ALTA</p>
+            </div>
+            <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-center">
+              <span className="material-symbols-outlined text-secondary text-2xl">notifications</span>
+              <p className="font-display-hero text-display-hero text-on-surface mt-1">{resumen?.totalNotificacionesPendientes ?? 0}</p>
+              <p className="text-on-surface-variant font-label-bold text-label-bold">Notificaciones Pendientes</p>
+            </div>
+          </section>
+        )}
+
+        {/* Content Cards Grid */}
+        {!loading && (
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter fade-in-up stagger-3">
+
+            {/* Lista de Espera por Gravedad */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant col-span-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-tertiary-fixed rounded-lg flex items-center justify-center text-tertiary">
+                  <span className="material-symbols-outlined">monitoring</span>
+                </div>
+                <h3 className="font-label-bold text-on-surface">Lista de Espera por Gravedad</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-on-surface-variant font-label-bold">ALTA</span>
+                    <span className="font-label-bold text-error">{metricas?.pacientesGravedadAlta ?? 0}</span>
+                  </div>
+                  <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-error rounded-full transition-all duration-700" style={{ width: `${metricas?.totalPendientes ? (metricas.pacientesGravedadAlta / metricas.totalPendientes) * 100 : 0}%` }}></div>
+                  </div>
                 </div>
                 <div>
-                  <h4 className="font-label-bold text-on-error-container">Error de sincronización detectado</h4>
-                  <p className="font-body-md text-on-surface-variant">
-                    La base de datos de la clínica "Norte Central" no se sincronizó correctamente hace 15 minutos.
-                  </p>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-on-surface-variant font-label-bold">MEDIA</span>
+                    <span className="font-label-bold text-primary">{metricas?.pacientesGravedadMedia ?? 0}</span>
+                  </div>
+                  <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${metricas?.totalPendientes ? (metricas.pacientesGravedadMedia / metricas.totalPendientes) * 100 : 0}%` }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-on-surface-variant font-label-bold">BAJA</span>
+                    <span className="font-label-bold text-tertiary">{metricas?.pacientesGravedadBaja ?? 0}</span>
+                  </div>
+                  <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+                    <div className="h-full bg-tertiary rounded-full transition-all duration-700" style={{ width: `${metricas?.totalPendientes ? (metricas.pacientesGravedadBaja / metricas.totalPendientes) * 100 : 0}%` }}></div>
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={handleSyncRetry}
-                disabled={isSyncing}
-                className="px-4 py-2 bg-error text-white font-label-bold rounded-lg hover:bg-on-error-container transition-all duration-300 active:scale-95 shadow-lg shadow-error/20 disabled:opacity-50"
-              >
-                {isSyncing ? 'Sincronizando...' : 'Reintentar Sincronización'}
-              </button>
             </div>
+
+            {/* Últimos Pacientes Registrados */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant col-span-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined">person_add</span>
+                </div>
+                <h3 className="font-label-bold text-on-surface">Últimos Pacientes Registrados</h3>
+              </div>
+              {ultimosPacientes.length === 0 ? (
+                <p className="text-on-surface-variant text-body-md">No hay pacientes registrados.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {ultimosPacientes.map((p, i) => (
+                    <li key={p.id ?? i} className="flex items-center gap-3 pb-3 border-b border-outline-variant/50 last:border-b-0 last:pb-0">
+                      <div className="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-label-bold text-sm">
+                        {p.nombre?.[0]}{p.apellido?.[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-label-bold text-on-surface truncate">{p.nombre} {p.apellido}</p>
+                        <p className="text-on-surface-variant text-body-sm">{p.dni ?? 'Sin RUT'}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Notificaciones Recientes */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant col-span-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-error-container rounded-lg flex items-center justify-center text-error">
+                  <span className="material-symbols-outlined">notification_important</span>
+                </div>
+                <h3 className="font-label-bold text-on-surface">Notificaciones Recientes</h3>
+              </div>
+              {notificaciones.length === 0 ? (
+                <p className="text-on-surface-variant text-body-md">No hay notificaciones pendientes.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {notificaciones.map((n, i) => (
+                    <li key={n.id ?? i} className="flex items-start gap-3 pb-3 border-b border-outline-variant/50 last:border-b-0 last:pb-0">
+                      <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-primary shrink-0 mt-0.5">
+                        <span className="material-symbols-outlined text-sm">mail</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-label-bold text-on-surface text-sm truncate">{n.tipo?.replace(/_/g, ' ')}</p>
+                        <p className="text-on-surface-variant text-body-sm leading-tight line-clamp-2">{n.mensaje}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
           </section>
         )}
-
-        {syncErrorResolved && (
-          <section className="fade-in-up stagger-2">
-            <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-lg flex items-center shadow-sm">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                <span className="material-symbols-outlined">check_circle</span>
-              </div>
-              <div>
-                <h4 className="font-label-bold text-emerald-800">Sincronización completada</h4>
-                <p className="font-body-md text-emerald-600">La base de datos se ha sincronizado correctamente.</p>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Summary Cards Grid (Bento Style) */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-gutter fade-in-up stagger-3">
-          
-          {/* Patients Card */}
-          <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/50 transition-all duration-500 group cursor-pointer hover:scale-105 hover:shadow-xl hover:shadow-primary/5">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 bg-secondary-container rounded-lg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                <span className="material-symbols-outlined">person_add</span>
-              </div>
-              <span className="text-primary font-label-bold text-label-bold">+12%</span>
-            </div>
-            <h3 className="text-on-surface-variant font-label-bold mb-1">Pacientes registrados</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="font-display-hero text-display-hero text-on-surface">{resumen?.totalPacientes ?? 0}</span>
-              <span className="text-on-surface-variant text-body-md">total</span>
-            </div>
-            <div className="mt-4 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-[75%] transition-all duration-1000 delay-500 ease-out"></div>
-            </div>
-          </div>
-
-          {/* Notifications Card */}
-          <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-tertiary/50 transition-all duration-500 group cursor-pointer hover:scale-105 hover:shadow-xl hover:shadow-tertiary/5">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 bg-tertiary-fixed rounded-lg flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-white transition-all duration-500">
-                <span className="material-symbols-outlined">notification_important</span>
-              </div>
-              <span className="px-2 py-0.5 bg-error-container text-error rounded font-label-bold text-[10px]">URGENTE</span>
-            </div>
-            <h3 className="text-on-surface-variant font-label-bold mb-1">Notificaciones pendientes</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="font-display-hero text-display-hero text-on-surface">{resumen?.totalNotificacionesPendientes ?? 0}</span>
-              <span className="text-on-surface-variant text-body-md">mensajes</span>
-            </div>
-            <p className="mt-4 text-on-surface-variant font-body-md flex items-center gap-1">
-              <span className="material-symbols-outlined text-[16px] text-tertiary">info</span>
-              2 requieren acción inmediata
-            </p>
-          </div>
-        </section>
 
       </div>
     </main>

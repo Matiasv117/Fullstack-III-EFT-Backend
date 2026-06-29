@@ -72,7 +72,7 @@ function App() {
 
     switch (activeSection) {
       case 'dashboard':
-        return <Dashboard user={user} />
+        return <Dashboard user={user} onSectionChange={setActiveSection} />
       case 'pacientes':
         return <div className="ml-[260px] pt-24 p-gutter min-h-screen"><GestionPacientes /></div>
       case 'clinicas':

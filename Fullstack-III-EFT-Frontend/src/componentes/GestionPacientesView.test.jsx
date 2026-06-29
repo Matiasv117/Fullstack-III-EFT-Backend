@@ -95,10 +95,13 @@ describe('GestionPacientesView', () => {
     ];
     render(<GestionPacientesView {...mockProps} pacientes={pacientes} />);
 
-    const agregarButton = screen.getByRole('button', { name: /Agregar a lista/i });
-    await user.click(agregarButton);
+    const agregarButtons = screen.getAllByRole('button', { name: /Agregar a lista/i });
+    await user.click(agregarButtons[0]);
 
-    expect(mockProps.agregarALista).toHaveBeenCalledWith(1);
+    const confirmModalButtons = screen.getAllByRole('button', { name: /Agregar a lista/i });
+    await user.click(confirmModalButtons[confirmModalButtons.length - 1]);
+
+    expect(mockProps.agregarALista).toHaveBeenCalledWith(1, expect.objectContaining({ gravedad: 'MEDIA' }));
   });
 
   it('should call borrarPaciente when delete button clicked and confirm', async () => {
