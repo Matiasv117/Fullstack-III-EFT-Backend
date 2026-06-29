@@ -84,6 +84,11 @@ public class ListaEsperaController {
         return listaEsperaService.obtenerPorGravedad(gravedad);
     }
 
+    /**
+     * Obtiene métricas de la lista de espera calculadas vía stored procedure.
+     *
+     * @return métricas como total de pacientes, distribución por gravedad, etc.
+     */
     @GetMapping("/metricas")
     @Operation(summary = "Métricas de lista de espera", description = "Retorna métricas calculadas vía stored procedure PostgreSQL")
     public ListaEsperaMetricasDTO obtenerMetricas() {

@@ -53,6 +53,12 @@ public class SimpleAuthService {
         return jwtTokenValidator.validate(token);
     }
 
+    /**
+     * Determina si una ruta no requiere autenticación.
+     *
+     * @param path la ruta HTTP a evaluar
+     * @return true si la ruta es pública (login, auth, actuator)
+     */
     public boolean isPublicPath(String path) {
         if (path == null || path.isBlank()) {
             return false;
@@ -60,6 +66,15 @@ public class SimpleAuthService {
         return PUBLIC_PATH_PREFIXES.stream().anyMatch(path::startsWith);
     }
 
+    /**
+     * Verifica si un rol tiene permiso para acceder a una ruta con un método específico.
+     * Los administradores tienen acceso completo; los usuarios solo GET a rutas permitidas.
+     *
+     * @param method método HTTP (GET, POST, etc.)
+     * @param path   la ruta solicitada
+     * @param role   el rol del usuario (ADMIN, USER)
+     * @return true si el acceso está permitido
+     */
     public boolean canAccess(String method, String path, String role) {
         if (path == null || path.isBlank()) {
             return false;

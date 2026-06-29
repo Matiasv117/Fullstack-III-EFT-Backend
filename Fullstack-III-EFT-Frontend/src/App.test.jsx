@@ -5,6 +5,9 @@ import userEvent from '@testing-library/user-event';
 vi.mock('./api/portalApi', () => ({
   obtenerResumenPortal: vi.fn(),
 }));
+vi.mock('./componentes/Login', () => ({
+  default: ({ onLoginSuccess }) => <div data-testid="login-component">Login</div>,
+}));
 vi.mock('./componentes/GestionPacientes', () => ({
   default: () => <div>GestionPacientes</div>,
 }));
@@ -176,6 +179,69 @@ describe('App', () => {
     // Should show 0 when data is null
     const zeros = screen.queryAllByText('0');
     expect(zeros.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('debe mostrar Login cuando no hay token', () => {
+    localStorage.clear();
+    render(<App />);
+    expect(screen.getByTestId('login-component')).toBeInTheDocument();
+  });
+
+  it('debe mostrar admin dashboard para admin', () => {
+    localStorage.setItem('user', JSON.stringify({ username: 'admin', role: 'ROLE_ADMIN' }));
+    render(<App />);
+    expect(screen.getByText('Panel de Administración')).toBeInTheDocument();
+  });
+
+  it('debe navegar a gestion de usuarios como admin', async () => {
+    localStorage.setItem('user', JSON.stringify({ username: 'admin', role: 'ROLE_ADMIN' }));
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Gestión de Usuarios' }));
+    expect(screen.getByText('Gestión de Funcionarios')).toBeInTheDocument();
+  });
+
+  it('debe navegar a clínicas como funcionario', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Clínicas' }));
+    const clinicas = screen.getAllByText('Clínicas');
+    expect(clinicas.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('debe cerrar sesion', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const logoutButtons = screen.getAllByRole('button', { name: /Cerrar Sesión|Cerrar sesión/i });
+    await user.click(logoutButtons[0]);
+    await waitFor(() => {
+      expect(screen.getByTestId('login-component')).toBeInTheDocument();
+    });
+    expect(localStorage.getItem('token')).toBeNull();
+  });
+
+  it('debe navegar a ajustes como admin', async () => {
+    localStorage.setItem('user', JSON.stringify({ username: 'admin', role: 'ROLE_ADMIN' }));
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Configuración' }));
+    expect(screen.getByText('Configuración del Sistema')).toBeInTheDocument();
+  });
+
+  it('debe navegar a ajustes como funcionario', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const ajustesButtons = screen.getAllByRole('button', { name: /^Ajustes/ });
+    await user.click(ajustesButtons[0]);
+    expect(screen.getByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();
+  });
+
+  it('debe alternar modo oscuro', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const darkModeButton = screen.getByText('Modo Oscuro');
+    await user.click(darkModeButton);
+    expect(screen.getByText('Modo Claro')).toBeInTheDocument();
   });
 });
 

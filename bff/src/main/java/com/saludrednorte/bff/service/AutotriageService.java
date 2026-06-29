@@ -12,6 +12,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 
+/**
+ * Servicio de autotriage que coordina el cálculo de prioridad con
+ * ms-optimizacion y el registro en lista de espera con ms-gestionpacientes.
+ */
 @Service
 public class AutotriageService {
 
@@ -26,6 +30,14 @@ public class AutotriageService {
         this.mapper = mapper;
     }
 
+    /**
+     * Procesa una solicitud de autotriage: calcula prioridad del paciente
+     * y lo registra en la lista de espera.
+     *
+     * @param request            datos del autotriage (paciente, gravedad, ubicación)
+     * @param authorizationHeader token JWT opcional para autenticar las llamadas downstream
+     * @return JSON combinado con resultado de prioridad y registro en lista de espera
+     */
     public JsonNode procesar(AutotriageRequest request, String authorizationHeader) {
         ObjectNode root = mapper.createObjectNode();
 

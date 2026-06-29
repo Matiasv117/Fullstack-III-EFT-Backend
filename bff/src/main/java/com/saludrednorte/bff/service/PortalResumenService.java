@@ -31,10 +31,23 @@ public class PortalResumenService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Construye el resumen del portal sin token de autorización.
+     *
+     * @return JSON con pacientes, notificaciones pendientes y resumen
+     */
     public JsonNode construirResumen() {
         return construirResumen(null);
     }
 
+    /**
+     * Construye el resumen del portal con datos agregados de pacientes
+     * y notificaciones pendientes, autenticando las llamadas downstream
+     * con el token proporcionado.
+     *
+     * @param authorizationHeader token JWT para autenticar llamadas a microservicios
+     * @return JSON con pacientes, notificaciones pendientes y resumen numérico
+     */
     public JsonNode construirResumen(String authorizationHeader) {
         ObjectNode root = objectMapper.createObjectNode();
         ArrayNode errores = root.putArray("errores");

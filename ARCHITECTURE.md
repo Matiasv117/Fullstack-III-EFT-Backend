@@ -1,148 +1,142 @@
-# Arquitectura Completa de Microservicios
+# Arquitectura — RedNorte / InsForge
 
-## Estructura del Proyecto
+## Diagrama de Arquitectura
 
-```
-Fullstack-III-EFT/
-├── eureka-server/              # Servidor de Descubrimiento de Servicios
-│   ├── pom.xml
-│   └── src/
-│       └── main/
-│           ├── java/
-│           │   └── com/saludrednorte/eureka/
-│           │       └── EurekaServerApplication.java
-│           └── resources/
-│               ├── application.properties
-│               └── application.yml
-│
-├── api-gateway/                # API Gateway para enrutamiento
-│   ├── pom.xml
-│   └── src/
-│       └── main/
-│           ├── java/
-│           │   └── com/saludrednorte/gateway/
-│           │       └── ApiGatewayApplication.java
-│           └── resources/
-│               ├── application.properties
-│               └── application.yml
-│
-├── ms-gestionpacientes/        # Microservicio de Gestión de Pacientes y Lista de Espera
-│   ├── pom.xml
-│   └── src/
-│       └── main/
-│           ├── java/
-│           └── resources/
-│
-├── ms-notificaciones/          # Microservicio de Notificaciones
-│   ├── pom.xml
-│   └── src/
-│       └── main/
-│           ├── java/
-│           └── resources/
-│
-└── ms-optimizacion/            # Microservicio de Optimización
-    ├── pom.xml
-    └── src/
-        └── main/
-            ├── java/
-            └── resources/
-```
+```mermaid
+graph TB
+    subgraph Cliente["Client Layer"]
+        F["Frontend React<br/>(Vite :5173)"]
+    end
 
-## Puertos de Ejecución
+    subgraph Gateway["Gateway Layer"]
+        BFF["Backend for Frontend<br/>(:8097)"]
+        GW["API Gateway<br/>(:8080)"]
+        E["Eureka Server<br/>(:8761)"]
+    end
 
-- **Eureka Server**: Puerto 8761 - http://localhost:8761
-- **API Gateway**: Puerto 8080 - http://localhost:8080
-- **ms-gestionpacientes**: Puerto 8083 - http://localhost:8083
-- **ms-notificaciones**: Puerto 8085 - http://localhost:8085
-- **ms-optimizacion**: Puerto 8084 - http://localhost:8084
+    subgraph MS["Microservicios"]
+        AUTH["ms-auth<br/>(:8087)"]
+        GP["ms-gestionpacientes<br/>(:8083)"]
+        OPT["ms-optimizacion<br/>(:8084)"]
+        NOT["ms-notificaciones<br/>(:8085)"]
+        PRO["ms-progreso<br/>(:8086)"]
+        AUD["ms-auditoria<br/>(:8088)"]
+    end
 
-## Rutas del API Gateway
+    subgraph ASYNC["Mensajería Asíncrona"]
+        RMQ["RabbitMQ<br/>(:5672)"]
+        EXCH_A["exchange: salud.auditoria.exchange"]
+        EXCH_N["exchange: salud.notificaciones.exchange"]
+    end
 
-El gateway enruta las solicitudes de la siguiente manera:
+    subgraph DATA["Persistencia y Cache"]
+        DB["Neon PostgreSQL<br/>(única instancia)"]
+        REDIS["Redis<br/>(:6379)"]
+    end
 
-```
-GET/POST http://localhost:8080/api/listas-espera/**     → ms-gestionpacientes:8083
-GET/POST http://localhost:8080/lista-espera/**          → ms-gestionpacientes:8083
-GET/POST http://localhost:8080/pacientes/**             → ms-gestionpacientes:8083
-GET/POST http://localhost:8080/api/notifications/**     → ms-notificaciones:8085
-GET/POST http://localhost:8080/optimizacion/**          → ms-optimizacion:8084
-```
+    F -- HTTP/JSON --> BFF
+    BFF -- HTTP/JSON --> GW
+    GW -- lb://ms-auth --> AUTH
+    GW -- lb://ms-listas-espera --> GP
+    GW -- lb://ms-optimizacion --> OPT
+    GW -- lb://ms-notificaciones --> NOT
+    GW -- lb://ms-progreso --> PRO
+    GW -- lb://ms-auditoria --> AUD
 
-## Cómo Ejecutar
+    AUTH -- Feign --> GP
+    GP -- Feign --> NOT
+    GP -- Feign --> OPT
+    OPT -- Feign --> NOT
+    OPT -- Feign --> GP
 
-### 1. Iniciar Eureka Server
+    AUTH -. publish .-> EXCH_A
+    GP -. publish .-> EXCH_A
+    OPT -. publish .-> EXCH_A
+    EXCH_A -. consume .-> AUD
 
-```bash
-cd eureka-server
-./mvnw spring-boot:run
-```
+    GP -. publish .-> EXCH_N
+    OPT -. publish .-> EXCH_N
+    EXCH_N -. consume .-> NOT
 
-### 2. Iniciar API Gateway
+    RMQ --- EXCH_A
+    RMQ --- EXCH_N
 
-```bash
-cd api-gateway
-./mvnw spring-boot:run
+    AUTH -- JDBC --> DB
+    GP -- JDBC --> DB
+    OPT -- JDBC --> DB
+    NOT -- JDBC --> DB
+    PRO -- JDBC --> DB
+    AUD -- JDBC --> DB
+
+    GP -- Redis --> REDIS
+
+    AUTH -.->|Register| E
+    GW -.->|Register| E
+    BFF -.->|Register| E
+    GP -.->|Register| E
+    OPT -.->|Register| E
+    NOT -.->|Register| E
+    PRO -.->|Register| E
+    AUD -.->|Register| E
 ```
 
-### 3. Iniciar los Microservicios
+## Puertos
 
-```bash
-# En terminales separadas
-cd ms-gestionpacientes
-./mvnw spring-boot:run
+| Servicio | Puerto | Propósito |
+|---|---|---|
+| Frontend (Vite) | 5173 | SPA React |
+| BFF | 8097 | Backend for Frontend, auth proxy, agregación |
+| API Gateway | 8080 | Enrutamiento, balanceo de carga |
+| Eureka Server | 8761 | Service Discovery |
+| ms-auth | 8087 | Autenticación JWT, registro |
+| ms-gestionpacientes | 8083 | Pacientes, lista de espera |
+| ms-optimizacion | 8084 | Optimización de citas (Strategy Pattern) |
+| ms-notificaciones | 8085 | Notificaciones push/email |
+| ms-progreso | 8086 | Progreso de pacientes |
+| ms-auditoria | 8088 | Auditoría de eventos |
+| RabbitMQ | 5672 / 15672 | Mensajería asíncrona |
+| Redis | 6379 | Caching (usado por ms-gestionpacientes) |
 
-cd ms-notificaciones
-./mvnw spring-boot:run
+## Stack Tecnológico
 
-cd ms-optimizacion
-./mvnw spring-boot:run
+| Capa | Tecnología |
+|---|---|
+| Frontend | React 19, Vite 8, Tailwind CSS v4, Lucide React, Axios |
+| Backend | Spring Boot 3.4.1, Java 17 |
+| Base de datos | Neon PostgreSQL (1 instancia compartida vía Flyway) |
+| Cache | Redis 7 |
+| Mensajería | RabbitMQ 3 |
+| Service Discovery | Eureka |
+| Gateway | Spring Cloud Gateway |
+| Testing Frontend | Vitest 4, Testing Library, jsdom |
+| Testing Backend | JUnit 5, Mockito, JaCoCo |
+
+## Comunicación
+
+### Síncrona (Feign / HTTP)
+```
+ms-auth → ms-gestionpacientes  (validación de pacientes)
+ms-gestionpacientes → ms-notificaciones  (notificar evento)
+ms-gestionpacientes → ms-optimizacion  (consultar citas)
+ms-optimizacion → ms-notificaciones  (notificar optimización)
+ms-optimizacion → ms-gestionpacientes  (consultar lista de espera)
 ```
 
-## Verificar Servicios Registrados
+### Asíncrona (RabbitMQ)
+| Exchange | Publishers | Consumer |
+|---|---|---|
+| `salud.auditoria.exchange` | ms-auth, ms-gestionpacientes, ms-optimizacion | ms-auditoria |
+| `salud.notificaciones.exchange` | ms-gestionpacientes, ms-optimizacion | ms-notificaciones |
 
-Una vez que todos los servicios estén ejecutándose, accede a:
-- **Eureka Dashboard**: http://localhost:8761
+### Persistencia
+- Todos los microservicios usan la **misma instancia Neon PostgreSQL** con tablas separadas vía Flyway
+- Solo ms-gestionpacientes usa Redis para caching
 
-Deberías ver registrados todos los servicios:
-- ms-listas-espera
-- ms-notificaciones
-- ms-optimizacion
-- api-gateway
+## Frontend
 
-## Comunicación entre Servicios
-
-Los microservicios se comunican automáticamente a través de:
-- **OpenFeign**: Para llamadas HTTP entre servicios
-- **Eureka**: Para descubrimiento dinámico de servicios
-- **Resilience4j**: Para manejo de fallos y circuit breaker
-
-## Ejemplos de Uso
-
-### A través del API Gateway:
-
-```bash
-# Registrar paciente
-curl -X POST http://localhost:8080/pacientes \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Juan","apellido":"Perez","dni":"12345678"}'
-
-# Obtener lista de espera
-curl http://localhost:8080/lista-espera
-
-# Crear notificación
-curl -X POST http://localhost:8080/api/notifications \
-  -H "Content-Type: application/json" \
-  -d '{"pacienteId":1,"tipo":"PACIENTE_ASIGNADO","mensaje":"Paciente registrado"}'
-
-# Obtener lista de espera desde optimización
-curl http://localhost:8080/optimizacion/lista-espera
-```
-
-### Directamente a los microservicios:
-
-```bash
-curl http://localhost:8083/pacientes
-curl http://localhost:8085/api/notifications
-curl http://localhost:8084/optimizacion/lista-espera
-```
-
+- **Sin React Router** — navegación por estado en `App.jsx` con `activeSection`
+- **httpClient.js** con baseURL `http://localhost:8097` e interceptors JWT
+- **Vite proxy** configurado para desarrollo (`/api` → `localhost:8080`)
+- **Tema Tailwind v4** con colores Material Design 3 en `src/index.css`
+- **Componentes** en `src/componentes/`
+- **Tests** junto a cada componente/API (Vitest, 248 tests, 25 archivos)

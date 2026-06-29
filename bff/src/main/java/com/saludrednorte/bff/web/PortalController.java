@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controlador del portal de salud que expone endpoints agregados
+ * para el dashboard del frontend, siguiendo el patrón BFF.
+ */
 @RestController
 @RequestMapping(path = "/api/portal", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PortalController {

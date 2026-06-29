@@ -8,6 +8,10 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import java.util.Map;
 
+/**
+ * Controlador para la consulta de eventos de auditoría.
+ * Actúa como proxy hacia ms-auditoría para el frontend.
+ */
 @RestController
 @RequestMapping("/api/auditoria")
 public class AuditoriaController {
@@ -21,6 +25,12 @@ public class AuditoriaController {
         return webClientBuilder.build();
     }
 
+    /**
+     * Lista los eventos de auditoría registrados en el sistema.
+     *
+     * @param token token JWT para autenticación contra ms-auditoria
+     * @return lista de eventos de auditoría
+     */
     @GetMapping("/eventos")
     public ResponseEntity<?> listarEventos(@RequestHeader(value = "Authorization", required = false) String token) {
         try {

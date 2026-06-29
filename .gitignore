@@ -35,3 +35,6 @@ config/local-insforge.env
 .roo
 .trae
 .windsurf
+
+# Coverage reports (generated)
+**/coverage/

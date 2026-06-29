@@ -46,7 +46,8 @@ scripts/stop-all.ps1                 # Detener todo
 | Servicio | Puerto | Responsabilidad |
 |---|---|---|
 | eureka-server | 8761 | Service discovery |
-| api-gateway / bff | 8080 | Gateway, BFF, auth proxy |
+| api-gateway | 8080 | API Gateway (Spring Cloud Gateway) |
+| bff | 8097 | Backend for Frontend, auth proxy, agregación |
 | ms-auth | 8087 | Autenticación JWT, registro |
 | ms-gestionpacientes | 8083 | Pacientes, listas de espera |
 | ms-optimizacion | 8084 | Optimización de citas (Strategy Pattern) |
@@ -67,7 +68,10 @@ scripts/stop-all.ps1                 # Detener todo
 - Vite proxy configurado para desarrollo (`/api` -> `localhost:8080`)
 - Tema Tailwind v4 definido en `src/index.css` con colores Material Design 3
 - Componentes en `src/componentes/`
-- Tests junto a cada componente/API
+- Tests junto a cada componente/API (Vitest 4 + Testing Library + jsdom)
+- Coverage con provider v8, thresholds configurados en `vitest.config.js`
+- **248 tests, 25 archivos de test**
+- Cobertura: lines 87.22%, statements 84.78%, functions 82.58%, branches 71%
 
 ## Convenciones de Código
 
@@ -166,6 +170,16 @@ scripts/stop-all.ps1                 # Detener todo
 - **API Gateway route**: cambiado `uri: lb://ms-gestionpacientes` → `lb://ms-listas-espera`.
 - `start-all.ps1` y `start-no-docker.ps1`: optimizados para arranque paralelo (Eureka primero, resto simultáneo).
 
+### Fase 7 — Cobertura Frontend ≥85% + Diagrama de Arquitectura (29 Jun 2026)
+- **ARCHITECTURE.md**: Reemplazado con diagrama Mermaid completo (Frontend → BFF → Gateway → 6 MS → Neon + RabbitMQ + Redis + Eureka)
+- **Sidebar.test.jsx** (nuevo): 11 tests — menús por rol (funcionario/admin/paciente), dark mode toggle, botón Ayuda (abre AyudaModal), logout
+- **Dashboard.test.jsx** (nuevo): 6 tests — vista paciente (PORTAL DEL PACIENTE), vista funcionario, error/sync/loading states, handleSyncRetry click
+- **TopNavBar.test.jsx** (actualizado): 7 tests — agregado search input onChange + USER badge por defecto
+- **App.test.jsx** (actualizado): 22 tests — agregado navegación a ajustes (admin y funcionario), dark mode toggle
+- **vitest.config.js**: Corregido formato de thresholds para Vitest 4 (`coverage.thresholds` sub-object). Thresholds: lines 85, functions 80, branches 65, statements 80
+- **Cobertura frontend**: lines 87.22%, statements 84.78%, functions 82.58%, branches 71% — todos los thresholds se cumplen
+- **Tests**: 248 tests, 25 archivos, 0 fallas
+
 ## Base de Datos
 - Hosteada en Neon (no local) — todos los microservicios apuntan a Neon ahora
 - MCP server configurado en `opencode.json` para consultas directas (requiere `NEON_API_KEY`)
@@ -190,6 +204,12 @@ scripts/stop-all.ps1                 # Detener todo
 15. ~~Optimizar scripts de arranque (start-all.ps1, start-no-docker.ps1)~~ — Completado
 16. ~~Fix BFF controllers y API Gateway: lb://ms-gestionpacientes → ms-listas-espera~~ — Completado
 17. **Mejorar vista de paciente y funcionario** — pendiente (darles utilidades reales)
+18. ~~ARCHITECTURE.md: diagrama Mermaid completo~~ — Completado
+19. ~~Sidebar.test.jsx, Dashboard.test.jsx, TopNavBar.test.jsx (actualizado), App.test.jsx (actualizado)~~ — Completado
+20. ~~Coverage thresholds Vitest 4: lines≥85% (87.22%), functions≥80% (82.58%), branches≥65% (71%), statements≥80% (84.78%)~~ — Completado
+21. **Cobertura GestionPacientesView.jsx** — ~51% líneas / 34% funciones. Requiere esfuerzo significativo para cubrir paths condicionales
+22. **JavaDoc en todos los microservicios** — Services + Controllers con documentación
+23. **Separar repos (Thanos audit)** — cada MS en su propio repo GitHub
 
 ## Bugs / Notas
 - ~~Los tests de API esperan rutas sin prefijo `/api` pero el código real las usa con `/api`~~ — Corregido

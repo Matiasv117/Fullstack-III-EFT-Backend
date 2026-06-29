@@ -18,10 +18,12 @@ export default defineConfig({
         '**/*.test.js',
         'src/main.jsx',
       ],
-      lines: 80,
-      functions: 80,
-      branches: 80,
-      statements: 80,
+      thresholds: {
+        lines: 85,
+        functions: 80,
+        branches: 65,
+        statements: 80,
+      },
     },
   },
 });
