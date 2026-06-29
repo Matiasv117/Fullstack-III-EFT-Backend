@@ -180,6 +180,13 @@ scripts/stop-all.ps1                 # Detener todo
 - **Cobertura frontend**: lines 87.22%, statements 84.78%, functions 82.58%, branches 71% — todos los thresholds se cumplen
 - **Tests**: 248 tests, 25 archivos, 0 fallas
 
+### Fase 8 — Swagger/OpenAPI + Exception Handlers + PDF Cobertura (29 Jun 2026)
+- **Swagger/OpenAPI**: Agregado `springdoc-openapi-starter-webmvc-ui` 2.6.0 a api-gateway, bff, eureka-server. Actualizado 2.3.0 → 2.6.0 en ms-notificaciones y ms-optimizacion. Agregado `@OpenAPIDefinition(info = @Info(...))` en los 9 Application classes.
+- **GlobalExceptionHandler**: Creados en api-gateway, bff y eureka-server (ya existían en los otros 6 MS). Todos siguen el mismo patrón: `@RestControllerAdvice` con handlers para `MethodArgumentNotValidException` (400), `IllegalArgumentException` (400) y `Exception` (500).
+- **PDF Cobertura JaCoCo**: Script `scripts/coverage-report.js` con pdfkit que genera `coverage-report-backend.pdf` — tabla de los 9 MS con 4 métricas (instrucciones, ramas, líneas, métodos), barras por servicio y resumen general.
+- **Frontend**: no disponible localmente para generar Vitest coverage PDF.
+- **Tests**: 275 backend (0 fallas), 248 frontend (0 fallas). api-gateway tiene 3 fallos preexistentes en `SimpleAuthServiceTest` (firma de método no coincide con implementación).
+
 ## Base de Datos
 - Hosteada en Neon (no local) — todos los microservicios apuntan a Neon ahora
 - MCP server configurado en `opencode.json` para consultas directas (requiere `NEON_API_KEY`)
@@ -208,8 +215,15 @@ scripts/stop-all.ps1                 # Detener todo
 19. ~~Sidebar.test.jsx, Dashboard.test.jsx, TopNavBar.test.jsx (actualizado), App.test.jsx (actualizado)~~ — Completado
 20. ~~Coverage thresholds Vitest 4: lines≥85% (87.22%), functions≥80% (82.58%), branches≥65% (71%), statements≥80% (84.78%)~~ — Completado
 21. **Cobertura GestionPacientesView.jsx** — ~51% líneas / 34% funciones. Requiere esfuerzo significativo para cubrir paths condicionales
-22. **JavaDoc en todos los microservicios** — Services + Controllers con documentación
-23. **Separar repos (Thanos audit)** — cada MS en su propio repo GitHub
+22. ~~JavaDoc en todos los microservicios~~ — Services + Controllers ya tenían documentación desde fases anteriores
+23. ~~Swagger/OpenAPI en cada microservicio~~ — Completado (Fase 8)
+24. ~~Manejo de errores global~~ — Completado (Fase 8)
+25. ~~Informe PDF de cobertura backend (JaCoCo)~~ — Completado: `coverage-report-backend.pdf`
+26. **Repositorio frontend independiente** — REQUERIDO checklist. Separar frontend en su propio repo GitHub
+27. **Repositorio por cada MS** (mínimo 6 repos) + Thanos audit — REQUERIDO checklist
+28. **GitHub Flow** — feature branches, main limpio — REQUERIDO checklist
+29. **Colección Swagger/Postman** — ejemplos de peticiones y respuestas — REQUERIDO checklist
+30. **Desplegar frontend en Vercel** — después de separar repos, build + deploy
 
 ## Bugs / Notas
 - ~~Los tests de API esperan rutas sin prefijo `/api` pero el código real las usa con `/api`~~ — Corregido
@@ -219,3 +233,4 @@ scripts/stop-all.ps1                 # Detener todo
 - ~~Los 11 tests de App.test.jsx fueron corregidos~~
 - En Windows con WSL/Hyper-V, los servicios se registran en Eureka con IP virtual (172.x.x.x). Siempre agregar `eureka.instance.prefer-ip-address: true` en nuevos microservicios.
 - El nombre del `@FeignClient` debe coincidir exactamente con `spring.application.name` del servicio destino.
+- api-gateway tiene 3 tests fallando en `SimpleAuthServiceTest` (preexistente): `generarToken` con firma `(String, String)` no coincide, y `decodeBearerToken_mapeaFuncionarioComoAdmin` espera "ADMIN" pero recibe "USER". No relacionados con cambios de Fase 8.
