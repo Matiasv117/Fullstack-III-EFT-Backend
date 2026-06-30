@@ -5,6 +5,7 @@ import com.saludrednorte.ms_notificaciones.entity.Notification;
 import com.saludrednorte.ms_notificaciones.repository.NotificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,9 @@ public class NotificationService {
     private static final List<String> CANALES_PERMITIDOS = List.of("EMAIL", "SMS", "PUSH");
 
     private final NotificationRepository repository;
+
+    @Autowired
+    private EmailService emailService;
 
     /**
      * Constructor del servicio.
@@ -193,5 +197,11 @@ public class NotificationService {
         notification.setIntentosEnvio(notification.getIntentosEnvio() == null ? 1 : notification.getIntentosEnvio() + 1);
         repository.save(notification);
         logger.info("Notificación {} enviada por {}", notification.getId(), channel);
+
+        if (notification.getEmailDestino() != null && !notification.getEmailDestino().isBlank()) {
+            String subject = "RedNorte - " + notification.getTipo().name().replace("_", " ");
+            String body = notification.getMensaje();
+            emailService.sendEmail(notification.getEmailDestino(), subject, body);
+        }
     }
 }

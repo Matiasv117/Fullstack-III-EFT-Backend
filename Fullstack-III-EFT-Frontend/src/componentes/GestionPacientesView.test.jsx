@@ -13,7 +13,6 @@ describe('GestionPacientesView', () => {
     formValido: false,
     actualizarCampo: vi.fn(),
     registrar: vi.fn(),
-    agregarALista: vi.fn(),
     borrarPaciente: vi.fn(),
     recargarPacientes: vi.fn(),
   };
@@ -86,22 +85,6 @@ describe('GestionPacientesView', () => {
 
     const registerButton = screen.getByRole('button', { name: /Procesando…/i });
     expect(registerButton).toBeDisabled();
-  });
-
-  it('should call agregarALista when add button clicked', async () => {
-    const user = userEvent.setup();
-    const pacientes = [
-      { id: 1, nombre: 'Juan', apellido: 'Pérez', dni: '123456789', telefono: '1234567890', email: 'juan@test.com' },
-    ];
-    render(<GestionPacientesView {...mockProps} pacientes={pacientes} />);
-
-    const agregarButtons = screen.getAllByRole('button', { name: /Agregar a lista/i });
-    await user.click(agregarButtons[0]);
-
-    const confirmModalButtons = screen.getAllByRole('button', { name: /Agregar a lista/i });
-    await user.click(confirmModalButtons[confirmModalButtons.length - 1]);
-
-    expect(mockProps.agregarALista).toHaveBeenCalledWith(1, expect.objectContaining({ gravedad: 'MEDIA' }));
   });
 
   it('should call borrarPaciente when delete button clicked and confirm', async () => {

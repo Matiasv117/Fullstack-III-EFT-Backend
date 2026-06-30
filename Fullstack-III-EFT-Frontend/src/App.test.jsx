@@ -231,14 +231,6 @@ describe('App', () => {
     expect(screen.getByText('Gestión de Funcionarios')).toBeInTheDocument();
   });
 
-  it('debe navegar a clínicas como funcionario', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    await user.click(screen.getByRole('button', { name: 'Clínicas' }));
-    const clinicas = screen.getAllByText('Clínicas');
-    expect(clinicas.length).toBeGreaterThanOrEqual(1);
-  });
-
   it('debe cerrar sesion', async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -256,14 +248,6 @@ describe('App', () => {
     render(<App />);
     await user.click(screen.getByRole('button', { name: 'Configuración' }));
     expect(screen.getByText('Configuración del Sistema')).toBeInTheDocument();
-  });
-
-  it('debe navegar a ajustes como funcionario', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    const ajustesButtons = screen.getAllByRole('button', { name: /^Ajustes/ });
-    await user.click(ajustesButtons[0]);
-    expect(screen.getByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();
   });
 
   it('debe alternar modo oscuro', async () => {

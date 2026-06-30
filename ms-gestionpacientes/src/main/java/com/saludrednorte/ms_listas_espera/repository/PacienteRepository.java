@@ -8,7 +8,9 @@ import java.util.Optional;
 
 @Repository
 public interface PacienteRepository extends JpaRepository<Paciente, Long> {
-	boolean existsByDniIgnoreCase(String dni);
-	
-	Optional<Paciente> findByNombreIgnoreCaseAndApellidoIgnoreCaseAndDniIgnoreCase(String nombre, String apellido, String dni);
+    boolean existsByDniIgnoreCase(String dni);
+		
+		Optional<Paciente> findByNombreIgnoreCaseAndApellidoIgnoreCaseAndDniIgnoreCase(String nombre, String apellido, String dni);
+		
+		void deleteById(Long id);
 }

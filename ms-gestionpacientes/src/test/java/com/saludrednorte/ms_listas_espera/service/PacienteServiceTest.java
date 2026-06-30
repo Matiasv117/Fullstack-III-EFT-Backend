@@ -1,11 +1,11 @@
 package com.saludrednorte.ms_listas_espera.service;
 
-import com.saludrednorte.ms_listas_espera.client.CitaClient;
-import com.saludrednorte.ms_listas_espera.dto.MedicoDTO;
 import com.saludrednorte.ms_listas_espera.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
+import com.saludrednorte.ms_listas_espera.repository.ListaEsperaRepository;
+import com.saludrednorte.ms_optimizacion.repository.CitaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,13 +30,16 @@ class PacienteServiceTest {
     private PacienteRepository pacienteRepository;
 
     @Mock
+    private ListaEsperaRepository listaEsperaRepository;
+
+    @Mock
+    private CitaRepository citaRepository;
+
+    @Mock
     private NotificacionEventPublisher notificacionEventPublisher;
 
     @Mock
     private AuditEventPublisher auditEventPublisher;
-
-    @Mock
-    private CitaClient citaClient;
 
     private PacienteService pacienteService;
 
@@ -42,9 +47,10 @@ class PacienteServiceTest {
     void setUp() {
         pacienteService = new PacienteService();
         ReflectionTestUtils.setField(pacienteService, "pacienteRepository", pacienteRepository);
+        ReflectionTestUtils.setField(pacienteService, "listaEsperaRepository", listaEsperaRepository);
+        ReflectionTestUtils.setField(pacienteService, "citaRepository", citaRepository);
         ReflectionTestUtils.setField(pacienteService, "notificacionEventPublisher", notificacionEventPublisher);
         ReflectionTestUtils.setField(pacienteService, "auditEventPublisher", auditEventPublisher);
-        ReflectionTestUtils.setField(pacienteService, "citaClient", citaClient);
     }
 
     @Test
@@ -60,14 +66,8 @@ class PacienteServiceTest {
         guardado.setApellido(paciente.getApellido());
         guardado.setDni(paciente.getDni());
 
-        MedicoDTO medico = new MedicoDTO();
-        medico.setId(1L);
-        medico.setNombre("Dr. García");
-        medico.setEspecialidad("General");
-
         when(pacienteRepository.existsByDniIgnoreCase("12345678-9")).thenReturn(false);
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
-        when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of(medico));
 
         Paciente resultado = pacienteService.registrarPaciente(paciente);
 
@@ -106,7 +106,6 @@ class PacienteServiceTest {
         guardado.setApellido("Gómez");
 
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
-        when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of());
 
         Paciente resultado = pacienteService.registrarPaciente(paciente);
 
@@ -128,7 +127,6 @@ class PacienteServiceTest {
 
         when(pacienteRepository.existsByDniIgnoreCase("99999999-9")).thenReturn(false);
         when(pacienteRepository.save(paciente)).thenReturn(guardado);
-        when(citaClient.obtenerTodosMedicos()).thenReturn(java.util.List.of());
         org.mockito.Mockito.doThrow(new RuntimeException("RabbitMQ error"))
                 .when(notificacionEventPublisher).publicar(org.mockito.ArgumentMatchers.anyLong(),
                         org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
@@ -250,6 +248,8 @@ class PacienteServiceTest {
 
         pacienteService.eliminarPaciente(5L);
 
+        verify(listaEsperaRepository).deleteByPacienteId(5L);
+        verify(citaRepository).deleteByPacienteId(5L);
         verify(pacienteRepository).deleteById(5L);
     }
 
@@ -263,5 +263,9 @@ class PacienteServiceTest {
                     ResponseStatusException exception = (ResponseStatusException) error;
                     assertThat(exception.getStatusCode().value()).isEqualTo(HttpStatus.NOT_FOUND.value());
                 });
+
+        verify(listaEsperaRepository, never()).deleteByPacienteId(anyLong());
+        verify(citaRepository, never()).deleteByPacienteId(anyLong());
+        verify(pacienteRepository, never()).deleteById(anyLong());
     }
 }

@@ -1,7 +1,11 @@
 package com.saludrednorte.ms_optimizacion.service;
 
 import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
+import com.saludrednorte.ms_optimizacion.client.PacienteClient;
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
+import com.saludrednorte.ms_optimizacion.dto.PacienteDTO;
+import com.saludrednorte.ms_optimizacion.dto.ReasignacionResponse;
+import com.saludrednorte.ms_optimizacion.entity.EstadoCita;
 import com.saludrednorte.ms_optimizacion.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_optimizacion.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
@@ -36,6 +40,9 @@ public class OptimizacionService {
     private ListaEsperaClient listaEsperaClient;
 
     @Autowired
+    private PacienteClient pacienteClient;
+
+    @Autowired
     private NotificacionEventPublisher notificacionEventPublisher;
 
     @Autowired
@@ -54,29 +61,58 @@ public class OptimizacionService {
      *
      * @param citaId el ID de la cita cancelada
      * @param estrategiaTipo el tipo de estrategia de optimización (FIFO, POR_GRAVEDAD)
+     * @return información del paciente que recibió la cita reasignada, o null si no hay candidatos
      */
-    public void procesarCancelacion(Long citaId, String estrategiaTipo) {
+    public ReasignacionResponse procesarCancelacion(Long citaId, String estrategiaTipo) {
         citaService.cancelarCita(citaId);
         Cita citaCancelada = citaService.obtenerCitaPorId(citaId).orElse(null);
-        if (citaCancelada != null) {
-            EstrategiaOptimizacion estrategia = factory.getEstrategia(estrategiaTipo);
-            estrategia.reasignarCita(citaCancelada);
+        if (citaCancelada == null) {
+            return null;
+        }
 
-            // Publicar notificación de reasignación vía RabbitMQ
+        EstrategiaOptimizacion estrategia = factory.getEstrategia(estrategiaTipo);
+        estrategia.reasignarCita(citaCancelada);
+
+        if (citaCancelada.getPacienteId() == null) {
+            logger.info("No se pudo reasignar cita {}: no hay pacientes en lista de espera", citaCancelada.getId());
+            return null;
+        }
+
+        citaCancelada.setEstado(EstadoCita.REASIGNADA);
+        citaService.actualizarCita(citaCancelada);
+
+        String nombrePaciente = null;
+
+        // Publicar notificación de reasignación vía RabbitMQ
+        try {
+            String emailDestino = null;
             try {
-                notificacionEventPublisher.publicar(
-                        citaCancelada.getPacienteId(),
-                        "CITA_REASIGNADA",
-                        "Cita reasignada para " + citaCancelada.getFechaHora()
-                );
-                logger.info("Evento de reasignación publicado para cita {}", citaCancelada.getId());
-            } catch (Exception e) {
-                logger.warn("Fallo al publicar reasignación de cita {} : {}", citaCancelada.getId(), e.getMessage());
+                PacienteDTO paciente = pacienteClient.obtenerPacientePorId(citaCancelada.getPacienteId());
+                if (paciente != null) {
+                    if (paciente.getEmail() != null) {
+                        emailDestino = paciente.getEmail();
+                    }
+                    nombrePaciente = (paciente.getNombre() + " " + paciente.getApellido()).trim();
+                }
+            } catch (Exception ex) {
+                logger.warn("No se pudo obtener datos del paciente {}: {}", citaCancelada.getPacienteId(), ex.getMessage());
             }
 
-            auditEventPublisher.publicar("sistema", "CITA_OPTIMIZADA",
-                    "Cita ID " + citaCancelada.getId() + " reasignada para paciente " + citaCancelada.getPacienteId());
+            notificacionEventPublisher.publicar(
+                    citaCancelada.getPacienteId(),
+                    "CITA_REASIGNADA",
+                    "Cita reasignada para " + citaCancelada.getFechaHora(),
+                    emailDestino
+            );
+            logger.info("Evento de reasignación publicado para cita {}", citaCancelada.getId());
+        } catch (Exception e) {
+            logger.warn("Fallo al publicar reasignación de cita {} : {}", citaCancelada.getId(), e.getMessage());
         }
+
+        auditEventPublisher.publicar("sistema", "CITA_OPTIMIZADA",
+                "Cita ID " + citaCancelada.getId() + " reasignada para paciente " + citaCancelada.getPacienteId());
+
+        return new ReasignacionResponse(citaCancelada.getId(), citaCancelada.getPacienteId(), nombrePaciente);
     }
 
     /**

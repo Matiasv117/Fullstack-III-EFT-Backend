@@ -29,6 +29,9 @@ public interface CitaClient {
     @DeleteMapping("/citas/{id}")
     ResponseEntity<Void> cancelarCita(@PathVariable Long id);
 
+    @GetMapping("/citas/paciente/{pacienteId}")
+    List<CitaDTO> obtenerCitasPorPaciente(@PathVariable Long pacienteId);
+
     @GetMapping("/medicos")
     List<MedicoDTO> obtenerTodosMedicos();
 

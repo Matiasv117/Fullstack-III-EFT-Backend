@@ -1,5 +1,10 @@
 package com.saludrednorte.bff.web;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saludrednorte.bff.service.ProgresoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -7,6 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Controlador de lista de espera que delega las operaciones al microservicio ms-gestionpacientes.
@@ -15,8 +21,16 @@ import java.util.Map;
 @RequestMapping("/api/lista-espera")
 public class ListaEsperaController {
 
+    private static final Logger log = LoggerFactory.getLogger(ListaEsperaController.class);
+
     @Autowired
     private WebClient.Builder webClientBuilder;
+
+    @Autowired
+    private ProgresoService progresoService;
+
+    @Autowired
+    private ObjectMapper mapper;
 
     private static final String MS_GESTION_PACIENTES_URL = "lb://ms-listas-espera";
 
@@ -83,6 +97,16 @@ public class ListaEsperaController {
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
+            try {
+                JsonNode node = mapper.readTree(response);
+                JsonNode pacienteNode = node.get("paciente");
+                if (pacienteNode != null && pacienteNode.has("id") && !pacienteNode.get("id").isNull()) {
+                    Long pacienteId = pacienteNode.get("id").asLong();
+                    CompletableFuture.runAsync(() -> progresoService.actualizarProgreso(pacienteId, "EN_LISTA_ACTIVA"));
+                }
+            } catch (Exception ex) {
+                log.warn("Error en after-call de progreso al agregar a lista de espera", ex);
+            }
             return ResponseEntity.ok(response);
         } catch (WebClientResponseException ex) {
             return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());

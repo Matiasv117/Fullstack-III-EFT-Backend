@@ -33,6 +33,9 @@ public class Notification {
 
     private Integer intentosEnvio;
 
+    @Column(name = "email_destino")
+    private String emailDestino;
+
     public Notification() {
         this.creadoAt = LocalDateTime.now();
         this.estado = EstadoNotificacion.PENDIENTE;
@@ -64,4 +67,7 @@ public class Notification {
 
     public Integer getIntentosEnvio() { return intentosEnvio; }
     public void setIntentosEnvio(Integer intentosEnvio) { this.intentosEnvio = intentosEnvio; }
+
+    public String getEmailDestino() { return emailDestino; }
+    public void setEmailDestino(String emailDestino) { this.emailDestino = emailDestino; }
 }

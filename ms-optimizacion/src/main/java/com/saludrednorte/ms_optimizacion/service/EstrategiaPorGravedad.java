@@ -52,6 +52,7 @@ public class EstrategiaPorGravedad implements EstrategiaOptimizacion {
 
         citaCancelada.setPacienteId(candidato.getPacienteId());
         citaService.actualizarCita(citaCancelada);
+        listaEsperaClient.actualizarEstado(candidato.getId(), "ASIGNADA");
         logger.info("Cita {} reasignada al paciente {} por prioridad", citaCancelada.getId(), candidato.getPacienteId());
     }
 

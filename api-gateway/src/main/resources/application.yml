@@ -34,7 +34,7 @@ spring:
         - id: ms-listas-espera
           uri: lb://ms-listas-espera
           predicates:
-            - Path=/api/listas-espera/**,/lista-espera/**,/pacientes/**
+            - Path=/api/lista-espera/**,/lista-espera/**,/api/pacientes/**,/pacientes/**
           filters:
             - StripPrefix=0
 
@@ -48,7 +48,7 @@ spring:
         - id: ms-optimizacion
           uri: lb://ms-optimizacion
           predicates:
-            - Path=/optimizacion/**,/citas/**,/medicos/**,/horarios/**
+            - Path=/api/optimizacion/**,/optimizacion/**,/api/citas/**,/citas/**,/api/medicos/**,/medicos/**,/api/horarios/**,/horarios/**
           filters:
             - StripPrefix=0
 

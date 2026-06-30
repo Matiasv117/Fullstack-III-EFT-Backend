@@ -1,9 +1,14 @@
 package com.saludrednorte.ms_optimizacion.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Map;
+
 public class ListaEsperaDTO {
 
     private Long id;
     private Long pacienteId;
+    private String nombrePaciente;
     private String interconsulta;
     private String gravedad;
     private String estado;
@@ -33,6 +38,24 @@ public class ListaEsperaDTO {
 
     public void setPacienteId(Long pacienteId) {
         this.pacienteId = pacienteId;
+    }
+
+    public String getNombrePaciente() {
+        return nombrePaciente;
+    }
+
+    public void setNombrePaciente(String nombrePaciente) {
+        this.nombrePaciente = nombrePaciente;
+    }
+
+    @JsonProperty("paciente")
+    public void unpackPaciente(Map<String, Object> paciente) {
+        if (paciente != null) {
+            this.pacienteId = paciente.get("id") != null ? ((Number) paciente.get("id")).longValue() : null;
+            String nombre = (String) paciente.getOrDefault("nombre", "");
+            String apellido = (String) paciente.getOrDefault("apellido", "");
+            this.nombrePaciente = (nombre + " " + apellido).trim();
+        }
     }
 
     public String getInterconsulta() {

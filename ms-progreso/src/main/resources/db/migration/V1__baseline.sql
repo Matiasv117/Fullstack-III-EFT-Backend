@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS flyway_ms_progreso (id INTEGER PRIMARY KEY);

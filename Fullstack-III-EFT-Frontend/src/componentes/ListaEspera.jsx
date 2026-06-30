@@ -13,9 +13,11 @@ function ListaEsperaView({
   eliminarDeListaEspera,
   actualizarEstado,
   recargarListaEspera,
+  onSectionChange,
 }) {
   const [filtroGravedad, setFiltroGravedad] = useState('TODOS');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
+  const [selectEstado, setSelectEstado] = useState({});
 
   const listaFiltrada = listaEspera.filter((item) => {
     if (filtroGravedad !== 'TODOS' && (item.gravedad || 'NORMAL') !== filtroGravedad) {
@@ -40,8 +42,8 @@ function ListaEsperaView({
   const estadoStyles = (estado) => {
     const mapa = {
       PENDIENTE: 'bg-rose-600 text-white shadow-xs',
-      ATENDIDO: 'bg-emerald-600 text-white shadow-xs',
-      CANCELADO: 'bg-outline text-white shadow-xs',
+      ASIGNADA: 'bg-emerald-600 text-white shadow-xs',
+      FINALIZADA: 'bg-outline text-white shadow-xs',
     };
     return mapa[estado] || 'bg-primary text-white shadow-xs';
   };
@@ -56,15 +58,24 @@ function ListaEsperaView({
             Monitorea y gestiona los pacientes que esperan atención médica en tiempo real.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={recargarListaEspera}
-          disabled={cargando}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-outline-variant bg-surface hover:bg-surface-container-low text-on-surface-variant font-semibold rounded-lg text-sm shadow-xs transition-colors cursor-pointer"
-        >
-          <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
-          <span>{cargando ? 'Actualizando…' : 'Actualizar'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={recargarListaEspera}
+            disabled={cargando}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-outline-variant bg-surface hover:bg-surface-container-low text-on-surface-variant font-semibold rounded-lg text-sm shadow-xs transition-colors cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
+            <span>{cargando ? 'Actualizando…' : 'Actualizar'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onSectionChange?.('agendarcita')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/95 text-white font-semibold rounded-lg text-sm shadow-xs shadow-primary/15 transition-all cursor-pointer hover:-translate-y-0.5"
+          >
+            Agendar Cita →
+          </button>
+        </div>
       </header>
 
       {/* Alert Feedbacks */}
@@ -118,13 +129,13 @@ function ListaEsperaView({
               >
                 <option value="TODOS">Todos</option>
                 <option value="PENDIENTE">Pendiente</option>
-                <option value="ATENDIDO">Atendido</option>
-                <option value="CANCELADO">Cancelado</option>
-              </select>
-              <Filter className="absolute right-3 bottom-2.5 text-on-surface-variant w-3.5 h-3.5 pointer-events-none" />
-            </div>
+            <option value="ASIGNADA">Asignada</option>
+            <option value="FINALIZADA">Finalizada</option>
+          </select>
+          <Filter className="absolute right-3 bottom-2.5 text-on-surface-variant w-3.5 h-3.5 pointer-events-none" />
+        </div>
 
-            <div className="flex items-end pt-5 sm:pt-0">
+        <div className="flex items-end pt-5 sm:pt-0">
               <span className="text-xs text-on-surface-variant font-medium">
                 Mostrando: <strong className="text-on-surface">{listaFiltrada.length}</strong> de{' '}
                 <strong className="text-on-surface">{listaEspera.length}</strong>
@@ -165,19 +176,26 @@ function ListaEsperaView({
 
                 <div className="flex items-center gap-2 pt-3 border-t border-outline-variant/30">
                   <select
+                    value={selectEstado[item.id] || ''}
                     className="flex-1 bg-surface-container-low text-on-surface border border-outline-variant rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                     onChange={(e) => {
-                      if (e.target.value) {
-                        actualizarEstado(item.id, e.target.value);
-                        e.target.value = '';
+                      const val = e.target.value;
+                      setSelectEstado(prev => ({ ...prev, [item.id]: val }));
+                      if (val) {
+                        actualizarEstado(item.id, val);
+                        setTimeout(() => setSelectEstado(prev => {
+                          const next = { ...prev };
+                          next[item.id] = '';
+                          return next;
+                        }), 100);
                       }
                     }}
                     disabled={cargando}
                   >
                     <option value="">Cambiar estado</option>
                     <option value="PENDIENTE">Pendiente</option>
-                    <option value="ATENDIDO">Atendido</option>
-                    <option value="CANCELADO">Cancelado</option>
+                    <option value="ASIGNADA">Asignada</option>
+                    <option value="FINALIZADA">Finalizada</option>
                   </select>
                   
                   <button
@@ -204,7 +222,7 @@ function ListaEsperaView({
   );
 }
 
-function ListaEspera() {
+function ListaEspera({ onSectionChange }) {
   const {
     listaEspera,
     cargando,
@@ -224,6 +242,7 @@ function ListaEspera() {
       eliminarDeListaEspera={eliminarDeListaEspera}
       actualizarEstado={actualizarEstado}
       recargarListaEspera={cargarListaEspera}
+      onSectionChange={onSectionChange}
     />
   );
 }

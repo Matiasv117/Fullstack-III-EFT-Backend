@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.saludrednorte.bff.dto.LoginRequest;
 import com.saludrednorte.bff.dto.LoginResponse;
 import com.saludrednorte.bff.dto.PacienteLoginRequest;
+import com.saludrednorte.bff.service.AuditoriaService;
 import com.saludrednorte.bff.service.AuthProxyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,9 @@ class AuthControllerTest {
 
     @Mock
     private AuthProxyService authProxyService;
+
+    @Mock
+    private AuditoriaService auditoriaService;
 
     @InjectMocks
     private AuthController authController;

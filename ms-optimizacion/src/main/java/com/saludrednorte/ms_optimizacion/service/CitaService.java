@@ -6,6 +6,7 @@ import com.saludrednorte.ms_optimizacion.repository.CitaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -52,6 +53,7 @@ public class CitaService {
      *
      * @return lista de todas las citas
      */
+    @Transactional(readOnly = true)
     public List<Cita> obtenerTodasCitas() {
         return citaRepository.findAll();
     }
@@ -64,6 +66,16 @@ public class CitaService {
      */
     public List<Cita> obtenerCitasPorEstado(EstadoCita estado) {
         return citaRepository.findByEstado(estado);
+    }
+
+    /**
+     * Obtiene las citas de un paciente específico.
+     *
+     * @param pacienteId el ID del paciente
+     * @return lista de citas del paciente
+     */
+    public List<Cita> obtenerCitasPorPaciente(Long pacienteId) {
+        return citaRepository.findByPacienteId(pacienteId);
     }
 
     /**

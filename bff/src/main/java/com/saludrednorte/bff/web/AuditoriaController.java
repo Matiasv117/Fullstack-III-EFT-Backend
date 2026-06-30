@@ -1,5 +1,7 @@
 package com.saludrednorte.bff.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saludrednorte.bff.service.AuditoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,12 @@ public class AuditoriaController {
 
     @Autowired
     private WebClient.Builder webClientBuilder;
+
+    @Autowired
+    private AuditoriaService auditoriaService;
+
+    @Autowired
+    private ObjectMapper mapper;
 
     private static final String MS_AUDITORIA_URL = "lb://ms-auditoria";
 
@@ -46,6 +54,22 @@ public class AuditoriaController {
             return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Error al listar eventos de auditoría"));
+        }
+    }
+
+    @PostMapping("/eventos")
+    public ResponseEntity<?> registrarEvento(@RequestBody Map<String, String> body) {
+        try {
+            String username = body.getOrDefault("username", "anonimo");
+            String action = body.get("action");
+            String details = body.getOrDefault("details", "");
+            if (action == null || action.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "La acción es obligatoria"));
+            }
+            auditoriaService.registrarEvento(username, action, details);
+            return ResponseEntity.ok(Map.of("status", "ok"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error al registrar evento"));
         }
     }
 }

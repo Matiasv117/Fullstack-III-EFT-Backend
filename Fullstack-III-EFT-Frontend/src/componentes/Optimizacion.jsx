@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { obtenerListaEsperaOptimizada, cancelarCitaConEstrategia } from '../api/optimizacionApi';
+import { obtenerCitasPorEstado } from '../api/citasApi';
 import { 
-  Zap, Play, Filter, AlertTriangle, RefreshCw, Info, ChevronDown, ListOrdered, Layers, ClipboardList
+  Zap, Send, Filter, AlertTriangle, RefreshCw, Info, ChevronDown, ListOrdered, Layers, ClipboardList, CheckCircle, Tag
 } from 'lucide-react';
 
 const ESTRATEGIAS = [
@@ -20,26 +21,31 @@ function Optimizacion() {
   const [filtroGravedad, setFiltroGravedad] = useState('TODOS');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
   const [simulandoCancelacion, setSimulandoCancelacion] = useState(false);
-  const [citaAnclarId, setCitaAnclarId] = useState(null);
+  const [citaSeleccionada, setCitaSeleccionada] = useState(null);
+  const [citasConfirmadas, setCitasConfirmadas] = useState([]);
   const [estrategia, setEstrategia] = useState('fifo');
-  const [vistaEstrategia, setVistaEstrategia] = useState('lista');
+  const [resultadoCancelacion, setResultadoCancelacion] = useState(null);
 
   useEffect(() => {
-    const fetchLista = async () => {
+    const fetchData = async () => {
       setCargando(true);
       setError('');
 
       try {
-        const datos = await obtenerListaEsperaOptimizada();
-        setListaEspera(Array.isArray(datos) ? datos : []);
+        const [datosLista, datosCitas] = await Promise.all([
+          obtenerListaEsperaOptimizada(),
+          obtenerCitasPorEstado('CONFIRMADA'),
+        ]);
+        setListaEspera(Array.isArray(datosLista) ? datosLista : []);
+        setCitasConfirmadas(Array.isArray(datosCitas) ? datosCitas : []);
       } catch (errorCapturado) {
-        setError(errorCapturado.message || 'No fue posible obtener la lista de espera');
+        setError(errorCapturado.message || 'No fue posible obtener los datos');
       } finally {
         setCargando(false);
       }
     };
 
-    void fetchLista();
+    void fetchData();
   }, []);
 
   const ordenarLista = (lista, estrategiaId) => {
@@ -76,30 +82,43 @@ function Optimizacion() {
     setListaFiltrada(filtrada);
   }, [listaEspera, filtroGravedad, filtroEstado, estrategia]);
 
-  const manejarCancelacion = async () => {
-    if (!citaAnclarId) {
-      setError('Selecciona una cita para cancelar');
-      return;
-    }
-
-    setSimulandoCancelacion(true);
-    setError('');
-
-    try {
-      await cancelarCitaConEstrategia(citaAnclarId, estrategia);
-      const datos = await obtenerListaEsperaOptimizada();
-      setListaEspera(Array.isArray(datos) ? datos : []);
-      setCitaAnclarId(null);
-      alert(`Cita ${citaAnclarId} cancelada y reasignada con estrategia ${estrategia}`);
-    } catch (errorCapturado) {
-      setError(
-        errorCapturado.message ||
-        'No fue posible procesar la cancelación de la cita'
-      );
-    } finally {
-      setSimulandoCancelacion(false);
-    }
-  };
+      const manejarCancelacion = async () => {
+        if (!citaSeleccionada) {
+          setError('Selecciona una cita para cancelar');
+          return;
+        }
+    
+        setSimulandoCancelacion(true);
+        setError('');
+        setResultadoCancelacion(null);
+    
+        try {
+          const response = await cancelarCitaConEstrategia(citaSeleccionada.id, estrategia);
+          const [datosLista, datosCitas] = await Promise.all([
+            obtenerListaEsperaOptimizada(),
+            obtenerCitasPorEstado('CONFIRMADA'),
+          ]);
+          setListaEspera(Array.isArray(datosLista) ? datosLista : []);
+          setCitasConfirmadas(Array.isArray(datosCitas) ? datosCitas : []);
+    
+          setResultadoCancelacion({
+            citaId: citaSeleccionada.id,
+            medico: citaSeleccionada.medico?.nombre || '—',
+            fechaHora: citaSeleccionada.fechaHora,
+            estrategia,
+            pacienteReasignado: response?.nombrePaciente || (response?.pacienteId ? `Paciente #${response.pacienteId}` : 'Paciente de lista de espera'),
+          });
+    
+          setCitaSeleccionada(null);
+        } catch (errorCapturado) {
+          setError(
+            errorCapturado.message ||
+            'No fue posible procesar la cancelación de la cita'
+          );
+        } finally {
+          setSimulandoCancelacion(false);
+        }
+      };
 
   const gravedadColor = (gravedad) => {
     const mapa = {
@@ -114,8 +133,8 @@ function Optimizacion() {
   const estadoColor = (estado) => {
     const mapa = {
       PENDIENTE: 'bg-rose-600 text-white shadow-xs',
-      ATENDIDO: 'bg-emerald-600 text-white shadow-xs',
-      CANCELADO: 'bg-outline text-white shadow-xs',
+      ASIGNADA: 'bg-emerald-600 text-white shadow-xs',
+      FINALIZADA: 'bg-outline text-white shadow-xs',
     };
     return mapa[estado] || 'bg-primary text-white shadow-xs';
   };
@@ -147,54 +166,77 @@ function Optimizacion() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         
-        {/* Simular Cancelación Form */}
+        {/* Cancelar y Reasignar Form */}
         <div className="xl:col-span-1 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xs p-6 h-fit space-y-6">
           <div className="flex items-center gap-2 pb-4 border-b border-outline-variant">
-            <Play className="w-5 h-5 text-primary shrink-0" />
-            <h3 className="font-bold text-on-surface">Simular Cancelación de Cita</h3>
+            <Send className="w-5 h-5 text-primary shrink-0" />
+            <h3 className="font-bold text-on-surface">Cancelar y Reasignar Cita</h3>
           </div>
 
           <form className="space-y-4 text-left" onSubmit={(e) => e.preventDefault()}>
             <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant/70 uppercase tracking-wider mb-1.5">ID de Cita a Cancelar</label>
-              <input
-                type="number"
-                value={citaAnclarId || ''}
-                onChange={(e) => setCitaAnclarId(e.target.value ? parseInt(e.target.value) : null)}
-                placeholder="Ingresa el ID de la cita"
-                disabled={simulandoCancelacion}
-                className="w-full border border-outline-variant rounded-lg p-2.5 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant/70 uppercase tracking-wider mb-1.5">Estrategia de Reasignación</label>
+              <label className="block text-[10px] font-bold text-on-surface-variant/70 uppercase tracking-wider mb-1.5">Cita a Cancelar</label>
               <div className="relative">
                 <select
-                  value={estrategia}
-                  onChange={(e) => setEstrategia(e.target.value)}
+                  value={citaSeleccionada ? JSON.stringify(citaSeleccionada) : ''}
+                  onChange={(e) => setCitaSeleccionada(e.target.value ? JSON.parse(e.target.value) : null)}
                   disabled={simulandoCancelacion}
-                  className="appearance-none w-full border border-outline-variant rounded-lg p-2.5 pr-8 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm font-semibold transition-all cursor-pointer"
+                  className="appearance-none w-full border border-outline-variant rounded-lg p-2.5 pr-8 text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm transition-all cursor-pointer"
                 >
-                  {ESTRATEGIAS.map((e) => (
-                    <option key={e.id} value={e.id}>{e.label}</option>
+                  <option value="">— Selecciona una cita —</option>
+                  {citasConfirmadas.map((cita) => (
+                    <option key={cita.id} value={JSON.stringify(cita)}>
+                      #{cita.id} — {cita.medico?.nombre || 'Dr.'} — {cita.fechaHora ? new Date(cita.fechaHora).toLocaleString('es-CL') : ''} (Paciente #{cita.pacienteId})
+                    </option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 pointer-events-none" />
               </div>
             </div>
 
+            {citaSeleccionada && (
+              <div className="bg-surface-container-low p-3 rounded-lg text-xs space-y-1">
+                <p className="font-semibold text-on-surface">Cita #{citaSeleccionada.id}</p>
+                <p className="text-on-surface-variant">Médico: {citaSeleccionada.medico?.nombre || '—'}</p>
+                <p className="text-on-surface-variant">Fecha: {citaSeleccionada.fechaHora ? new Date(citaSeleccionada.fechaHora).toLocaleString('es-CL') : '—'}</p>
+                <p className="text-on-surface-variant">Paciente ID: #{citaSeleccionada.pacienteId}</p>
+              </div>
+            )}
+
+            <div className="bg-surface-container-low p-3 rounded-lg flex items-center gap-2">
+              <Tag className="w-4 h-4 text-primary shrink-0" />
+              <div>
+                <p className="text-[10px] font-bold text-on-surface-variant/70 uppercase tracking-wider">Estrategia activa</p>
+                <p className="text-sm font-bold text-on-surface">{ESTRATEGIAS.find((e) => e.id === estrategia)?.label}</p>
+                <p className="text-[10px] text-on-surface-variant/70 italic">{ESTRATEGIAS.find((e) => e.id === estrategia)?.desc}</p>
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={manejarCancelacion}
-              disabled={simulandoCancelacion || !citaAnclarId}
+              disabled={simulandoCancelacion || !citaSeleccionada}
               className={`w-full py-2.5 px-4 bg-primary hover:bg-primary/95 text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/15 transition-all cursor-pointer ${
-                (simulandoCancelacion || !citaAnclarId) ? 'opacity-50 cursor-not-allowed transform-none' : 'hover:-translate-y-0.5'
+                (simulandoCancelacion || !citaSeleccionada) ? 'opacity-50 cursor-not-allowed transform-none' : 'hover:-translate-y-0.5'
               }`}
             >
-              {simulandoCancelacion ? 'Procesando...' : 'Procesar Cancelación'}
+              {simulandoCancelacion ? 'Procesando...' : 'Cancelar y Reasignar'}
             </button>
           </form>
+
+          {resultadoCancelacion && (
+            <div className="bg-primary-fixed/10 border border-primary/20 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                <CheckCircle className="w-4 h-4" />
+                Cita Reasignada Exitosamente
+              </div>
+              <div className="text-xs text-on-surface-variant space-y-1">
+                <p>Cita <strong>#{resultadoCancelacion.citaId}</strong> con {resultadoCancelacion.medico} el {resultadoCancelacion.fechaHora ? new Date(resultadoCancelacion.fechaHora).toLocaleString('es-CL') : '—'}</p>
+                <p>Estrategia: <strong className="text-on-surface">{resultadoCancelacion.estrategia.toUpperCase()}</strong></p>
+                <p>Horario reasignado a: <strong className="text-on-surface">{resultadoCancelacion.pacienteReasignado}</strong></p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Filters and Current Waiting List */}
@@ -232,8 +274,8 @@ function Optimizacion() {
                   >
                     <option value="TODOS">Todos (Estado)</option>
                     <option value="PENDIENTE">Pendiente</option>
-                    <option value="ATENDIDO">Atendido</option>
-                    <option value="CANCELADO">Cancelado</option>
+                    <option value="ASIGNADA">Asignada</option>
+                    <option value="FINALIZADA">Finalizada</option>
                   </select>
                   <Filter className="w-3.5 h-3.5 text-on-surface-variant absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -247,9 +289,9 @@ function Optimizacion() {
             {/* Strategy Tabs */}
             <div className="flex gap-1 bg-surface-container-low rounded-lg p-1">
               <button
-                onClick={() => { setVistaEstrategia('lista'); setEstrategia('fifo'); }}
+                onClick={() => setEstrategia('fifo')}
                 className={`flex-1 py-1.5 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                  vistaEstrategia === 'lista' && estrategia === 'fifo'
+                  estrategia === 'fifo'
                     ? 'bg-white dark:bg-surface-container-lowest text-primary shadow-xs'
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
@@ -260,9 +302,9 @@ function Optimizacion() {
                 </div>
               </button>
               <button
-                onClick={() => { setVistaEstrategia('lista'); setEstrategia('lifo'); }}
+                onClick={() => setEstrategia('lifo')}
                 className={`flex-1 py-1.5 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                  vistaEstrategia === 'lista' && estrategia === 'lifo'
+                  estrategia === 'lifo'
                     ? 'bg-white dark:bg-surface-container-lowest text-primary shadow-xs'
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
@@ -273,9 +315,9 @@ function Optimizacion() {
                 </div>
               </button>
               <button
-                onClick={() => { setVistaEstrategia('lista'); setEstrategia('gravedad'); }}
+                onClick={() => setEstrategia('gravedad')}
                 className={`flex-1 py-1.5 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                  vistaEstrategia === 'lista' && estrategia === 'gravedad'
+                  estrategia === 'gravedad'
                     ? 'bg-white dark:bg-surface-container-lowest text-primary shadow-xs'
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
@@ -311,7 +353,7 @@ function Optimizacion() {
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-[9px] font-mono text-on-surface-variant/50 min-w-[1.5rem]">#{idx + 1}</span>
-                      <strong className="text-xs text-on-surface font-bold">ID: {item.id}</strong>
+                      <strong className="text-xs text-on-surface font-bold">{item.nombrePaciente || `ID: ${item.id}`}</strong>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${gravedadColor(item.gravedad)}`}>
                         {item.gravedad || 'NORMAL'}
                       </span>

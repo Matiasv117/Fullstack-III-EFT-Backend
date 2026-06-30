@@ -17,7 +17,7 @@ describe('authApi', () => {
       const result = await authApi.login('admin', 'admin123');
 
       expect(result).toEqual(mockResponse);
-      expect(httpClient.post).toHaveBeenCalledWith('http://localhost:8097/api/auth/login', {
+      expect(httpClient.post).toHaveBeenCalledWith('/api/auth/login', {
         username: 'admin', password: 'admin123',
       });
     });
@@ -36,8 +36,20 @@ describe('authApi', () => {
       const result = await authApi.loginPaciente('Juan', 'Pérez', '12345678-9');
 
       expect(result).toEqual(mockResponse);
-      expect(httpClient.post).toHaveBeenCalledWith('http://localhost:8097/api/auth/login-paciente', {
+      expect(httpClient.post).toHaveBeenCalledWith('/api/auth/login-paciente', {
         nombre: 'Juan', apellido: 'Pérez', rut: '12345678-9',
+      });
+    });
+
+    it('should login paciente with email', async () => {
+      const mockResponse = { token: 'jwt', username: 'Juan', role: 'ROLE_PACIENTE' };
+      httpClient.post.mockResolvedValue({ data: mockResponse });
+
+      const result = await authApi.loginPaciente('Juan', 'Pérez', '12345678-9', 'juan@correo.cl');
+
+      expect(result).toEqual(mockResponse);
+      expect(httpClient.post).toHaveBeenCalledWith('/api/auth/login-paciente', {
+        nombre: 'Juan', apellido: 'Pérez', rut: '12345678-9', email: 'juan@correo.cl',
       });
     });
   });
@@ -51,7 +63,7 @@ describe('authApi', () => {
 
       expect(result).toEqual(mockResponse);
       expect(httpClient.post).toHaveBeenCalledWith(
-        'http://localhost:8097/api/auth/validate',
+        '/api/auth/validate',
         {},
         { headers: { Authorization: 'Bearer some-token' } },
       );
@@ -67,7 +79,7 @@ describe('authApi', () => {
 
       expect(result).toEqual(mockResponse);
       expect(httpClient.get).toHaveBeenCalledWith(
-        'http://localhost:8097/api/auth/me',
+        '/api/auth/me',
         { headers: { Authorization: 'Bearer some-token' } },
       );
     });

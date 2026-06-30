@@ -60,7 +60,7 @@ describe('ReportesView', () => {
     expect(screen.getAllByText('10').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Prioridad Alta')).toBeInTheDocument();
     expect(screen.getAllByText('5').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Tiempo Promedio (est.)')).toBeInTheDocument();
+    expect(screen.getByText('Total en Espera')).toBeInTheDocument();
   });
 
   it('should display distribution by gravity section', async () => {

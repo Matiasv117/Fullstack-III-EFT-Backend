@@ -138,6 +138,29 @@ public class NotificacionesController {
     }
 
     /**
+     * Obtener notificaciones por paciente.
+     */
+    @GetMapping("/paciente/{pacienteId}")
+    public ResponseEntity<?> obtenerNotificacionesPorPaciente(
+            @PathVariable Long pacienteId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            WebClient webClient = getWebClient();
+            String response = webClient.get()
+                    .uri(MS_NOTIFICACIONES_URL + "/api/notificaciones/paciente/" + pacienteId)
+                    .header("Authorization", token)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            return ResponseEntity.ok(response);
+        } catch (WebClientResponseException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error al obtener notificaciones del paciente"));
+        }
+    }
+
+    /**
      * Obtener canales disponibles.
      */
     @GetMapping("/info/canales")

@@ -22,7 +22,14 @@ public class NotificacionEventPublisher {
      * Publica un evento de notificación de forma asíncrona.
      */
     public void publicar(Long pacienteId, String tipo, String mensaje) {
-        NotificacionEvent evento = new NotificacionEvent(pacienteId, tipo, mensaje, ORIGEN);
+        publicar(pacienteId, tipo, mensaje, null);
+    }
+
+    /**
+     * Publica un evento de notificación con email destino de forma asíncrona.
+     */
+    public void publicar(Long pacienteId, String tipo, String mensaje, String emailDestino) {
+        NotificacionEvent evento = new NotificacionEvent(pacienteId, tipo, mensaje, ORIGEN, emailDestino);
         rabbitTemplate.convertAndSend(
                 NotificacionMessagingConstants.EXCHANGE,
                 NotificacionMessagingConstants.ROUTING_KEY,

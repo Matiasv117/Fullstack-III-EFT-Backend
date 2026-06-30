@@ -1,6 +1,7 @@
 package com.saludrednorte.ms_auth.dto;
 
 import com.saludrednorte.ms_auth.validation.RutValid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -17,6 +18,9 @@ public class PacienteLoginRequest {
     @NotBlank(message = "El RUT es requerido")
     @RutValid(message = "RUT chileno inválido. Formato esperado: XX.XXX.XXX-X")
     private String rut;
+
+    @Email(message = "Formato de correo inválido")
+    private String email;
 
     public PacienteLoginRequest() {}
 
@@ -48,5 +52,13 @@ public class PacienteLoginRequest {
 
     public void setRut(String rut) {
         this.rut = rut;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

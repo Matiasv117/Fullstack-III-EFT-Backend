@@ -1,6 +1,7 @@
 package com.saludrednorte.ms_optimizacion.controller;
 
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
+import com.saludrednorte.ms_optimizacion.dto.ReasignacionResponse;
 import com.saludrednorte.ms_optimizacion.service.OptimizacionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,18 +38,30 @@ class OptimizacionControllerTest {
 
     @Test
     void testProcesarCancelacionExitosa() throws Exception {
-        // Given & When & Then
+        // Given
+        ReasignacionResponse expected = new ReasignacionResponse(1L, 100L, "Juan Pérez");
+        when(optimizacionService.procesarCancelacion(1L, "fifo")).thenReturn(expected);
+        
+        // When & Then
         mockMvc.perform(post("/optimizacion/cancelar/1?estrategia=fifo"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.citaId").value(1L))
+                .andExpect(jsonPath("$.pacienteId").value(100L))
+                .andExpect(jsonPath("$.nombrePaciente").value("Juan Pérez"));
         
         verify(optimizacionService, times(1)).procesarCancelacion(1L, "fifo");
     }
 
     @Test
     void testProcesarCancelacionConEstrategiaGravedad() throws Exception {
-        // Given & When & Then
+        // Given
+        when(optimizacionService.procesarCancelacion(5L, "gravedad")).thenReturn(new ReasignacionResponse(5L, 200L, null));
+        
+        // When & Then
         mockMvc.perform(post("/optimizacion/cancelar/5?estrategia=gravedad"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.citaId").value(5L))
+                .andExpect(jsonPath("$.pacienteId").value(200L));
         
         verify(optimizacionService, times(1)).procesarCancelacion(5L, "gravedad");
     }
@@ -83,9 +96,15 @@ class OptimizacionControllerTest {
 
     @Test
     void testProcesarCancelacionPorDefectoFIFO() throws Exception {
-        // Given & When & Then (sin especificar estrategia, usa default)
+        // Given
+        when(optimizacionService.procesarCancelacion(10L, "fifo")).thenReturn(new ReasignacionResponse(10L, 300L, "María García"));
+        
+        // When & Then (sin especificar estrategia, usa default)
         mockMvc.perform(post("/optimizacion/cancelar/10"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.citaId").value(10L))
+                .andExpect(jsonPath("$.pacienteId").value(300L))
+                .andExpect(jsonPath("$.nombrePaciente").value("María García"));
         
         verify(optimizacionService, times(1)).procesarCancelacion(10L, "fifo");
     }

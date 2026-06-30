@@ -3,10 +3,12 @@ import {
   enviarNotificacion as enviarNotificacionApi,
   obtenerNotificacionesPendientes,
 } from '../api/notificacionesApi';
+import { obtenerPacientes } from '../api/gestionPacientesApi';
 import { Bell, RefreshCw, Send, Check, AlertTriangle, AlertCircle, Zap } from 'lucide-react';
 
 function Notificaciones() {
   const [notificaciones, setNotificaciones] = useState([]);
+  const [pacientesMap, setPacientesMap] = useState({});
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
@@ -17,8 +19,16 @@ function Notificaciones() {
     setError('');
 
     try {
-      const datos = await obtenerNotificacionesPendientes();
+      const [datos, pacientesData] = await Promise.all([
+        obtenerNotificacionesPendientes(),
+        obtenerPacientes().catch(() => []),
+      ]);
       setNotificaciones(Array.isArray(datos) ? datos : []);
+      const map = {};
+      if (Array.isArray(pacientesData)) {
+        pacientesData.forEach(p => { map[p.id] = p });
+      }
+      setPacientesMap(map);
     } catch (errorCapturado) {
       setError(errorCapturado.message || 'No fue posible cargar las notificaciones');
     } finally {
@@ -122,7 +132,7 @@ function Notificaciones() {
                   </div>
 
                   <div className="text-xs space-y-1 text-on-surface-variant">
-                    <p className="font-semibold text-on-surface">Paciente: {n.pacienteId ?? 'N/A'}</p>
+                    <p className="font-semibold text-on-surface">Paciente: {pacientesMap[n.pacienteId] ? `${pacientesMap[n.pacienteId].nombre} ${pacientesMap[n.pacienteId].apellido}` : `#${n.pacienteId ?? 'N/A'}`}</p>
                     <p className="font-semibold text-on-surface">Tipo: {n.tipo ?? 'N/A'}</p>
                     <div className="bg-surface-container-low p-2.5 rounded-lg border border-outline-variant mt-2">
                       <p className="text-on-surface-variant font-medium">Mensaje:</p>

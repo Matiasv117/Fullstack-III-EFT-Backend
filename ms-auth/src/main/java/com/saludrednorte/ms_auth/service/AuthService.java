@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import feign.FeignException;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Servicio de negocio para autenticación, registro y validación de usuarios.
@@ -196,6 +198,7 @@ public class AuthService {
                         request.getApellido(),
                         rutNormalizado
                 );
+                nuevoPaciente.setEmail(request.getEmail());
                 paciente = pacienteClient.crearPaciente(nuevoPaciente);
                 auditEventPublisher.publicar(
                         "PACIENTE_" + request.getRut(),
@@ -208,7 +211,7 @@ public class AuthService {
             UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                     "PACIENTE_" + paciente.getId(),
                     "",
-                    new ArrayList<>()
+                    List.of(new SimpleGrantedAuthority("ROLE_PACIENTE"))
             );
 
             // Generar token JWT

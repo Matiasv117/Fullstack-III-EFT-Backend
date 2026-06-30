@@ -22,7 +22,7 @@ describe('Login', () => {
 
   it('should render login form with title', () => {
     render(<Login onLoginSuccess={onLoginSuccess} />);
-    expect(screen.getByText('Sistema de Salud')).toBeInTheDocument();
+    expect(screen.getByText('RedNorte')).toBeInTheDocument();
     expect(screen.getByText('Inicia sesión para continuar')).toBeInTheDocument();
   });
 
@@ -54,7 +54,7 @@ describe('Login', () => {
   it('should show info for pacientes', () => {
     render(<Login onLoginSuccess={onLoginSuccess} />);
     expect(screen.getByText('Información para pacientes:')).toBeInTheDocument();
-    expect(screen.getByText(/Ingresa tu nombre, apellido y RUT para acceder/)).toBeInTheDocument();
+    expect(screen.getByText(/Ingresa tu nombre, apellido, RUT y correo/)).toBeInTheDocument();
   });
 
   it('should submit paciente login', async () => {
@@ -68,6 +68,21 @@ describe('Login', () => {
     await user.click(screen.getByRole('button', { name: /Ingresar como Paciente/i }));
     await waitFor(() => {
       expect(authApi.loginPaciente).toHaveBeenCalled();
+    });
+  }, 10000);
+
+  it('should submit paciente login with email', async () => {
+    const user = userEvent.setup();
+    const mockResponse = { token: 'jwt-paciente', username: 'Juan', role: 'ROLE_PACIENTE' };
+    authApi.loginPaciente.mockResolvedValue(mockResponse);
+    render(<Login onLoginSuccess={onLoginSuccess} />);
+    await user.type(screen.getByPlaceholderText('Ingresa tu nombre'), 'Juan');
+    await user.type(screen.getByPlaceholderText('Ingresa tu apellido'), 'Perez');
+    await user.type(screen.getByPlaceholderText(/Ej:/), '12345678-5');
+    await user.type(screen.getByPlaceholderText('ej: paciente@correo.cl'), 'juan@correo.cl');
+    await user.click(screen.getByRole('button', { name: /Ingresar como Paciente/i }));
+    await waitFor(() => {
+      expect(authApi.loginPaciente).toHaveBeenCalledWith('Juan', 'Perez', '12345678-5', 'juan@correo.cl');
     });
   }, 10000);
 

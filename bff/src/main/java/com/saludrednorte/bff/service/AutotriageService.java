@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Servicio de autotriage que coordina el cálculo de prioridad con
@@ -21,13 +23,17 @@ public class AutotriageService {
 
     private static final Logger log = LoggerFactory.getLogger(AutotriageService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
+    private static final String MS_OPTIMIZACION = "lb://ms-optimizacion";
+    private static final String MS_LISTAS_ESPERA = "lb://ms-listas-espera";
 
-    private final WebClient downstream;
+    private final WebClient.Builder webClientBuilder;
     private final ObjectMapper mapper;
+    private final ProgresoService progresoService;
 
-    public AutotriageService(WebClient downstreamWebClient, ObjectMapper mapper) {
-        this.downstream = downstreamWebClient;
+    public AutotriageService(@LoadBalanced WebClient.Builder webClientBuilder, ObjectMapper mapper, ProgresoService progresoService) {
+        this.webClientBuilder = webClientBuilder;
         this.mapper = mapper;
+        this.progresoService = progresoService;
     }
 
     /**
@@ -43,12 +49,11 @@ public class AutotriageService {
 
         // Llamar a optimizacion para calcular prioridad
         try {
-            WebClient.RequestHeadersSpec<?> call = downstream.get()
-                    .uri(uriBuilder -> uriBuilder.path("/optimizacion/prioridad")
-                            .queryParam("gravedad", request.getGravedad())
-                            .queryParam("distanciaKm",  (double) Math.round( calcularDistanceKm(request.getLat(), request.getLon()) * 100.0)/100.0)
-                            .queryParam("diasEspera", 0)
-                            .build());
+            WebClient client = webClientBuilder.build();
+            double distanciaKm = calcularDistanceKm(request.getLat(), request.getLon());
+            WebClient.RequestHeadersSpec<?> call = client.get()
+                    .uri(MS_OPTIMIZACION + "/optimizacion/prioridad?gravedad=" + request.getGravedad()
+                            + "&distanciaKm=" + distanciaKm + "&diasEspera=0");
 
             if (authorizationHeader != null && !authorizationHeader.isBlank()) {
                 call = call.header(HttpHeaders.AUTHORIZATION, authorizationHeader);
@@ -68,12 +73,15 @@ public class AutotriageService {
 
         // Llamar a lista-espera para persistir
         try {
+            WebClient client = webClientBuilder.build();
+            ObjectNode pacienteNode = mapper.createObjectNode();
+            pacienteNode.put("id", request.getPacienteId());
             ObjectNode listaReq = mapper.createObjectNode();
-            listaReq.put("pacienteId", request.getPacienteId());
+            listaReq.set("paciente", pacienteNode);
             listaReq.put("interconsulta", request.getSintomas());
-            listaReq.put("gravedad", request.getGravedad());
+            listaReq.put("gravedad", mapearGravedad(request.getGravedad()));
 
-            WebClient.RequestBodySpec post = downstream.post().uri("/lista-espera");
+            WebClient.RequestBodySpec post = client.post().uri(MS_LISTAS_ESPERA + "/lista-espera");
             if (authorizationHeader != null && !authorizationHeader.isBlank()) {
                 post = post.header(HttpHeaders.AUTHORIZATION, authorizationHeader);
             }
@@ -91,11 +99,34 @@ public class AutotriageService {
         }
 
         root.put("status","ok");
+
+        // Registrar progreso: EVALUANDO_PRIORIDAD + EN_LISTA_ACTIVA (best-effort)
+        Long pid = request.getPacienteId();
+        CompletableFuture.runAsync(() -> {
+            progresoService.registrarProgreso(pid, "EVALUANDO_PRIORIDAD");
+            progresoService.actualizarProgreso(pid, "EN_LISTA_ACTIVA");
+        });
+
         return root;
     }
 
-    // Stub: calcular distancia en km desde lat/lon; por ahora retorna 0.
+    private String mapearGravedad(int gravedad) {
+        if (gravedad >= 4) return "ALTA";
+        if (gravedad >= 2) return "MEDIA";
+        return "BAJA";
+    }
+
     private double calcularDistanceKm(double lat, double lon) {
-        return 0.0;
+        // Coordenadas del hospital (centro de la ciudad)
+        double latHospital = -33.4489;
+        double lonHospital = -70.6693;
+        double radioTierra = 6371.0;
+        double dLat = Math.toRadians(lat - latHospital);
+        double dLon = Math.toRadians(lon - lonHospital);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                   Math.cos(Math.toRadians(latHospital)) * Math.cos(Math.toRadians(lat)) *
+                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return Math.round(radioTierra * c * 100.0) / 100.0;
     }
 }

@@ -69,6 +69,20 @@ public class CitaController {
     }
 
     /**
+     * Obtiene las citas de un paciente específico.
+     *
+     * @param pacienteId el ID del paciente
+     * @return lista de citas del paciente
+     */
+    @GetMapping("/paciente/{pacienteId}")
+    @Operation(summary = "Obtener citas por paciente", description = "Retorna las citas de un paciente específico")
+    @ApiResponse(responseCode = "200", description = "Citas del paciente obtenidas exitosamente")
+    public List<Cita> obtenerCitasPorPaciente(
+            @Parameter(description = "ID del paciente") @PathVariable Long pacienteId) {
+        return citaService.obtenerCitasPorPaciente(pacienteId);
+    }
+
+    /**
      * Obtiene una cita por su ID.
      *
      * @param id el ID de la cita

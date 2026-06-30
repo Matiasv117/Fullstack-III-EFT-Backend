@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { LogIn, User, Lock, AlertCircle, UserCircle, IdCard } from 'lucide-react';
+import { LogIn, User, Lock, AlertCircle, UserCircle, IdCard, Mail } from 'lucide-react';
 import authApi from '../api/authApi';
-import { validarRUT, validarNombre, validarApellido, validarPassword, validarUsuario } from '../utils/validations';
+import { validarRUT, validarNombre, validarApellido, validarPassword, validarUsuario, validarEmail } from '../utils/validations';
 
 function Login({ onLoginSuccess }) {
   const [loginType, setLoginType] = useState('paciente'); // 'paciente' o 'funcionario'
@@ -10,6 +10,7 @@ function Login({ onLoginSuccess }) {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [rut, setRut] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [erroresCampo, setErroresCampo] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -34,13 +35,16 @@ function Login({ onLoginSuccess }) {
         const validRUT = validarRUT(rut);
         if (!validRUT.valido) errores.rut = validRUT.mensaje;
 
+        const validEmail = validarEmail(email);
+        if (!validEmail.valido) errores.email = validEmail.mensaje;
+
         if (Object.keys(errores).length > 0) {
           setErroresCampo(errores);
           setIsLoading(false);
           return;
         }
 
-        const response = await authApi.loginPaciente(nombre, apellido, rut);
+        const response = await authApi.loginPaciente(nombre, apellido, rut, email);
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify({
           username: response.username,
@@ -86,7 +90,7 @@ function Login({ onLoginSuccess }) {
               <LogIn className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Sistema de Salud
+              RedNorte
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
               Inicia sesión para continuar
@@ -231,14 +235,48 @@ function Login({ onLoginSuccess }) {
                        required
                      />
                    </div>
-                   {erroresCampo.rut && (
+                  {erroresCampo.rut && (
+                      <p className="text-red-600 dark:text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                        <span>⚠</span> {erroresCampo.rut}
+                      </p>
+                    )}
+                  </div>
+
+                 {/* Email Field */}
+                 <div>
+                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                     Correo electrónico <span className="text-gray-400 dark:text-gray-500 font-normal">(opcional)</span>
+                   </label>
+                   <div className="relative">
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <Mail className="h-5 w-5 text-gray-400" />
+                     </div>
+                     <input
+                       id="email"
+                       type="email"
+                       value={email}
+                       onChange={(e) => {
+                         setEmail(e.target.value);
+                         if (erroresCampo.email) {
+                           setErroresCampo(prev => ({ ...prev, email: '' }));
+                         }
+                       }}
+                       className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
+                         erroresCampo.email
+                           ? 'border-red-500 focus:ring-red-500'
+                           : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                       }`}
+                       placeholder="ej: paciente@correo.cl"
+                     />
+                   </div>
+                   {erroresCampo.email && (
                      <p className="text-red-600 dark:text-red-400 text-xs mt-1.5 flex items-center gap-1">
-                       <span>⚠</span> {erroresCampo.rut}
+                       <span>⚠</span> {erroresCampo.email}
                      </p>
                    )}
                  </div>
-              </>
-            ) : (
+               </>
+             ) : (
               <>
                  {/* Username Field */}
                  <div>
@@ -351,7 +389,7 @@ function Login({ onLoginSuccess }) {
                 Información para pacientes:
               </p>
               <div className="space-y-1 text-xs text-green-800 dark:text-green-400">
-                <p>Ingresa tu nombre, apellido y RUT para acceder.</p>
+                <p>Ingresa tu nombre, apellido, RUT y correo (opcional) para acceder.</p>
                 <p>Si es tu primera vez, se creará tu perfil automáticamente.</p>
               </div>
             </div>

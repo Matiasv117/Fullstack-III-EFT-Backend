@@ -96,7 +96,7 @@ describe('gestionPacientesApi', () => {
 
     it('should add patient with custom parameters', async () => {
       const pacienteId = 1;
-      const params = { gravedad: 'ALTA', interconsulta: 'Cardiología', estado: 'ATENDIDO' };
+      const params = { gravedad: 'ALTA', interconsulta: 'Cardiología', estado: 'ASIGNADA' };
       httpClient.post.mockResolvedValue({ data: {} });
 
       await agregarPacienteAListaEspera(pacienteId, params);
@@ -174,7 +174,7 @@ describe('gestionPacientesApi', () => {
   describe('actualizarEstadoListaEspera', () => {
     it('should update waiting list status', async () => {
       const registroId = 1;
-      const nuevoEstado = 'ATENDIDO';
+      const nuevoEstado = 'ASIGNADA';
       httpClient.put.mockResolvedValue({ data: { id: registroId, estado: nuevoEstado } });
 
       await actualizarEstadoListaEspera(registroId, nuevoEstado);
@@ -185,7 +185,7 @@ describe('gestionPacientesApi', () => {
 
   describe('obtenerPacientesPorEstado', () => {
     it('should fetch patients by status', async () => {
-      const estado = 'ATENDIDO';
+      const estado = 'ASIGNADA';
       const mockPacientes = [{ id: 1, estado }];
       httpClient.get.mockResolvedValue({ data: mockPacientes });
 

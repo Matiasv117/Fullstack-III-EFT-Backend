@@ -17,14 +17,19 @@ import static org.mockito.Mockito.*;
 class AutotriageServiceTest {
 
     private WebClient webClient;
+    private WebClient.Builder webClientBuilder;
     private AutotriageService service;
+    private ProgresoService progresoService;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @SuppressWarnings("unchecked")
     @BeforeEach
     void setUp() {
         webClient = mock(WebClient.class);
-        service = new AutotriageService(webClient, mapper);
+        webClientBuilder = mock(WebClient.Builder.class);
+        when(webClientBuilder.build()).thenReturn(webClient);
+        progresoService = mock(ProgresoService.class);
+        service = new AutotriageService(webClientBuilder, mapper, progresoService);
     }
 
     @Test
@@ -32,8 +37,8 @@ class AutotriageServiceTest {
         AutotriageRequest request = new AutotriageRequest();
         request.setPacienteId(1L);
         request.setGravedad(3);
-        request.setLat(-33.0);
-        request.setLon(-70.0);
+        request.setLat(-33.4489);
+        request.setLon(-70.6693);
         request.setSintomas("Dolor de cabeza");
 
         WebClient.RequestHeadersUriSpec getSpec = mock(WebClient.RequestHeadersUriSpec.class);
@@ -45,13 +50,13 @@ class AutotriageServiceTest {
         WebClient.ResponseSpec postResponseSpec = mock(WebClient.ResponseSpec.class);
 
         when(webClient.get()).thenReturn(getSpec);
-        when(getSpec.uri(any(java.util.function.Function.class))).thenReturn(getHeadersSpec);
+        when(getSpec.uri(anyString())).thenReturn(getHeadersSpec);
         when(getHeadersSpec.header(anyString(), anyString())).thenReturn(getHeadersSpec);
         when(getHeadersSpec.retrieve()).thenReturn(getResponseSpec);
         when(getResponseSpec.bodyToMono(JsonNode.class)).thenReturn(Mono.just(mapper.createObjectNode().put("nivel", "ALTO")));
 
         when(webClient.post()).thenReturn(postSpec);
-        when(postSpec.uri("/lista-espera")).thenReturn(postBodySpec);
+        when(postSpec.uri(anyString())).thenReturn(postBodySpec);
         when(postBodySpec.header(anyString(), anyString())).thenReturn(postBodySpec);
         when(postBodySpec.bodyValue(any())).thenReturn(postHeadersSpec);
         when(postHeadersSpec.retrieve()).thenReturn(postResponseSpec);
@@ -69,8 +74,8 @@ class AutotriageServiceTest {
         AutotriageRequest request = new AutotriageRequest();
         request.setPacienteId(1L);
         request.setGravedad(3);
-        request.setLat(-33.0);
-        request.setLon(-70.0);
+        request.setLat(-33.4489);
+        request.setLon(-70.6693);
         request.setSintomas("Fiebre");
 
         WebClient.RequestHeadersUriSpec getSpec = mock(WebClient.RequestHeadersUriSpec.class);
@@ -80,10 +85,10 @@ class AutotriageServiceTest {
         WebClient.ResponseSpec postResponseSpec = mock(WebClient.ResponseSpec.class);
 
         when(webClient.get()).thenReturn(getSpec);
-        when(getSpec.uri(any(java.util.function.Function.class))).thenThrow(new RuntimeException("Error de conexion"));
+        when(getSpec.uri(anyString())).thenThrow(new RuntimeException("Error de conexion"));
 
         when(webClient.post()).thenReturn(postSpec);
-        when(postSpec.uri("/lista-espera")).thenReturn(postBodySpec);
+        when(postSpec.uri(anyString())).thenReturn(postBodySpec);
         when(postBodySpec.header(anyString(), anyString())).thenReturn(postBodySpec);
         when(postBodySpec.bodyValue(any())).thenReturn(postHeadersSpec);
         when(postHeadersSpec.retrieve()).thenReturn(postResponseSpec);
@@ -102,8 +107,8 @@ class AutotriageServiceTest {
         AutotriageRequest request = new AutotriageRequest();
         request.setPacienteId(1L);
         request.setGravedad(1);
-        request.setLat(0);
-        request.setLon(0);
+        request.setLat(-33.4489);
+        request.setLon(-70.6693);
         request.setSintomas("Dolor");
 
         WebClient.RequestHeadersUriSpec getSpec = mock(WebClient.RequestHeadersUriSpec.class);
@@ -114,13 +119,13 @@ class AutotriageServiceTest {
         WebClient.RequestHeadersSpec postHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
 
         when(webClient.get()).thenReturn(getSpec);
-        when(getSpec.uri(any(java.util.function.Function.class))).thenReturn(getHeadersSpec);
+        when(getSpec.uri(anyString())).thenReturn(getHeadersSpec);
         when(getHeadersSpec.header(anyString(), anyString())).thenReturn(getHeadersSpec);
         when(getHeadersSpec.retrieve()).thenReturn(getResponseSpec);
         when(getResponseSpec.bodyToMono(JsonNode.class)).thenReturn(Mono.just(mapper.createObjectNode().put("nivel", "BAJO")));
 
         when(webClient.post()).thenReturn(postSpec);
-        when(postSpec.uri("/lista-espera")).thenReturn(postBodySpec);
+        when(postSpec.uri(anyString())).thenReturn(postBodySpec);
         when(postBodySpec.header(anyString(), anyString())).thenReturn(postBodySpec);
         when(postBodySpec.bodyValue(any())).thenReturn(postHeadersSpec);
         when(postHeadersSpec.retrieve()).thenThrow(new WebClientResponseException(400, "Bad Request", null, null, null));

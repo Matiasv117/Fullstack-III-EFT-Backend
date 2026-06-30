@@ -115,7 +115,7 @@ describe('Notificaciones', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/ID: 1/)).toBeInTheDocument();
-      expect(screen.getByText(/Paciente: 1/)).toBeInTheDocument();
+      expect(screen.getByText(/Paciente: #1/)).toBeInTheDocument();
       expect(screen.getByText(/Tipo: CITA/)).toBeInTheDocument();
     });
   });

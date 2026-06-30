@@ -1,11 +1,7 @@
 server:
   port: ${BFF_SERVER_PORT:8097}
 
-# URL del API Gateway: el BFF llama a los microservicios a través del gateway
-# (un solo punto de configuración; en local es http://localhost:8080).
 bff:
-  downstream:
-    base-url: ${BFF_DOWNSTREAM_BASE_URL:http://localhost:8080}
   auth:
     base-url: ${BFF_AUTH_BASE_URL:lb://ms-auth}
 

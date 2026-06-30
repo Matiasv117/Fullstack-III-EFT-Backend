@@ -99,9 +99,9 @@ const ReportesView = () => {
         <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg p-5 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-90">Tiempo Promedio (est.)</p>
+              <p className="text-sm opacity-90">Total en Espera</p>
               <p className="text-3xl font-bold mt-1">
-                {tiempoPromedio ? `${tiempoPromedio.total}d` : '—'}
+                {tiempoPromedio ? tiempoPromedio.total : '—'}
               </p>
             </div>
             <Clock className="w-10 h-10 opacity-30" />

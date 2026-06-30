@@ -10,6 +10,8 @@ const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDar
   const menuItems = isPaciente
     ? [
       { id: 'dashboard', label: 'Mi Portal', icon: 'dashboard' },
+      { id: 'citas', label: 'Mis Citas', icon: 'event' },
+      { id: 'perfil', label: 'Mi Perfil', icon: 'account_circle' },
     ]
     : isAdmin
     ? [
@@ -20,13 +22,14 @@ const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDar
     ]
     : [
       { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { id: 'citas', label: 'Citas', icon: 'event' },
+      { id: 'agendarcita', label: 'Agendar Cita', icon: 'calendar_add_on' },
       { id: 'pacientes', label: 'Pacientes', icon: 'group' },
       { id: 'listaespera', label: 'Lista de Espera', icon: 'list_alt' },
+      { id: 'triaje', label: 'Triage', icon: 'stethoscope' },
       { id: 'notificaciones', label: 'Notificaciones', icon: 'notifications' },
       { id: 'optimizacion', label: 'Optimización', icon: 'query_stats' },
-      { id: 'clinicas', label: 'Clínicas', icon: 'medical_services' },
       { id: 'reportes', label: 'Reportes', icon: 'analytics' },
-      { id: 'ajustes', label: 'Ajustes', icon: 'settings' },
     ];
 
   return (
@@ -41,7 +44,7 @@ const Sidebar = ({ user, activeSection, onSectionChange, isDarkMode, onToggleDar
         </div>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-3">
+      <nav className="flex-1 flex flex-col gap-3 overflow-y-auto min-h-0">
         {menuItems.map((item) => (
           <button
             key={item.id}

@@ -1,7 +1,10 @@
 package com.saludrednorte.ms_optimizacion.service;
 
 import com.saludrednorte.ms_optimizacion.client.ListaEsperaClient;
+import com.saludrednorte.ms_optimizacion.client.PacienteClient;
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
+import com.saludrednorte.ms_optimizacion.dto.PacienteDTO;
+import com.saludrednorte.ms_optimizacion.dto.ReasignacionResponse;
 import com.saludrednorte.ms_optimizacion.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_optimizacion.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
@@ -38,6 +41,9 @@ class OptimizacionServiceTest {
     private AuditEventPublisher auditEventPublisher;
 
     @Mock
+    private PacienteClient pacienteClient;
+
+    @Mock
     private PrioridadCalculadora prioridadCalculadora;
 
     @Mock
@@ -71,13 +77,24 @@ class OptimizacionServiceTest {
         when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
         when(factory.getEstrategia("fifo")).thenReturn(estrategia);
         
+        PacienteDTO pacienteDTO = new PacienteDTO();
+        pacienteDTO.setId(100L);
+        pacienteDTO.setNombre("Juan");
+        pacienteDTO.setApellido("Pérez");
+        pacienteDTO.setEmail("paciente@test.com");
+        when(pacienteClient.obtenerPacientePorId(100L)).thenReturn(pacienteDTO);
+
         // When
-        optimizacionService.procesarCancelacion(1L, "fifo");
-        
+        ReasignacionResponse response = optimizacionService.procesarCancelacion(1L, "fifo");
+
         // Then
+        assertNotNull(response);
+        assertEquals(1L, response.getCitaId());
+        assertEquals(100L, response.getPacienteId());
+        assertEquals("Juan Pérez", response.getNombrePaciente());
         verify(citaService, times(1)).cancelarCita(1L);
         verify(estrategia, times(1)).reasignarCita(cita);
-        verify(notificacionEventPublisher, times(1)).publicar(eq(100L), eq("CITA_REASIGNADA"), anyString());
+        verify(notificacionEventPublisher, times(1)).publicar(eq(100L), eq("CITA_REASIGNADA"), anyString(), eq("paciente@test.com"));
         verify(auditEventPublisher, times(1)).publicar(eq("sistema"), eq("CITA_OPTIMIZADA"), anyString());
     }
 
@@ -87,12 +104,13 @@ class OptimizacionServiceTest {
         when(citaService.obtenerCitaPorId(999L)).thenReturn(Optional.empty());
         
         // When
-        optimizacionService.procesarCancelacion(999L, "fifo");
+        ReasignacionResponse response = optimizacionService.procesarCancelacion(999L, "fifo");
         
         // Then
+        assertNull(response);
         verify(citaService, times(1)).cancelarCita(999L);
         verify(estrategia, never()).reasignarCita(any());
-        verify(notificacionEventPublisher, never()).publicar(anyLong(), anyString(), anyString());
+        verify(notificacionEventPublisher, never()).publicar(anyLong(), anyString(), anyString(), anyString());
         verify(auditEventPublisher, never()).publicar(anyString(), anyString(), anyString());
     }
 
@@ -129,11 +147,17 @@ class OptimizacionServiceTest {
         // Given
         when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
         when(factory.getEstrategia("gravedad")).thenReturn(estrategia);
+        PacienteDTO pacienteDTO = new PacienteDTO();
+        pacienteDTO.setId(100L);
+        pacienteDTO.setEmail("paciente@test.com");
+        when(pacienteClient.obtenerPacientePorId(100L)).thenReturn(pacienteDTO);
         
         // When
-        optimizacionService.procesarCancelacion(1L, "gravedad");
+        ReasignacionResponse response = optimizacionService.procesarCancelacion(1L, "gravedad");
         
         // Then
+        assertNotNull(response);
+        assertEquals(1L, response.getCitaId());
         verify(citaService, times(1)).cancelarCita(1L);
         verify(factory, times(1)).getEstrategia("gravedad");
         verify(estrategia, times(1)).reasignarCita(cita);
@@ -144,15 +168,21 @@ class OptimizacionServiceTest {
         // Given
         when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
         when(factory.getEstrategia("fifo")).thenReturn(estrategia);
+        PacienteDTO pacienteDTO = new PacienteDTO();
+        pacienteDTO.setId(100L);
+        pacienteDTO.setEmail("paciente@test.com");
+        when(pacienteClient.obtenerPacientePorId(100L)).thenReturn(pacienteDTO);
         doThrow(new RuntimeException("Error en notificación"))
-                .when(notificacionEventPublisher).publicar(anyLong(), anyString(), anyString());
+                .when(notificacionEventPublisher).publicar(anyLong(), anyString(), anyString(), anyString());
         
         // When - No debe lanzar excepción
-        assertDoesNotThrow(() -> {
-            optimizacionService.procesarCancelacion(1L, "fifo");
+        ReasignacionResponse response = assertDoesNotThrow(() -> {
+            return optimizacionService.procesarCancelacion(1L, "fifo");
         });
         
         // Then
+        assertNotNull(response);
+        assertEquals(1L, response.getCitaId());
         verify(citaService, times(1)).cancelarCita(1L);
         verify(estrategia, times(1)).reasignarCita(cita);
     }

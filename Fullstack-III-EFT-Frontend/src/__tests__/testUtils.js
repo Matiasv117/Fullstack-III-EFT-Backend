@@ -73,7 +73,6 @@ export const createMockGestionPacientesProps = (overrides = {}) => ({
   formValido: false,
   actualizarCampo: vi.fn(),
   registrar: vi.fn(),
-  agregarALista: vi.fn(),
   borrarPaciente: vi.fn(),
   recargarPacientes: vi.fn(),
   ...overrides,

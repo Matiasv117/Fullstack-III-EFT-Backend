@@ -227,6 +227,21 @@ scripts/stop-all.ps1                 # Detener todo
   4. Esto activaría el flujo RabbitMQ → notificaciones reales al cancelar citas.
 - **Propuesta Opción A** (más simple): solo mantener pestañas de estrategia + agregar score de prioridad (`GET /prioridad`) por paciente.
 
+### Fase 14 — Auditoría general de falencias + fixes (29 Jun 2026)
+1. ✅ **Fix Autotriage + UI de triaje** — Corregido payload (`pacienteId` → `paciente: { id }` + mapeo int→string gravedad). Creado `TriagePaciente.jsx` con selector de paciente, radio buttons de gravedad (1-5), campo de síntomas. Nueva API `triageApi.js`. Sidebar item "Triage".
+2. ✅ **Unificar flujo Paciente → ListaEspera → Cita** — Eliminada creación automática de cita en `PacienteService.registrarPaciente()` (primer médico, fecha mañana). Tests actualizados.
+3. ✅ **Activar ms-progreso** — Creado `ProgresoService` en BFF (best-effort WebClient). Integrado en AutotriageService (EVALUANDO_PRIORIDAD → EN_LISTA_ACTIVA), PacientesController (SINTOMAS_REGISTRADOS), ListaEsperaController (EN_LISTA_ACTIVA), CitasController y OptimizacionController (CITA_ASIGNADA). Ms-progreso SecurityConfig permite `/progreso/**`. Tests 0 fallas.
+4. ✅ **Auditar eventos reales** — Creado `AuditoriaService` en BFF (best-effort WebClient). Integrado en AuthController (LOGIN_EXITOSO/LOGIN_FALLIDO), PacientesController (PACIENTE_REGISTRADO), CitasController y OptimizacionController (CITA_OPTIMIZADA). Ms-auditoria SecurityConfig permite `/api/auditoria/eventos`. BFF AuditoriaController ahora acepta POST para eventos desde frontend. Tests 0 fallas.
+5. ✅ **Fix BFF SecurityConfig** — Aplicados roles: auth y actuator permitAll, admin → ADMIN, pacientes/lista-espera/optimizacion/autotriage/citas/auditoria → FUNCIONARIO+ADMIN, resto authenticated. Tests 0 fallas.
+6. ✅ **Limpiar credenciales** — Unificada Neon URL y password en docker-compose.full.yml para que coincida con defaults de application.yml (ep-shy-hall / npg_Viz5aYF6NSuO).
+7. ✅ **Fix API Gateway route** — `/api/listas-espera/**` → `/api/lista-espera/**` (singular) en api-gateway application.yml. Tests 0 fallas.
+
+### Fase 13 — Plan de sincronización ListaEspera-Optimización (29 Jun 2026)
+1. ✅ **Sincronizar "Cancelar y Reasignar" con lista de espera** — Al reasignar una cita, marcar el registro de lista de espera como `ASIGNADA` (vía `ListaEsperaClient.actualizarEstado(id, "ASIGNADA")` desde cada estrategia).
+2. ✅ **Arreglar estados del frontend** — En `ListaEspera.jsx` y `Optimizacion.jsx`, cambiado `ATENDIDO` → `ASIGNADA`, `CANCELADO` → `FINALIZADA` (badge styles, selects, tests).
+3. ✅ **Devolver paciente real reasignado** — `OptimizacionService.procesarCancelacion()` ahora retorna `ReasignacionResponse{citaId, pacienteId, nombrePaciente}`. El frontend usa `response.nombrePaciente` directamente en vez de adivinar el primer `PENDIENTE`.
+4. ✅ **Crear UI de agendamiento manual** — Nuevo componente `AgendarCita.jsx` con formulario (paciente, médico, fecha/hora), función `crearCita` en `citasApi.js`, sidebar item "Agendar Cita" y ruta `agendarcita` en `App.jsx`.
+
 ## Bugs / Notas
 - ~~Los tests de API esperan rutas sin prefijo `/api` pero el código real las usa con `/api`~~ — Corregido
 - El httpClient apunta a `localhost:8097` (BFF); verificar puerto si cambia

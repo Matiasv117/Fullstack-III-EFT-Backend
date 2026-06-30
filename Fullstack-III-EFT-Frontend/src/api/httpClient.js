@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const httpClient = axios.create({
-  baseURL: 'http://localhost:8097',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8097',
   timeout: 15000,
 });
 
@@ -22,23 +22,27 @@ httpClient.interceptors.request.use(
 httpClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const apiMessage = error?.response?.data?.error || error?.response?.data?.message;
     const statusCode = error?.response?.status;
     
-    // Si el backend ya envía un mensaje de error amigable, usarlo
+    // Redirect to login on 401 (unauthenticated)
+    if (statusCode === 401 && !window.location.pathname.includes('/login')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+      return Promise.reject(new Error('Sesión expirada. Redirigiendo al login...'));
+    }
+    
+    const apiMessage = error?.response?.data?.error || error?.response?.data?.message;
+    
     if (apiMessage) {
       return Promise.reject(new Error(apiMessage));
     }
     
-    // Si no hay mensaje del backend, generar uno amigable según el código de estado
     let userMessage = 'Error inesperado al procesar tu solicitud';
     
     switch (statusCode) {
       case 400:
         userMessage = 'Los datos ingresados no son válidos. Por favor, verifica la información.';
-        break;
-      case 401:
-        userMessage = 'Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.';
         break;
       case 403:
         userMessage = 'No tienes permisos para realizar esta acción.';

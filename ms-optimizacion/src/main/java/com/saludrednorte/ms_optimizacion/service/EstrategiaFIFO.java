@@ -49,6 +49,7 @@ public class EstrategiaFIFO implements EstrategiaOptimizacion {
 
         citaCancelada.setPacienteId(candidato.getPacienteId());
         citaService.actualizarCita(citaCancelada);
+        listaEsperaClient.actualizarEstado(candidato.getId(), "ASIGNADA");
         logger.info("Cita {} reasignada al paciente {} por FIFO", citaCancelada.getId(), candidato.getPacienteId());
     }
 }

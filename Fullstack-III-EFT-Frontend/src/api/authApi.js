@@ -1,6 +1,6 @@
 import httpClient from './httpClient';
 
-const API_BASE_URL = 'http://localhost:8097/api/auth';
+const API_BASE_URL = '/api/auth';
 
 export const authApi = {
   /**
@@ -22,14 +22,13 @@ export const authApi = {
    * @param {string} nombre - Nombre del paciente
    * @param {string} apellido - Apellido del paciente
    * @param {string} rut - RUT del paciente
+   * @param {string} [email] - Correo electrónico del paciente (opcional)
    * @returns {Promise} Respuesta con token JWT y datos del paciente
    */
-  loginPaciente: async (nombre, apellido, rut) => {
-    const response = await httpClient.post(`${API_BASE_URL}/login-paciente`, {
-      nombre,
-      apellido,
-      rut,
-    });
+  loginPaciente: async (nombre, apellido, rut, email) => {
+    const body = { nombre, apellido, rut };
+    if (email) body.email = email;
+    const response = await httpClient.post(`${API_BASE_URL}/login-paciente`, body);
     return response.data;
   },
 

@@ -1,5 +1,7 @@
 package com.saludrednorte.ms_listas_espera.controller;
 
+import com.saludrednorte.ms_listas_espera.client.CitaClient;
+import com.saludrednorte.ms_listas_espera.dto.CitaDTO;
 import com.saludrednorte.ms_listas_espera.entity.ListaEspera;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.service.ListaEsperaService;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +38,9 @@ public class PacientePortalController {
 
     @Autowired
     private ListaEsperaService listaEsperaService;
+
+    @Autowired
+    private CitaClient citaClient;
 
     /**
      * Obtiene los datos personales del paciente autenticado.
@@ -96,14 +102,17 @@ public class PacientePortalController {
                 int posicion = (int) listaEspera.stream()
                         .filter(le -> le.getId().compareTo(miRegistro.get().getId()) <= 0)
                         .count();
-                
+
                 return ResponseEntity.ok(Map.of(
                         "posicion", posicion,
                         "total", listaEspera.size(),
                         "registro", miRegistro.get()
                 ));
             } else {
-                return ResponseEntity.status(404).body(Map.of("error", "No estás en la lista de espera"));
+                Map<String, Object> resp = new HashMap<>();
+                resp.put("posicion", null);
+                resp.put("total", listaEspera.size());
+                return ResponseEntity.ok(resp);
             }
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("error", "Error al procesar token"));
@@ -111,14 +120,13 @@ public class PacientePortalController {
     }
 
     /**
-     * Obtiene las citas programadas para el paciente.
-     * Nota: Este endpoint está preparado para cuando se implemente el servicio de citas.
+     * Obtiene las citas programadas para el paciente autenticado.
      *
      * @param authorization token JWT del paciente
-     * @return lista de citas del paciente
+     * @return lista de citas del paciente con estado CONFIRMADA
      */
     @GetMapping("/mis-citas")
-    @Operation(summary = "Mis citas", description = "Obtiene las citas programadas para el paciente")
+    @Operation(summary = "Mis citas", description = "Obtiene las citas programadas para el paciente autenticado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Citas obtenidas exitosamente"),
             @ApiResponse(responseCode = "401", description = "No autorizado")
@@ -131,13 +139,10 @@ public class PacientePortalController {
                 return ResponseEntity.status(401).body(Map.of("error", "Token inválido o no es de paciente"));
             }
 
-            // Por ahora retornamos un mensaje indicando que esta funcionalidad está en desarrollo
-            return ResponseEntity.ok(Map.of(
-                    "mensaje", "Funcionalidad de citas en desarrollo",
-                    "pacienteId", pacienteId
-            ));
+            List<CitaDTO> citas = citaClient.obtenerCitasPorPaciente(pacienteId);
+            return ResponseEntity.ok(citas);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Error al procesar token"));
+            return ResponseEntity.status(401).body(Map.of("error", "Error al obtener citas"));
         }
     }
 

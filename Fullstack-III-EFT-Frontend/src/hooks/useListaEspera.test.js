@@ -84,7 +84,7 @@ describe('useListaEspera', () => {
 
   it('should update status', async () => {
     const mockLista = [{ id: 1, pacienteId: 1, estado: 'PENDIENTE' }];
-    const updatedItem = { id: 1, pacienteId: 1, estado: 'ATENDIDO' };
+    const updatedItem = { id: 1, pacienteId: 1, estado: 'ASIGNADA' };
     api.obtenerListaEspera.mockResolvedValue(mockLista);
     api.actualizarEstadoListaEspera.mockResolvedValue(updatedItem);
 
@@ -95,11 +95,11 @@ describe('useListaEspera', () => {
     });
 
     await act(async () => {
-      await result.current.actualizarEstado(1, 'ATENDIDO');
+      await result.current.actualizarEstado(1, 'ASIGNADA');
     });
 
-    expect(result.current.listaEspera[0].estado).toBe('ATENDIDO');
-    expect(result.current.mensaje).toBe('Estado actualizado a ATENDIDO');
+    expect(result.current.listaEspera[0].estado).toBe('ASIGNADA');
+    expect(result.current.mensaje).toBe('Estado actualizado a ASIGNADA');
   });
 
   it('should handle error when updating status', async () => {
@@ -114,7 +114,7 @@ describe('useListaEspera', () => {
     });
 
     await act(async () => {
-      await result.current.actualizarEstado(1, 'ATENDIDO');
+      await result.current.actualizarEstado(1, 'ASIGNADA');
     });
 
     expect(result.current.error).toBe('Update failed');

@@ -33,6 +33,7 @@ public class NotificacionEventListener {
         notification.setPacienteId(evento.getPacienteId());
         notification.setTipo(mapTipo(evento.getTipo()));
         notification.setMensaje(evento.getMensaje());
+        notification.setEmailDestino(evento.getEmailDestino());
 
         Notification creada = notificationService.create(notification);
         notificationService.sendById(creada.getId());

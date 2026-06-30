@@ -4,8 +4,8 @@ public class AutotriageRequest {
 
     private Long pacienteId;
     private int gravedad; // 1-5
-    private double lat;
-    private double lon;
+    private double lat = -33.4489;
+    private double lon = -70.6693;
     private String sintomas;
 
     public AutotriageRequest() {

@@ -15,20 +15,25 @@ public class OptimizacionFactory {
     @Autowired
     private EstrategiaFIFO estrategiaFIFO;
 
+    @Autowired
+    private EstrategiaLIFO estrategiaLIFO;
+
     /**
      * Obtiene la estrategia de optimizacion segun el tipo indicado.
      *
-     * @param tipo tipo de estrategia (fifo, gravedad)
+     * @param tipo tipo de estrategia (fifo, lifo, gravedad)
      * @return implementacion de {@link EstrategiaOptimizacion}
      */
     public EstrategiaOptimizacion getEstrategia(String tipo) {
         switch (tipo.toLowerCase()) {
             case "gravedad":
                 return estrategiaPorGravedad;
+            case "lifo":
+                return estrategiaLIFO;
             case "fifo":
                 return estrategiaFIFO;
             default:
-                return estrategiaFIFO; // default
+                return estrategiaFIFO;
         }
     }
 }

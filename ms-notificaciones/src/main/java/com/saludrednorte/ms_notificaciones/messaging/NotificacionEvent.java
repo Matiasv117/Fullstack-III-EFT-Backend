@@ -9,6 +9,7 @@ public class NotificacionEvent {
     private String tipo;
     private String mensaje;
     private String origen;
+    private String emailDestino;
 
     public NotificacionEvent() {
     }
@@ -43,5 +44,13 @@ public class NotificacionEvent {
 
     public void setOrigen(String origen) {
         this.origen = origen;
+    }
+
+    public String getEmailDestino() {
+        return emailDestino;
+    }
+
+    public void setEmailDestino(String emailDestino) {
+        this.emailDestino = emailDestino;
     }
 }

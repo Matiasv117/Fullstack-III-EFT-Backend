@@ -1,10 +1,10 @@
 import GestionPacientesView from './GestionPacientesView';
 import { useGestionPacientes } from '../hooks/useGestionPacientes';
 
-function GestionPacientes() {
+function GestionPacientes({ onSectionChange }) {
   const gestionPacientes = useGestionPacientes();
 
-  return <GestionPacientesView {...gestionPacientes} />;
+  return <GestionPacientesView {...gestionPacientes} onSectionChange={onSectionChange} />;
 }
 
 export default GestionPacientes;

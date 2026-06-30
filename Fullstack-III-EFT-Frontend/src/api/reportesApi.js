@@ -2,18 +2,30 @@ import httpClient from './httpClient';
 
 const reportesApi = {
   obtenerMetricasListaEspera: async () => {
-    const response = await httpClient.get('/api/lista-espera/metricas');
-    return response.data;
+    try {
+      const response = await httpClient.get('/api/lista-espera/metricas');
+      return response.data;
+    } catch (err) {
+      throw new Error(err.message || 'Error al obtener métricas de lista de espera');
+    }
   },
 
   listarPacientes: async () => {
-    const response = await httpClient.get('/api/pacientes');
-    return response.data;
+    try {
+      const response = await httpClient.get('/api/pacientes');
+      return response.data;
+    } catch (err) {
+      throw new Error(err.message || 'Error al listar pacientes');
+    }
   },
 
   listarEventosAuditoria: async () => {
-    const response = await httpClient.get('/api/auditoria/eventos');
-    return response.data;
+    try {
+      const response = await httpClient.get('/api/auditoria/eventos');
+      return response.data;
+    } catch (err) {
+      throw new Error(err.message || 'Error al obtener eventos de auditoría');
+    }
   },
 };
 

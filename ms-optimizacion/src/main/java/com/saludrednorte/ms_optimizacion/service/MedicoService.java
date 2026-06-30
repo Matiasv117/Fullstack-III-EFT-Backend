@@ -2,6 +2,7 @@ package com.saludrednorte.ms_optimizacion.service;
 
 import com.saludrednorte.ms_optimizacion.entity.Medico;
 import com.saludrednorte.ms_optimizacion.repository.MedicoRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,26 @@ public class MedicoService {
 
     @Autowired
     private MedicoRepository medicoRepository;
+
+    @PostConstruct
+    public void init() {
+        if (medicoRepository.count() == 0) {
+            medicoRepository.saveAll(List.of(
+                crearMedico("Dr. Carlos Muñoz", "Medicina General"),
+                crearMedico("Dra. María González", "Cardiología"),
+                crearMedico("Dr. Andrés Soto", "Traumatología"),
+                crearMedico("Dra. Valentina Reyes", "Pediatría"),
+                crearMedico("Dr. Felipe Castro", "Neurología")
+            ));
+        }
+    }
+
+    private Medico crearMedico(String nombre, String especialidad) {
+        Medico m = new Medico();
+        m.setNombre(nombre);
+        m.setEspecialidad(especialidad);
+        return m;
+    }
 
     /**
      * Registra un nuevo médico en el sistema.

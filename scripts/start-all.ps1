@@ -153,8 +153,8 @@ Write-Host "Raiz: $root" -ForegroundColor DarkGray
 Write-Host "[START] Iniciando RabbitMQ y Redis con Docker Compose..." -ForegroundColor Cyan
 $dockerComposePath = Join-Path $root 'docker-compose.yml'
 if (Test-Path $dockerComposePath) {
-    docker-compose -f $dockerComposePath up -d rabbitmq redis
-    Write-Host "[WAIT] Esperando a que RabbitMQ y Redis estén listos..." -ForegroundColor Cyan
+    docker-compose -f $dockerComposePath up -d rabbitmq redis mailpit
+    Write-Host "[WAIT] Esperando a que RabbitMQ, Redis y Mailpit estén listos..." -ForegroundColor Cyan
     Start-Sleep -Seconds 15
 } else {
     Write-Host "[WARN] No se encontró docker-compose.yml en $root" -ForegroundColor Yellow

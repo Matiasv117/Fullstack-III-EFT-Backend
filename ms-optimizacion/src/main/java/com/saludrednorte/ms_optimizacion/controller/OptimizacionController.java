@@ -2,6 +2,7 @@ package com.saludrednorte.ms_optimizacion.controller;
 
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
 import com.saludrednorte.ms_optimizacion.dto.PrioridadResponse;
+import com.saludrednorte.ms_optimizacion.dto.ReasignacionResponse;
 import com.saludrednorte.ms_optimizacion.service.OptimizacionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,10 +37,10 @@ public class OptimizacionController {
     @PostMapping("/cancelar/{citaId}")
     @Operation(summary = "Procesar cancelación de cita", description = "Procesa la cancelación de una cita y reasigna automáticamente según la estrategia especificada")
     @ApiResponse(responseCode = "200", description = "Cancelación procesada exitosamente")
-    public void procesarCancelacion(
+    public ReasignacionResponse procesarCancelacion(
             @Parameter(description = "ID de la cita a cancelar") @PathVariable Long citaId,
             @Parameter(description = "Estrategia de reasignación (fifo, prioridad)") @RequestParam(defaultValue = "fifo") String estrategia) {
-        optimizacionService.procesarCancelacion(citaId, estrategia);
+        return optimizacionService.procesarCancelacion(citaId, estrategia);
     }
 
     /**

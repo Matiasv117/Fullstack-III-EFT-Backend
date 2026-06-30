@@ -3,6 +3,7 @@ import { obtenerResumenPortal } from '../api/portalApi'
 import reportesApi from '../api/reportesApi'
 import { obtenerPacientes } from '../api/gestionPacientesApi'
 import { obtenerNotificacionesPendientes } from '../api/notificacionesApi'
+import { obtenerMisDatos, obtenerMiPosicion, obtenerMisCitas, obtenerNotificacionesPorPaciente } from '../api/pacienteApi'
 
 const Dashboard = ({ user, onSectionChange }) => {
   const isPaciente = user?.role === 'ROLE_PACIENTE';
@@ -11,50 +12,58 @@ const Dashboard = ({ user, onSectionChange }) => {
   const [ultimosPacientes, setUltimosPacientes] = useState([])
   const [notificaciones, setNotificaciones] = useState([])
   const [loading, setLoading] = useState(true)
+  const [pacienteDatos, setPacienteDatos] = useState(null)
+  const [pacientePosicion, setPacientePosicion] = useState(null)
+  const [pacienteCitas, setPacienteCitas] = useState([])
+  const [pacienteNotifs, setPacienteNotifs] = useState([])
+  const [expandNotifs, setExpandNotifs] = useState(false)
 
   useEffect(() => {
-    Promise.all([
-      obtenerResumenPortal(),
-      reportesApi.obtenerMetricasListaEspera(),
-      obtenerPacientes(),
-      obtenerNotificacionesPendientes(),
-    ])
-      .then(([res, met, pac, notif]) => {
-        setResumen(res?.resumen ?? null)
-        setMetricas(met ?? null)
-        const sorted = Array.isArray(pac) ? pac.slice(-5).reverse() : []
-        setUltimosPacientes(sorted)
-        setNotificaciones(Array.isArray(notif) ? notif.slice(0, 4) : [])
-      })
-      .catch(() => {
-        setResumen(null)
-        setMetricas(null)
-      })
-      .finally(() => setLoading(false))
-  }, [])
-
-  useEffect(() => {
-    const handleMouseDown = (e) => {
-      if (e.target.tagName === 'BUTTON') {
-        e.target.classList.add('scale-95', 'opacity-80')
-      }
+    if (isPaciente) {
+      Promise.all([
+        obtenerMisDatos(),
+        obtenerMiPosicion().catch(() => null),
+        obtenerMisCitas().catch(() => []),
+      ])
+        .then(([datos, posicion, citas]) => {
+          setPacienteDatos(datos)
+          setPacientePosicion(posicion)
+          setPacienteCitas(Array.isArray(citas) ? citas : [])
+          if (datos?.id) {
+            obtenerNotificacionesPorPaciente(datos.id)
+              .then((notifs) => setPacienteNotifs(Array.isArray(notifs) ? notifs : []))
+              .catch(() => {})
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
+    } else {
+      Promise.all([
+        obtenerResumenPortal(),
+        reportesApi.obtenerMetricasListaEspera(),
+        obtenerPacientes(),
+        obtenerNotificacionesPendientes(),
+      ])
+        .then(([res, met, pac, notif]) => {
+          setResumen(res?.resumen ?? null)
+          setMetricas(met ?? null)
+          const sorted = Array.isArray(pac) ? pac.slice(-5).reverse() : []
+          setUltimosPacientes(sorted)
+          setNotificaciones(Array.isArray(notif) ? notif.slice(0, 4) : [])
+        })
+        .catch(() => {
+          setResumen(null)
+          setMetricas(null)
+        })
+        .finally(() => setLoading(false))
     }
-    const handleMouseUp = (e) => {
-      if (e.target.tagName === 'BUTTON') {
-        e.target.classList.remove('scale-95', 'opacity-80')
-      }
-    }
-
-    document.addEventListener('mousedown', handleMouseDown)
-    document.addEventListener('mouseup', handleMouseUp)
-
-    return () => {
-      document.removeEventListener('mousedown', handleMouseDown)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [])
+  }, [isPaciente])
 
   if (isPaciente) {
+    const proximaCita = pacienteCitas.find((c) => c.estado === 'CONFIRMADA')
+    const badgeEstado = pacientePosicion ? 'EN PROCESO' : 'NO REGISTRADO'
+    const badgeColor = pacientePosicion ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-surface-container text-on-surface-variant'
+
     return (
       <main className="ml-[260px] pt-24 p-gutter min-h-screen">
         <div className="max-w-[1400px] mx-auto flex flex-col gap-gutter">
@@ -68,7 +77,7 @@ const Dashboard = ({ user, onSectionChange }) => {
                   PORTAL DEL PACIENTE
                 </span>
                 <h2 className="font-display-hero text-display-hero text-white mb-2">
-                  Bienvenido a tu Portal de Salud
+                  Bienvenido{ pacienteDatos ? `, ${pacienteDatos.nombre}` : ' a tu Portal de Salud' }
                 </h2>
                 <p className="font-body-lg text-body-lg text-white/80">
                   Aquí puedes revisar el estado de tu ficha, tus citas médicas programadas y tu situación en la lista de espera.
@@ -86,17 +95,21 @@ const Dashboard = ({ user, onSectionChange }) => {
                 <div className="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
                   <span className="material-symbols-outlined">event_available</span>
                 </div>
-                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-label-bold text-[11px] font-bold">CONFIRMADA</span>
-              </div>
-              <h3 className="text-on-surface-variant font-label-bold mb-1">Próxima Cita Médica</h3>
-              <div className="flex flex-col gap-1 mt-2">
-                <span className="font-headline-md text-on-surface text-xl font-bold">Consulta de Medicina General</span>
-                <span className="text-on-surface-variant text-body-md">Mañana a las 10:30 AM</span>
-                <span className="text-on-surface-variant text-xs mt-2 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs text-primary">pin_drop</span>
-                  Edificio Central - Consultorio 104
+                <span className={`px-3 py-1 rounded-full font-label-bold text-[11px] font-bold ${proximaCita ? 'bg-primary/10 text-primary' : 'bg-surface-container text-on-surface-variant'}`}>
+                  {proximaCita ? proximaCita.estado : 'SIN CITA'}
                 </span>
               </div>
+              <h3 className="text-on-surface-variant font-label-bold mb-1">Próxima Cita Médica</h3>
+              {proximaCita ? (
+                <div className="flex flex-col gap-1 mt-2">
+                  <span className="font-headline-md text-on-surface text-xl font-bold">{proximaCita.medico?.nombre ?? 'Consulta'}</span>
+                  <span className="text-on-surface-variant text-body-md">{new Date(proximaCita.fechaHora).toLocaleString('es-CL')}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 mt-2">
+                  <span className="text-on-surface-variant text-body-md">No tienes citas programadas.</span>
+                </div>
+              )}
             </div>
 
             {/* Card Lista de Espera */}
@@ -105,27 +118,75 @@ const Dashboard = ({ user, onSectionChange }) => {
                 <div className="w-12 h-12 bg-tertiary-fixed rounded-lg flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-white transition-all duration-500">
                   <span className="material-symbols-outlined">list_alt</span>
                 </div>
-                <span className="px-3 py-1 bg-tertiary-container text-on-tertiary-container rounded-full font-label-bold text-[11px] font-bold">EN PROCESO</span>
+                <span className={`px-3 py-1 rounded-full font-label-bold text-[11px] font-bold ${badgeColor}`}>{badgeEstado}</span>
               </div>
               <h3 className="text-on-surface-variant font-label-bold mb-1">Tu Estado en Lista de Espera</h3>
-              <div className="flex flex-col gap-1 mt-2">
-                <span className="font-headline-md text-on-surface text-xl font-bold">Prioridad de Atención: Media</span>
-                <span className="text-on-surface-variant text-body-md">Tu solicitud de interconsulta ha sido recibida y está siendo procesada para su asignación rápida.</span>
-              </div>
+              {pacientePosicion ? (
+                <div className="flex flex-col gap-1 mt-2">
+                  <span className="font-headline-md text-on-surface text-xl font-bold">Posición {pacientePosicion.posicion} de {pacientePosicion.total}</span>
+                  <span className="text-on-surface-variant text-body-md">Gravedad: {pacientePosicion.registro?.gravedad ?? 'Media'}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 mt-2">
+                  <span className="text-on-surface-variant text-body-md">No estás en la lista de espera.</span>
+                </div>
+              )}
             </div>
 
-            {/* Card Notificaciones */}
-            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/50 transition-all duration-500 group cursor-pointer hover:scale-105">
+            {/* Card Notificaciones — Expandable Mini-Feed */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant transition-all duration-500 group">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-secondary-container rounded-lg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                <div className="w-12 h-12 bg-secondary-container rounded-lg flex items-center justify-center text-primary transition-all duration-500">
                   <span className="material-symbols-outlined">notifications_active</span>
                 </div>
-                <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded font-label-bold text-[10px] font-bold">NUEVO</span>
+                <span className={`px-2 py-0.5 rounded font-label-bold text-[10px] font-bold ${pacienteNotifs.length > 0 ? 'bg-green-100 text-green-800' : 'bg-surface-container text-on-surface-variant'}`}>
+                  {pacienteNotifs.length > 0 ? pacienteNotifs.length + ' NUEVOS' : 'VACÍO'}
+                </span>
               </div>
-              <h3 className="text-on-surface-variant font-label-bold mb-1">Mensajes Recientes</h3>
-              <div className="flex flex-col gap-1 mt-2">
-                <span className="font-headline-md text-on-surface text-md font-bold">¡Registro Exitoso!</span>
-                <span className="text-on-surface-variant text-body-sm">Tu cuenta de paciente ha sido creada y vinculada automáticamente con tu RUT. Ya estás registrado en el sistema de Salud Red Norte.</span>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-on-surface-variant font-label-bold">Mensajes Recientes</h3>
+                {pacienteNotifs.length > 1 && (
+                  <button
+                    onClick={() => setExpandNotifs(!expandNotifs)}
+                    className="text-primary text-xs font-semibold hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    {expandNotifs ? 'Ver menos' : `Ver ${pacienteNotifs.length}`}
+                    <span className={`material-symbols-outlined text-sm transition-transform duration-300 ${expandNotifs ? 'rotate-180' : ''}`}>
+                      expand_more
+                    </span>
+                  </button>
+                )}
+              </div>
+              <div className="overflow-hidden transition-all duration-500 ease-in-out" style={{ maxHeight: expandNotifs ? `${pacienteNotifs.length * 80}px` : '80px' }}>
+                {pacienteNotifs.length > 0 ? (
+                  <ul className="space-y-2 mt-2">
+                    {pacienteNotifs.map((n, i) => (
+                      <li
+                        key={n.id || i}
+                        className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-300 ${
+                          i === 0 && !expandNotifs
+                            ? ''
+                            : 'bg-surface-container-low hover:bg-surface-container-high'
+                        }`}
+                        style={{
+                          animation: expandNotifs ? `fadeIn 0.3s ease ${i * 0.05}s both` : undefined,
+                        }}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-secondary-container flex items-center justify-center text-primary shrink-0 mt-0.5">
+                          <span className="material-symbols-outlined text-sm">mail</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-on-surface text-xs">{n.tipo?.replace(/_/g, ' ') || 'Notificación'}</p>
+                          <p className="text-on-surface-variant text-[11px] leading-tight line-clamp-2 mt-0.5">{n.mensaje}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex flex-col gap-1 mt-2">
+                    <span className="text-on-surface-variant text-body-md">No tienes notificaciones recientes.</span>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -9,7 +9,7 @@ vi.mock('../api/gestionPacientesApi');
 describe('ListaEspera', () => {
   const mockLista = [
     { id: 1, paciente: { id: 1, nombre: 'Juan', apellido: 'Pérez' }, gravedad: 'ALTA', estado: 'PENDIENTE', interconsulta: 'Cardiología' },
-    { id: 2, paciente: { id: 2, nombre: 'María', apellido: 'García' }, gravedad: 'MEDIA', estado: 'ATENDIDO', interconsulta: 'Neurología' },
+    { id: 2, paciente: { id: 2, nombre: 'María', apellido: 'García' }, gravedad: 'MEDIA', estado: 'ASIGNADA', interconsulta: 'Neurología' },
   ];
 
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe('ListaEspera', () => {
 
     await waitFor(() => {
       expect(screen.getByText('PENDIENTE')).toBeInTheDocument();
-      expect(screen.getByText('ATENDIDO')).toBeInTheDocument();
+      expect(screen.getByText('ASIGNADA')).toBeInTheDocument();
     });
   });
 
@@ -86,12 +86,12 @@ describe('ListaEspera', () => {
     }, { timeout: 500 });
 
     const statusSelects = screen.getAllByRole('combobox');
-    await user.selectOptions(statusSelects[1], 'ATENDIDO');
+    await user.selectOptions(statusSelects[1], 'ASIGNADA');
   });
 
   it('should update status when select changed', async () => {
     const user = userEvent.setup();
-    api.actualizarEstadoListaEspera.mockResolvedValue({ id: 1, estado: 'ATENDIDO' });
+    api.actualizarEstadoListaEspera.mockResolvedValue({ id: 1, estado: 'ASIGNADA' });
 
     render(<ListaEspera />);
 

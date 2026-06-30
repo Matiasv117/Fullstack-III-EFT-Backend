@@ -1,6 +1,8 @@
 package com.saludrednorte.ms_listas_espera.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saludrednorte.ms_listas_espera.client.CitaClient;
+import com.saludrednorte.ms_listas_espera.dto.CitaDTO;
 import com.saludrednorte.ms_listas_espera.entity.Estado;
 import com.saludrednorte.ms_listas_espera.entity.Gravedad;
 import com.saludrednorte.ms_listas_espera.entity.ListaEspera;
@@ -36,6 +38,9 @@ class PacientePortalControllerTest {
 
     @Mock
     private ListaEsperaService listaEsperaService;
+
+    @Mock
+    private CitaClient citaClient;
 
     @InjectMocks
     private PacientePortalController pacientePortalController;
@@ -117,7 +122,7 @@ class PacientePortalControllerTest {
     }
 
     @Test
-    void getMiPosicion_debeRetornar404CuandoNoEnLista() throws Exception {
+    void getMiPosicion_debeRetornar200SinPosicionCuandoNoEnLista() throws Exception {
         List<ListaEspera> lista = List.of(
                 new ListaEspera() {{ setId(1L); setPaciente(new Paciente() {{ setId(2L); }}); }}
         );
@@ -126,8 +131,9 @@ class PacientePortalControllerTest {
 
         mockMvc.perform(get("/pacientes/portal/mi-posicion")
                         .header("Authorization", validToken))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("No estás en la lista de espera"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.posicion").isEmpty())
+                .andExpect(jsonPath("$.total").value(1));
     }
 
     @Test
@@ -145,11 +151,14 @@ class PacientePortalControllerTest {
 
     @Test
     void getMisCitas_debeRetornar200() throws Exception {
+        CitaDTO cita = new CitaDTO(1L, 1L, 2L, java.time.LocalDateTime.now(), "CONFIRMADA");
+        when(citaClient.obtenerCitasPorPaciente(1L)).thenReturn(List.of(cita));
+
         mockMvc.perform(get("/pacientes/portal/mis-citas")
                         .header("Authorization", validToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mensaje").value("Funcionalidad de citas en desarrollo"))
-                .andExpect(jsonPath("$.pacienteId").value(1));
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].pacienteId").value(1));
     }
 
     @Test

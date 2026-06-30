@@ -1,12 +1,11 @@
 package com.saludrednorte.ms_listas_espera.service;
 
-import com.saludrednorte.ms_listas_espera.client.CitaClient;
-import com.saludrednorte.ms_listas_espera.dto.CitaDTO;
-import com.saludrednorte.ms_listas_espera.dto.MedicoDTO;
 import com.saludrednorte.ms_listas_espera.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
+import com.saludrednorte.ms_listas_espera.repository.ListaEsperaRepository;
+import com.saludrednorte.ms_optimizacion.repository.CitaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,15 +17,14 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static com.saludrednorte.ms_listas_espera.config.CacheConfig.CACHE_PACIENTES;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Servicio para la gestión de pacientes.
  * <p>
- * Este servicio proporciona operaciones CRUD para pacientes, incluyendo registro automático
- * de citas y notificaciones cuando se registra un nuevo paciente.
+ * Este servicio proporciona operaciones CRUD para pacientes, incluyendo registro
+ * y notificaciones cuando se registra un nuevo paciente.
  * </p>
  */
 @Service
@@ -38,19 +36,22 @@ public class PacienteService {
     private PacienteRepository pacienteRepository;
 
     @Autowired
+    private ListaEsperaRepository listaEsperaRepository;
+
+    @Autowired
+    private CitaRepository citaRepository;
+
+    @Autowired
     private NotificacionEventPublisher notificacionEventPublisher;
 
     @Autowired
     private AuditEventPublisher auditEventPublisher;
 
-    @Autowired
-    private CitaClient citaClient;
-
     /**
      * Registra un nuevo paciente en el sistema.
      * <p>
      * Valida que no exista un paciente con el mismo DNI antes de registrar.
-     * Crea automáticamente una cita con el primer médico disponible y envía una notificación.
+     * Envía una notificación de bienvenida.
      * </p>
      *
      * @param paciente el paciente a registrar
@@ -64,24 +65,6 @@ public class PacienteService {
         }
 
         Paciente savedPaciente = pacienteRepository.save(paciente);
-
-        // Crear cita automáticamente con el primer médico disponible
-        try {
-            List<MedicoDTO> medicos = citaClient.obtenerTodosMedicos();
-            if (!medicos.isEmpty()) {
-                MedicoDTO medico = medicos.get(0);
-                CitaDTO cita = new CitaDTO();
-                cita.setPacienteId(savedPaciente.getId());
-                cita.setMedicoId(medico.getId());
-                cita.setFechaHora(LocalDateTime.now().plusDays(1));
-                cita.setEstado("CONFIRMADA");
-                citaClient.crearCita(cita);
-                logger.info("Cita creada automáticamente para paciente {} con médico {}", 
-                           savedPaciente.getId(), medico.getId());
-            }
-        } catch (Exception e) {
-            logger.warn("Fallo al crear cita automática pero paciente registrado: {}", e.getMessage());
-        }
 
         // Publicar notificación de forma asíncrona vía RabbitMQ
         try {
@@ -167,7 +150,16 @@ public class PacienteService {
         if (!pacienteRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente no encontrado");
         }
-        pacienteRepository.deleteById(id);
+        try {
+            // Eliminar entidades relacionadas primero
+            listaEsperaRepository.deleteByPacienteId(id);
+            citaRepository.deleteByPacienteId(id);
+            pacienteRepository.deleteById(id);
+        } catch (Exception e) {
+            logger.warn("Error eliminando paciente {}: {}", id, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "No se pudo eliminar el paciente: " + e.getMessage());
+        }
     }
 
     /**

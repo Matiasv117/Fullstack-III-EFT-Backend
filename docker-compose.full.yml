@@ -59,9 +59,9 @@ services:
       - "8087:8087"
     environment:
       - SPRING_PROFILES_ACTIVE=postgres
-      - DB_URL=jdbc:postgresql://ep-autumn-truth-adfu20rc-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - DB_URL=jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - DB_USERNAME=neondb_owner
-      - DB_PASSWORD=npg_bYcXjIfp0av3
+      - DB_PASSWORD=npg_Viz5aYF6NSuO
       - DB_DRIVER=org.postgresql.Driver
       - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - RABBITMQ_HOST=rabbitmq
@@ -86,9 +86,9 @@ services:
       - "8083:8083"
     environment:
       - SPRING_PROFILES_ACTIVE=postgres
-      - DB_URL=jdbc:postgresql://ep-autumn-truth-adfu20rc-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - DB_URL=jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - DB_USERNAME=neondb_owner
-      - DB_PASSWORD=npg_bYcXjIfp0av3
+      - DB_PASSWORD=npg_Viz5aYF6NSuO
       - DB_DRIVER=org.postgresql.Driver
       - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - RABBITMQ_HOST=rabbitmq
@@ -117,9 +117,9 @@ services:
       - "8084:8084"
     environment:
       - SPRING_PROFILES_ACTIVE=postgres
-      - DB_URL=jdbc:postgresql://ep-autumn-truth-adfu20rc-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - DB_URL=jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - DB_USERNAME=neondb_owner
-      - DB_PASSWORD=npg_bYcXjIfp0av3
+      - DB_PASSWORD=npg_Viz5aYF6NSuO
       - DB_DRIVER=org.postgresql.Driver
       - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - RABBITMQ_HOST=rabbitmq
@@ -144,9 +144,9 @@ services:
       - "8085:8085"
     environment:
       - SPRING_PROFILES_ACTIVE=postgres
-      - DB_URL=jdbc:postgresql://ep-autumn-truth-adfu20rc-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - DB_URL=jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - DB_USERNAME=neondb_owner
-      - DB_PASSWORD=npg_bYcXjIfp0av3
+      - DB_PASSWORD=npg_Viz5aYF6NSuO
       - DB_DRIVER=org.postgresql.Driver
       - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - RABBITMQ_HOST=rabbitmq
@@ -171,9 +171,9 @@ services:
       - "8086:8086"
     environment:
       - SPRING_PROFILES_ACTIVE=postgres
-      - DB_URL=jdbc:postgresql://ep-autumn-truth-adfu20rc-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - DB_URL=jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - DB_USERNAME=neondb_owner
-      - DB_PASSWORD=npg_bYcXjIfp0av3
+      - DB_PASSWORD=npg_Viz5aYF6NSuO
       - DB_DRIVER=org.postgresql.Driver
       - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
@@ -192,9 +192,9 @@ services:
       - "8088:8088"
     environment:
       - SPRING_PROFILES_ACTIVE=postgres
-      - DB_URL=jdbc:postgresql://ep-autumn-truth-adfu20rc-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - DB_URL=jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - DB_USERNAME=neondb_owner
-      - DB_PASSWORD=npg_bYcXjIfp0av3
+      - DB_PASSWORD=npg_Viz5aYF6NSuO
       - DB_DRIVER=org.postgresql.Driver
       - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - RABBITMQ_HOST=rabbitmq

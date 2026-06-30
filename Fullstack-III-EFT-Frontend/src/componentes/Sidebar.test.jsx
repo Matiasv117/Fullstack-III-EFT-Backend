@@ -19,9 +19,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Lista de Espera')).toBeInTheDocument();
     expect(screen.getByText('Notificaciones')).toBeInTheDocument();
     expect(screen.getByText('Optimización')).toBeInTheDocument();
-    expect(screen.getByText('Clínicas')).toBeInTheDocument();
     expect(screen.getByText('Reportes')).toBeInTheDocument();
-    expect(screen.getByText('Ajustes')).toBeInTheDocument();
   });
 
   it('should render admin menu items', () => {

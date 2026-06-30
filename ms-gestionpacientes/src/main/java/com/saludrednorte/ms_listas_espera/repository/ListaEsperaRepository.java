@@ -10,4 +10,5 @@ import java.util.List;
 public interface ListaEsperaRepository extends JpaRepository<ListaEspera, Long> {
     List<ListaEspera> findByEstado(Estado estado);
     List<ListaEspera> findByGravedadOrderByIdAsc(Gravedad gravedad);
+    void deleteByPacienteId(Long pacienteId);
 }

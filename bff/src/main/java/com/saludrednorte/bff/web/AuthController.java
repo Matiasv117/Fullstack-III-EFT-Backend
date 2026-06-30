@@ -2,6 +2,7 @@ package com.saludrednorte.bff.web;
 
 import com.saludrednorte.bff.dto.LoginRequest;
 import com.saludrednorte.bff.dto.PacienteLoginRequest;
+import com.saludrednorte.bff.service.AuditoriaService;
 import com.saludrednorte.bff.service.AuthProxyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,9 @@ public class AuthController {
     @Autowired
     private AuthProxyService authProxyService;
 
+    @Autowired
+    private AuditoriaService auditoriaService;
+
     /**
      * Endpoint de login que delega la generación del token JWT a ms-auth.
      *
@@ -29,8 +33,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            return ResponseEntity.ok(authProxyService.login(loginRequest));
+            var response = authProxyService.login(loginRequest);
+            auditoriaService.registrarEvento(loginRequest.getUsername(), "LOGIN_EXITOSO", "Login exitoso");
+            return ResponseEntity.ok(response);
         } catch (WebClientResponseException.Unauthorized ex) {
+            auditoriaService.registrarEvento(loginRequest.getUsername(), "LOGIN_FALLIDO", "Credenciales inválidas");
             return ResponseEntity.status(401).body(Map.of("error", "Credenciales inválidas"));
         } catch (WebClientResponseException ex) {
             return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
