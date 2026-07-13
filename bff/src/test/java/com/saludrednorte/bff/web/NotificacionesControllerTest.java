@@ -8,9 +8,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -214,6 +217,117 @@ class NotificacionesControllerTest {
                 .thenThrow(new RuntimeException("Error"));
 
         mockMvc.perform(get("/api/notificaciones/info/estado"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void crearNotificacion_debeRetornar200() throws Exception {
+        when(webClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.header(anyString(), any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just("{\"id\":1}"));
+
+        mockMvc.perform(post("/api/notificaciones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"mensaje\":\"test\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void crearNotificacion_debeReenviarStatusCodeError() throws Exception {
+        when(webClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.header(anyString(), any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new WebClientResponseException(400, "Bad Request", null, null, null));
+
+        mockMvc.perform(post("/api/notificaciones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"mensaje\":\"test\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void crearNotificacion_debeRetornar500EnErrorGenerico() throws Exception {
+        when(webClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.header(anyString(), any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new RuntimeException("Error"));
+
+        mockMvc.perform(post("/api/notificaciones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"mensaje\":\"test\"}"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void obtenerNotificacionesPorPaciente_debeRetornar200() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just("[]"));
+
+        mockMvc.perform(get("/api/notificaciones/paciente/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void obtenerNotificacionesPorPaciente_debeReenviarStatusCodeError() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new WebClientResponseException(404, "Not Found", null, null, null));
+
+        mockMvc.perform(get("/api/notificaciones/paciente/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void obtenerNotificacionesPorPaciente_debeRetornar500EnErrorGenerico() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new RuntimeException("Error"));
+
+        mockMvc.perform(get("/api/notificaciones/paciente/1"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void obtenerCanalesDisponibles_debeReenviarStatusCodeError() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new WebClientResponseException(500, "Error", null, null, null));
+
+        mockMvc.perform(get("/api/notificaciones/info/canales"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void obtenerCanalesDisponibles_debeRetornar500EnErrorGenerico() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new RuntimeException("Error"));
+
+        mockMvc.perform(get("/api/notificaciones/info/canales"))
                 .andExpect(status().isInternalServerError());
     }
 }

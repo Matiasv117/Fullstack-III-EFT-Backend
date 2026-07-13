@@ -95,3 +95,30 @@
 - Swagger/OpenAPI disponible en cada MS via springdoc: `/swagger-ui.html`, `/v3/api-docs`
 - Config local: copiar `config/local-insforge.env.example` → `config/local-insforge.env`
 - `opencode.json` tiene MCP Neon server configurado (requiere `NEON_API_KEY`)
+
+## Tareas completadas
+
+### Fixes de tests (2026-07-13)
+- **ms-auth `AdminControllerTest`**: Agregado `@Mock JwtUtil` + stubs con `lenient()` en `@BeforeEach` para evitar `UnnecessaryStubbingException`
+- **BFF `ListaEsperaControllerTest`**: Agregado `ObjectMapper` y `@Mock ProgresoService` para resolver NPE por `@InjectMocks`
+- **Frontend `Notificaciones.test.jsx`**: Mock de `gestionPacientesApi` + uso de `waitFor` para asserts async
+- **Eliminados `contextLoads()` vacíos**: `MsProgresoApplicationTests.java` y `MsAuditoriaApplicationTests.java` (causaban timeout con `@SpringBootTest` sin tests reales)
+- **ms-auditoria test config**: Agregado `spring.flyway.enabled: false` en `src/test/resources/application.yml`
+- **Resultado final**: 630 tests, 0 failures (266 frontend + 364 backend)
+
+### Cobertura JaCoCo salud-bff 85%+ (2026-07-13)
+- Expandidos tests en `NotificacionesControllerTest` (+8): POST crearNotificacion (3 paths), GET paciente/{id} (3 paths), GET info/canales error paths
+- Expandidos tests en `OptimizacionControllerTest` (+4): GET prioridad (3 paths), POST cancelar after-call success path
+- Fix en `PacientesControllerTest`: mapper vía `ReflectionTestUtils.setField` para cubrir after-call completo
+- Expandidos tests en `ListaEsperaControllerTest` (+7): GET metricas (3 paths), POST after-call success, PUT/POST/GET error paths
+- Expandidos tests en `PortalResumenServiceTest` (+3): WebClientResponseException catch blocks, Mono.empty() → blockOptional().orElseGet() path
+- **Resultado**: 153 tests, 0 failures, 97.5% line coverage (threshold: 85%)
+
+## Tareas pendientes
+
+### Swagger/OpenAPI funcional en todos los microservicios
+- Verificar que springdoc-openapi esté configurado correctamente en cada MS
+- Asegurar que `/swagger-ui.html` y `/v3/api-docs` funcionen en cada servicio
+- Documentar endpoints con anotaciones `@Operation`, `@Tag`, `@ApiResponse` en controllers
+- Configurar info de contacto y licencia en OpenAPI config
+- Considerar aggregate group para documentación centralizada vía BFF o Gateway

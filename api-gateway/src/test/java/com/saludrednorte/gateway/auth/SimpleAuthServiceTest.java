@@ -59,6 +59,60 @@ class SimpleAuthServiceTest {
     }
 
     @Test
+    void decodeBearerToken_headerNull() {
+        assertThat(authService.decodeBearerToken(null)).isEmpty();
+    }
+
+    @Test
+    void decodeBearerToken_headerSinBearer() {
+        assertThat(authService.decodeBearerToken("token-invalido")).isEmpty();
+    }
+
+    @Test
+    void decodeBearerToken_headerBearerVacio() {
+        assertThat(authService.decodeBearerToken("Bearer ")).isEmpty();
+    }
+
+    @Test
+    void isPublicPath_pathNull() {
+        assertThat(authService.isPublicPath(null)).isFalse();
+    }
+
+    @Test
+    void isPublicPath_pathBlank() {
+        assertThat(authService.isPublicPath("")).isFalse();
+        assertThat(authService.isPublicPath("   ")).isFalse();
+    }
+
+    @Test
+    void isPublicPath_pathPublico() {
+        assertThat(authService.isPublicPath("/login")).isTrue();
+        assertThat(authService.isPublicPath("/api/auth/login")).isTrue();
+        assertThat(authService.isPublicPath("/actuator/health")).isTrue();
+    }
+
+    @Test
+    void isPublicPath_pathNoPublico() {
+        assertThat(authService.isPublicPath("/productos")).isFalse();
+        assertThat(authService.isPublicPath("/pacientes")).isFalse();
+    }
+
+    @Test
+    void canAccess_pathNull() {
+        assertThat(authService.canAccess("GET", null, "ADMIN")).isFalse();
+    }
+
+    @Test
+    void canAccess_pathBlank() {
+        assertThat(authService.canAccess("GET", "", "ADMIN")).isFalse();
+    }
+
+    @Test
+    void canAccess_rolInvalido() {
+        assertThat(authService.canAccess("GET", "/productos", "INVALIDO")).isFalse();
+    }
+
+    @Test
     void canAccess_permiteAdminYRestringeUsuario() {
         assertThat(authService.canAccess("GET", "/productos", "ADMIN")).isTrue();
         assertThat(authService.canAccess("GET", "/productos", "USER")).isFalse();

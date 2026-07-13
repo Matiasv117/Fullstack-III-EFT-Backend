@@ -67,6 +67,20 @@ class OptimizacionFactoryTest {
     }
 
     @Test
+    void testObtenerEstrategiaLIFO() {
+        EstrategiaOptimizacion resultado = factory.getEstrategia("lifo");
+
+        assertNull(resultado);
+    }
+
+    @Test
+    void testObtenerEstrategiaLIFOMayuscula() {
+        EstrategiaOptimizacion resultado = factory.getEstrategia("LIFO");
+
+        assertNull(resultado);
+    }
+
+    @Test
     void testObtenerEstrategiaGravedadMayuscula() {
         // Given & When (case insensitive)
         EstrategiaOptimizacion resultado = factory.getEstrategia("GRAVEDAD");

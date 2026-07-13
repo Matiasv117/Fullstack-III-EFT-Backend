@@ -19,11 +19,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -193,4 +197,69 @@ class PacientePortalControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Token inválido o no es de paciente"));
     }
+
+    @Test
+    void actualizarMisDatos_debeRetornar200() throws Exception {
+        Paciente paciente = new Paciente();
+        paciente.setNombre("Nuevo");
+        paciente.setApellido("Nombre");
+        paciente.setEmail("nuevo@mail.com");
+
+        Paciente actualizado = new Paciente();
+        actualizado.setId(1L);
+        actualizado.setNombre("Nuevo");
+        actualizado.setApellido("Nombre");
+
+        when(pacienteService.actualizarPaciente(any(Paciente.class))).thenReturn(actualizado);
+
+        mockMvc.perform(put("/pacientes/portal/mis-datos")
+                        .header("Authorization", validToken)
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(paciente)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Nuevo"));
+    }
+
+    @Test
+    void actualizarMisDatos_debeRetornar401SinToken() throws Exception {
+        mockMvc.perform(put("/pacientes/portal/mis-datos")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new Paciente())))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void actualizarMisDatos_debeRetornar400CuandoFalla() throws Exception {
+        when(pacienteService.actualizarPaciente(any(Paciente.class)))
+                .thenThrow(new RuntimeException("Error interno"));
+
+        mockMvc.perform(put("/pacientes/portal/mis-datos")
+                        .header("Authorization", validToken)
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new Paciente())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("Error al actualizar datos")));
+    }
+
+    @Test
+    void getMisDatos_debeRetornar401ConTokenExpirado() throws Exception {
+        String payload = Base64.getUrlEncoder().encodeToString("{\"sub\":\"PACIENTE_999\"}".getBytes());
+        String token = "Bearer header." + payload + ".signature";
+
+        when(pacienteService.obtenerPacientePorId(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/pacientes/portal/mis-datos")
+                        .header("Authorization", token))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getMisCitas_debeRetornar401CuandoCitaClientFalla() throws Exception {
+        when(citaClient.obtenerCitasPorPaciente(1L)).thenThrow(new RuntimeException("Error conexión"));
+
+        mockMvc.perform(get("/pacientes/portal/mis-citas")
+                        .header("Authorization", validToken))
+                .andExpect(status().isUnauthorized());
+    }
+
 }

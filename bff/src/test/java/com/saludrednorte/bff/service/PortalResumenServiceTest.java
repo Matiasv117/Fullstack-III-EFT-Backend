@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -149,6 +150,67 @@ class PortalResumenServiceTest {
         JsonNode resumen = service.construirResumen();
 
         assertThat(resumen.get("resumen").get("totalPacientes").asInt()).isEqualTo(0);
+        assertThat(resumen.get("resumen").get("totalNotificacionesPendientes").asInt()).isEqualTo(0);
+        assertThat(resumen.get("errores")).isEmpty();
+    }
+
+    @Test
+    void construirResumen_degradaConWebClientResponseException() throws Exception {
+        WebClient webClient = mock(WebClient.class, RETURNS_DEEP_STUBS);
+        WebClient.Builder builder = mockBuilder(webClient);
+
+        when(webClient.get().uri("lb://ms-listas-espera/pacientes").retrieve().bodyToMono(JsonNode.class))
+                .thenThrow(new WebClientResponseException(503, "Service Unavailable", null, null, null));
+        when(webClient.get().uri("lb://ms-notificaciones/api/notificaciones/pendientes").retrieve().bodyToMono(JsonNode.class))
+                .thenThrow(new WebClientResponseException(503, "Service Unavailable", null, null, null));
+
+        PortalResumenService service = new PortalResumenService(builder, objectMapper);
+        JsonNode resumen = service.construirResumen();
+
+        assertThat(resumen.get("errores")).hasSize(2);
+        assertThat(resumen.get("errores").get(0).asText()).isEqualTo("pacientes: 503 SERVICE_UNAVAILABLE");
+        assertThat(resumen.get("errores").get(1).asText()).isEqualTo("notificaciones: 503 SERVICE_UNAVAILABLE");
+    }
+
+    @Test
+    void construirResumen_blockOptionalEmpty() throws Exception {
+        WebClient webClient = mock(WebClient.class, RETURNS_DEEP_STUBS);
+        WebClient.Builder builder = mockBuilder(webClient);
+
+        when(webClient.get().uri("lb://ms-listas-espera/pacientes").retrieve().bodyToMono(JsonNode.class))
+                .thenReturn(Mono.empty());
+        when(webClient.get().uri("lb://ms-notificaciones/api/notificaciones/pendientes").retrieve().bodyToMono(JsonNode.class))
+                .thenReturn(Mono.just(objectMapper.readTree("[{\"id\":1}]")));
+
+        PortalResumenService service = new PortalResumenService(builder, objectMapper);
+        JsonNode resumen = service.construirResumen();
+
+        assertThat(resumen.get("resumen").get("totalPacientes").asInt()).isEqualTo(0);
+        assertThat(resumen.get("resumen").get("totalNotificacionesPendientes").asInt()).isEqualTo(1);
+        assertThat(resumen.get("errores")).isEmpty();
+    }
+
+    @Test
+    void construirResumen_conTokenYBlockOptionalEmpty() throws Exception {
+        WebClient webClient = mock(WebClient.class, RETURNS_DEEP_STUBS);
+        WebClient.Builder builder = mockBuilder(webClient);
+
+        WebClient.RequestHeadersSpec pacientesSpec = mock(WebClient.RequestHeadersSpec.class, RETURNS_DEEP_STUBS);
+        WebClient.RequestHeadersSpec notifSpec = mock(WebClient.RequestHeadersSpec.class, RETURNS_DEEP_STUBS);
+
+        when(webClient.get().uri("lb://ms-listas-espera/pacientes")).thenReturn(pacientesSpec);
+        when(webClient.get().uri("lb://ms-notificaciones/api/notificaciones/pendientes")).thenReturn(notifSpec);
+
+        when(pacientesSpec.header(HttpHeaders.AUTHORIZATION, "Bearer token")).thenReturn(pacientesSpec);
+        when(pacientesSpec.retrieve().bodyToMono(JsonNode.class)).thenReturn(Mono.just(objectMapper.readTree("[{\"id\":1}]")));
+
+        when(notifSpec.header(HttpHeaders.AUTHORIZATION, "Bearer token")).thenReturn(notifSpec);
+        when(notifSpec.retrieve().bodyToMono(JsonNode.class)).thenReturn(Mono.empty());
+
+        PortalResumenService service = new PortalResumenService(builder, objectMapper);
+        JsonNode resumen = service.construirResumen("Bearer token");
+
+        assertThat(resumen.get("resumen").get("totalPacientes").asInt()).isEqualTo(1);
         assertThat(resumen.get("resumen").get("totalNotificacionesPendientes").asInt()).isEqualTo(0);
         assertThat(resumen.get("errores")).isEmpty();
     }

@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Optional;
+
 import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -267,5 +269,59 @@ class PacienteServiceTest {
         verify(listaEsperaRepository, never()).deleteByPacienteId(anyLong());
         verify(citaClient, never()).eliminarCitasPorPaciente(anyLong());
         verify(pacienteRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void eliminarPaciente_citaClientFalla() {
+        when(pacienteRepository.existsById(5L)).thenReturn(true);
+        org.mockito.Mockito.doThrow(new RuntimeException("Error conexión"))
+                .when(citaClient).eliminarCitasPorPaciente(5L);
+
+        pacienteService.eliminarPaciente(5L);
+
+        verify(listaEsperaRepository).deleteByPacienteId(5L);
+        verify(citaClient).eliminarCitasPorPaciente(5L);
+        verify(pacienteRepository).deleteById(5L);
+    }
+
+    @Test
+    void eliminarPaciente_errorInterno() {
+        when(pacienteRepository.existsById(5L)).thenReturn(true);
+        org.mockito.Mockito.doThrow(new RuntimeException("Error BD"))
+                .when(listaEsperaRepository).deleteByPacienteId(5L);
+
+        assertThatThrownBy(() -> pacienteService.eliminarPaciente(5L))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(error -> {
+                    ResponseStatusException exception = (ResponseStatusException) error;
+                    assertThat(exception.getStatusCode().value()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                });
+    }
+
+    @Test
+    void buscarPorNombreApellidoDni_retornaPaciente() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+        paciente.setNombre("Juan");
+        paciente.setApellido("Perez");
+        paciente.setDni("12345678-9");
+
+        when(pacienteRepository.findByNombreIgnoreCaseAndApellidoIgnoreCaseAndDniIgnoreCase("Juan", "Perez", "12345678-9"))
+                .thenReturn(Optional.of(paciente));
+
+        Optional<Paciente> resultado = pacienteService.buscarPorNombreApellidoDni("Juan", "Perez", "12345678-9");
+
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void buscarPorNombreApellidoDni_noEncontrado() {
+        when(pacienteRepository.findByNombreIgnoreCaseAndApellidoIgnoreCaseAndDniIgnoreCase("No", "Existe", "000"))
+                .thenReturn(Optional.empty());
+
+        Optional<Paciente> resultado = pacienteService.buscarPorNombreApellidoDni("No", "Existe", "000");
+
+        assertThat(resultado).isEmpty();
     }
 }

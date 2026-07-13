@@ -111,4 +111,35 @@ class PacienteControllerTest {
 
         verify(pacienteService).eliminarPaciente(7L);
     }
+
+    @Test
+    void buscarPaciente_debeRetornar200() throws Exception {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+        paciente.setNombre("Juan");
+        paciente.setApellido("Perez");
+        paciente.setDni("12345678-9");
+
+        when(pacienteService.buscarPorNombreApellidoDni("Juan", "Perez", "12345678-9"))
+                .thenReturn(Optional.of(paciente));
+
+        mockMvc.perform(get("/pacientes/buscar")
+                        .param("nombre", "Juan")
+                        .param("apellido", "Perez")
+                        .param("dni", "12345678-9"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
+    }
+
+    @Test
+    void buscarPaciente_debeRetornar404() throws Exception {
+        when(pacienteService.buscarPorNombreApellidoDni("No", "Existe", "000"))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/pacientes/buscar")
+                        .param("nombre", "No")
+                        .param("apellido", "Existe")
+                        .param("dni", "000"))
+                .andExpect(status().isNotFound());
+    }
 }

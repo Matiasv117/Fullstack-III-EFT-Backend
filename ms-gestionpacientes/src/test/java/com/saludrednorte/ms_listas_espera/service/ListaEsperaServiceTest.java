@@ -6,6 +6,7 @@ import com.saludrednorte.ms_listas_espera.entity.Estado;
 import com.saludrednorte.ms_listas_espera.entity.Gravedad;
 import com.saludrednorte.ms_listas_espera.entity.ListaEspera;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
+import com.saludrednorte.ms_listas_espera.repository.ListaEsperaProcedimientoRepository;
 import com.saludrednorte.ms_listas_espera.repository.ListaEsperaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,9 @@ class ListaEsperaServiceTest {
 
     @Mock
     private NotificationClient notificationClient;
+
+    @Mock
+    private ListaEsperaProcedimientoRepository procedimientoRepository;
 
     private ListaEsperaService listaEsperaService;
 
@@ -259,5 +263,50 @@ class ListaEsperaServiceTest {
 
         assertThatThrownBy(() -> listaEsperaService.eliminarDeListaEspera(999L))
                 .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void agregarAListaEspera_conProcedimientoRepository_gravedadNull() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera listaEspera = new ListaEspera();
+        listaEspera.setPaciente(paciente);
+        listaEspera.setGravedad(null);
+
+        ReflectionTestUtils.setField(listaEsperaService, "procedimientoRepository", procedimientoRepository);
+        when(procedimientoRepository.calcularGravedad(0, 1)).thenReturn(Gravedad.ALTA);
+        when(listaEsperaRepository.save(any(ListaEspera.class))).thenAnswer(invocation -> {
+            ListaEspera guardada = invocation.getArgument(0);
+            guardada.setId(50L);
+            return guardada;
+        });
+        when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
+
+        ListaEspera resultado = listaEsperaService.agregarAListaEspera(listaEspera);
+
+        assertThat(resultado.getGravedad()).isEqualTo(Gravedad.ALTA);
+        assertThat(resultado.getEstado()).isEqualTo(Estado.PENDIENTE);
+    }
+
+    @Test
+    void actualizarEstado_conProcedimientoRepository() {
+        Paciente paciente = new Paciente();
+        paciente.setId(1L);
+
+        ListaEspera lista = new ListaEspera();
+        lista.setId(20L);
+        lista.setPaciente(paciente);
+        lista.setEstado(Estado.PENDIENTE);
+
+        ReflectionTestUtils.setField(listaEsperaService, "procedimientoRepository", procedimientoRepository);
+        when(listaEsperaRepository.findById(20L)).thenReturn(Optional.of(lista));
+        when(listaEsperaRepository.findById(20L)).thenReturn(Optional.of(lista));
+        when(notificationClient.createNotification(any())).thenReturn(ResponseEntity.ok().build());
+
+        ListaEspera resultado = listaEsperaService.actualizarEstado(20L, Estado.ASIGNADA);
+
+        assertThat(resultado.getEstado()).isEqualTo(Estado.ASIGNADA);
+        verify(procedimientoRepository).actualizarEstado(20L, "ASIGNADA");
     }
 }

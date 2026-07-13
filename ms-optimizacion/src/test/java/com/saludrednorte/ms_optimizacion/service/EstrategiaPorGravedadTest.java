@@ -62,6 +62,21 @@ class EstrategiaPorGravedadTest {
     }
 
     @Test
+    void reasignarCita_noHaceNadaSiListaNull() {
+        when(listaEsperaClient.getListaEspera()).thenReturn(null);
+
+        estrategia.reasignarCita(cita);
+    }
+
+    @Test
+    void reasignarCita_noHaceNadaSiCandidatoNull() {
+        ListaEsperaDTO entry = new ListaEsperaDTO(1L, 201L, "x", null, "PENDIENTE");
+        when(listaEsperaClient.getListaEspera()).thenReturn(List.of(entry));
+
+        estrategia.reasignarCita(cita);
+    }
+
+    @Test
     void reasignarCita_asignaPacienteConMayorPrioridad() {
         ListaEsperaDTO baja = new ListaEsperaDTO(1L, 201L, "x", "BAJA", "PENDIENTE");
         ListaEsperaDTO alta = new ListaEsperaDTO(2L, 202L, "x", "ALTA", "PENDIENTE");

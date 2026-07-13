@@ -1,5 +1,7 @@
 package com.saludrednorte.bff.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saludrednorte.bff.service.ProgresoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -26,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ListaEsperaControllerTest {
 
     private MockMvc mockMvc;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Mock
     private WebClient.Builder webClientBuilder;
@@ -48,11 +52,15 @@ class ListaEsperaControllerTest {
     @Mock
     private WebClient.ResponseSpec responseSpec;
 
+    @Mock
+    private ProgresoService progresoService;
+
     @InjectMocks
     private ListaEsperaController listaEsperaController;
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(listaEsperaController, "mapper", mapper);
         mockMvc = MockMvcBuilders.standaloneSetup(listaEsperaController).build();
         lenient().when(webClientBuilder.build()).thenReturn(webClient);
     }
@@ -224,5 +232,128 @@ class ListaEsperaControllerTest {
 
         mockMvc.perform(get("/api/lista-espera/gravedad/invalido"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void obtenerPorGravedad_debeRetornar500EnErrorGenerico() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new RuntimeException("Error"));
+
+        mockMvc.perform(get("/api/lista-espera/gravedad/3"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void obtenerMetricas_debeRetornar200() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just("{\"total\":10}"));
+
+        mockMvc.perform(get("/api/lista-espera/metricas"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void obtenerMetricas_debeReenviarStatusCodeError() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new WebClientResponseException(500, "Error", null, null, null));
+
+        mockMvc.perform(get("/api/lista-espera/metricas"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void obtenerMetricas_debeRetornar500EnErrorGenerico() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new RuntimeException("Error"));
+
+        mockMvc.perform(get("/api/lista-espera/metricas"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void agregarAListaEspera_conAfterCallExitoso() throws Exception {
+        String json = "{\"paciente\":{\"id\":5,\"nombre\":\"Ana\"}}";
+        when(webClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.header(anyString(), any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(json));
+
+        mockMvc.perform(post("/api/lista-espera")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(json));
+    }
+
+    @Test
+    void agregarAListaEspera_debeRetornar500EnErrorGenerico() throws Exception {
+        when(webClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.header(anyString(), any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new RuntimeException("Error"));
+
+        mockMvc.perform(post("/api/lista-espera")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void actualizarEstadoListaEspera_debeRetornar500EnErrorGenerico() throws Exception {
+        when(webClient.put()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.header(anyString(), any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new RuntimeException("Error"));
+
+        mockMvc.perform(put("/api/lista-espera/1/estado/ATENDIDO"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void obtenerPorEstado_debeReenviarStatusCodeError() throws Exception {
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new WebClientResponseException(404, "Not Found", null, null, null));
+
+        mockMvc.perform(get("/api/lista-espera/estado/INEXISTENTE"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void eliminarDeListaEspera_debeReenviarStatusCodeError() throws Exception {
+        when(webClient.delete()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class))
+                .thenThrow(new WebClientResponseException(404, "Not Found", null, null, null));
+
+        mockMvc.perform(delete("/api/lista-espera/999"))
+                .andExpect(status().isNotFound());
     }
 }

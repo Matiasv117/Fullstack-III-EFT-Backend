@@ -99,6 +99,13 @@ class EstrategiaFIFOTest {
     }
 
     @Test
+    void testReasignarCitaFIFO_listaNull() {
+        when(listaEsperaClient.getListaEspera()).thenReturn(null);
+
+        assertDoesNotThrow(() -> estrategiaFIFO.reasignarCita(cita));
+    }
+
+    @Test
     void testReasignarCitaFIFOConPacienteEnLista() {
         ListaEsperaDTO candidato = new ListaEsperaDTO(5L, 200L, "consulta", "MEDIA", "PENDIENTE");
         when(listaEsperaClient.getListaEspera()).thenReturn(List.of(candidato));

@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Tests unitarios para NotificationService
@@ -30,6 +31,9 @@ class NotificationServiceTest {
     @Mock
     private NotificationRepository repository;
 
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private NotificationService service;
 
@@ -37,6 +41,7 @@ class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(service, "emailService", emailService);
         notification = new Notification();
         notification.setId(1L);
         notification.setPacienteId(123L);
@@ -135,6 +140,60 @@ class NotificationServiceTest {
     @Test
     void testGetAvailableChannels() {
         assertThat(service.getAvailableChannels()).containsExactly("EMAIL", "SMS", "PUSH");
+    }
+
+    @Test
+    void testCreateWithNullCreadoAt() {
+        notification.setCreadoAt(null);
+        when(repository.save(any(Notification.class))).thenReturn(notification);
+
+        Notification result = service.create(notification);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getCreadoAt()).isNotNull();
+    }
+
+    @Test
+    void testCreateWithNullIntentosEnvio() {
+        notification.setIntentosEnvio(null);
+        when(repository.save(any(Notification.class))).thenReturn(notification);
+
+        Notification result = service.create(notification);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getIntentosEnvio()).isZero();
+    }
+
+    @Test
+    void testSendPendingWithEmailDestino() {
+        notification.setEmailDestino("paciente@test.com");
+        when(repository.findByEstado(EstadoNotificacion.PENDIENTE)).thenReturn(List.of(notification));
+        when(repository.save(any(Notification.class))).thenReturn(notification);
+
+        service.sendPending();
+
+        verify(repository).save(any(Notification.class));
+    }
+
+    @Test
+    void testSendPendingWithBlankEmailDestino() {
+        notification.setEmailDestino("");
+        when(repository.findByEstado(EstadoNotificacion.PENDIENTE)).thenReturn(List.of(notification));
+        when(repository.save(any(Notification.class))).thenReturn(notification);
+
+        service.sendPending();
+
+        verify(repository).save(any(Notification.class));
+    }
+
+    @Test
+    void testSendByIdWithNullChannel() {
+        when(repository.findById(1L)).thenReturn(Optional.of(notification));
+        when(repository.save(any(Notification.class))).thenReturn(notification);
+
+        boolean result = service.sendById(1L, null);
+
+        assertThat(result).isTrue();
     }
 
     @Test

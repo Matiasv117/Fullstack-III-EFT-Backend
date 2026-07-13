@@ -164,6 +164,58 @@ class OptimizacionServiceTest {
     }
 
     @Test
+    void testProcesarCancelacionSinReasignacion() {
+        cita.setPacienteId(null);
+        when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
+        when(factory.getEstrategia("fifo")).thenReturn(estrategia);
+
+        ReasignacionResponse response = optimizacionService.procesarCancelacion(1L, "fifo");
+
+        assertNull(response);
+        verify(citaService, times(1)).cancelarCita(1L);
+    }
+
+    @Test
+    void testProcesarCancelacionConPacienteSinEmail() {
+        when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
+        when(factory.getEstrategia("fifo")).thenReturn(estrategia);
+        PacienteDTO pacienteDTO = new PacienteDTO();
+        pacienteDTO.setId(100L);
+        pacienteDTO.setNombre("Juan");
+        pacienteDTO.setApellido("Pérez");
+        when(pacienteClient.obtenerPacientePorId(100L)).thenReturn(pacienteDTO);
+
+        ReasignacionResponse response = optimizacionService.procesarCancelacion(1L, "fifo");
+
+        assertNotNull(response);
+        assertEquals("Juan Pérez", response.getNombrePaciente());
+        verify(notificacionEventPublisher, times(1)).publicar(eq(100L), eq("CITA_REASIGNADA"), anyString(), isNull());
+    }
+
+    @Test
+    void testProcesarCancelacionConPacienteNull() {
+        when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
+        when(factory.getEstrategia("fifo")).thenReturn(estrategia);
+        when(pacienteClient.obtenerPacientePorId(100L)).thenReturn(null);
+
+        ReasignacionResponse response = optimizacionService.procesarCancelacion(1L, "fifo");
+
+        assertNotNull(response);
+        assertNull(response.getNombrePaciente());
+    }
+
+    @Test
+    void testProcesarCancelacionConErrorAlObtenerPaciente() {
+        when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));
+        when(factory.getEstrategia("fifo")).thenReturn(estrategia);
+        when(pacienteClient.obtenerPacientePorId(100L)).thenThrow(new RuntimeException("Error Feign"));
+
+        ReasignacionResponse response = optimizacionService.procesarCancelacion(1L, "fifo");
+
+        assertNotNull(response);
+    }
+
+    @Test
     void testNotificacionFallidaNoAfectaFlujo() {
         // Given
         when(citaService.obtenerCitaPorId(1L)).thenReturn(Optional.of(cita));

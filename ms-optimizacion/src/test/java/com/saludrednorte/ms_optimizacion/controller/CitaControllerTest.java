@@ -125,6 +125,39 @@ class CitaControllerTest {
     }
 
     @Test
+    void testObtenerCitasPorPaciente() throws Exception {
+        List<Cita> citas = List.of(cita);
+        when(citaService.obtenerCitasPorPaciente(100L)).thenReturn(citas);
+
+        mockMvc.perform(get("/citas/paciente/100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
+
+        verify(citaService, times(1)).obtenerCitasPorPaciente(100L);
+    }
+
+    @Test
+    void testActualizarCita() throws Exception {
+        when(citaService.actualizarCita(any(Cita.class))).thenReturn(cita);
+
+        mockMvc.perform(put("/citas")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cita)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(citaService, times(1)).actualizarCita(any(Cita.class));
+    }
+
+    @Test
+    void testEliminarCitasPorPaciente() throws Exception {
+        mockMvc.perform(delete("/citas/paciente/100"))
+                .andExpect(status().isOk());
+
+        verify(citaService, times(1)).eliminarCitasPorPaciente(100L);
+    }
+
+    @Test
     void testCancelarCitaExitosa() throws Exception {
         // Given & When & Then
         mockMvc.perform(delete("/citas/1"))

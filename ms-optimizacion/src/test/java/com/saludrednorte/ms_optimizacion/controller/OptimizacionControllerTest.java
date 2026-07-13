@@ -2,6 +2,7 @@ package com.saludrednorte.ms_optimizacion.controller;
 
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
 import com.saludrednorte.ms_optimizacion.dto.ReasignacionResponse;
+import com.saludrednorte.ms_optimizacion.service.NivelPrioridad;
 import com.saludrednorte.ms_optimizacion.service.OptimizacionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,6 +93,20 @@ class OptimizacionControllerTest {
                 .andExpect(jsonPath("$", hasSize(2)));
         
         verify(optimizacionService, times(1)).obtenerListaEspera();
+    }
+
+    @Test
+    void testCalcularPrioridad() throws Exception {
+        when(optimizacionService.calcularPrioridadPaciente(4, 10.0, 5)).thenReturn(NivelPrioridad.ALTA);
+
+        mockMvc.perform(get("/optimizacion/prioridad")
+                        .param("gravedad", "4")
+                        .param("distanciaKm", "10.0")
+                        .param("diasEspera", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nivel").value("ALTA"));
+
+        verify(optimizacionService, times(1)).calcularPrioridadPaciente(4, 10.0, 5);
     }
 
     @Test

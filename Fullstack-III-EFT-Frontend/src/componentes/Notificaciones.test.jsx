@@ -3,8 +3,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Notificaciones from './Notificaciones';
 import * as api from '../api/notificacionesApi';
+import * as gpApi from '../api/gestionPacientesApi';
 
 vi.mock('../api/notificacionesApi');
+vi.mock('../api/gestionPacientesApi');
 
 describe('Notificaciones', () => {
   const mockNotificaciones = [
@@ -16,6 +18,7 @@ describe('Notificaciones', () => {
     vi.clearAllMocks();
     api.obtenerNotificacionesPendientes.mockResolvedValue(mockNotificaciones);
     api.enviarNotificacion.mockResolvedValue({});
+    gpApi.obtenerPacientes.mockResolvedValue([]);
   });
 
   it('should render the component', async () => {
@@ -62,14 +65,14 @@ describe('Notificaciones', () => {
     render(<Notificaciones />);
 
     await waitFor(() => {
-      expect(api.obtenerNotificacionesPendientes).toHaveBeenCalled();
+      expect(screen.getByText(/Test notification/)).toBeInTheDocument();
     });
 
     const sendButtons = screen.getAllByRole('button', { name: /Enviar/i });
-    if (sendButtons.length > 0) {
-      await user.click(sendButtons[0]);
+    await user.click(sendButtons[0]);
+    await waitFor(() => {
       expect(api.enviarNotificacion).toHaveBeenCalledWith(1);
-    }
+    });
   });
 
   it('should remove notification after sending', async () => {
@@ -81,13 +84,11 @@ describe('Notificaciones', () => {
     });
 
     const sendButtons = screen.getAllByRole('button', { name: /Enviar/i });
-    if (sendButtons.length > 0) {
-      await user.click(sendButtons[0]);
+    await user.click(sendButtons[0]);
 
-      await waitFor(() => {
-        expect(screen.queryByText(/Test notification/)).not.toBeInTheDocument();
-      });
-    }
+    await waitFor(() => {
+      expect(screen.queryByText(/Test notification/)).not.toBeInTheDocument();
+    });
   });
 
   it('should handle error when sending notification', async () => {
@@ -97,17 +98,15 @@ describe('Notificaciones', () => {
     render(<Notificaciones />);
 
     await waitFor(() => {
-      expect(api.obtenerNotificacionesPendientes).toHaveBeenCalled();
+      expect(screen.getByText(/Test notification/)).toBeInTheDocument();
     });
 
     const sendButtons = screen.getAllByRole('button', { name: /Enviar/i });
-    if (sendButtons.length > 0) {
-      await user.click(sendButtons[0]);
+    await user.click(sendButtons[0]);
 
-      await waitFor(() => {
-        expect(screen.getByText(/Send failed/)).toBeInTheDocument();
-      });
-    }
+    await waitFor(() => {
+      expect(screen.getByText(/Send failed/)).toBeInTheDocument();
+    });
   });
 
   it('should display notification details', async () => {
