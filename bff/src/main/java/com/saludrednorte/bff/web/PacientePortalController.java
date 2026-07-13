@@ -7,7 +7,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.Map;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Portal Pacientes", description = "Operaciones del portal de pacientes")
 @RestController
 @RequestMapping("/api/pacientes/portal")
 public class PacientePortalController {

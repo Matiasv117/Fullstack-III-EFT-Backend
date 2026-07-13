@@ -16,10 +16,12 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controlador de pacientes que delega las operaciones al microservicio ms-gestionpacientes.
  */
+@Tag(name = "Pacientes", description = "Operaciones de pacientes")
 @RestController
 @RequestMapping("/api/pacientes")
 public class PacientesController {

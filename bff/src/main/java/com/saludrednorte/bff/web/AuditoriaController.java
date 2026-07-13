@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import java.util.Map;
  * Controlador para la consulta de eventos de auditoría.
  * Actúa como proxy hacia ms-auditoría para el frontend.
  */
+@Tag(name = "Auditoria", description = "Operaciones de auditoría")
 @RestController
 @RequestMapping("/api/auditoria")
 public class AuditoriaController {

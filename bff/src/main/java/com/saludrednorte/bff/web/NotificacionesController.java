@@ -7,10 +7,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.Map;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controlador de notificaciones que delega las operaciones al microservicio ms-notificaciones.
  */
+@Tag(name = "Notificaciones", description = "Operaciones de notificaciones")
 @RestController
 @RequestMapping("/api/notificaciones")
 public class NotificacionesController {

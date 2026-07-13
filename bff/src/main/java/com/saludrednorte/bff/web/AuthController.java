@@ -9,11 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 
 /**
  * Controlador de autenticación que delega las operaciones al microservicio ms-auth.
  */
+@Tag(name = "Autenticacion", description = "Operaciones de autenticación y registro")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

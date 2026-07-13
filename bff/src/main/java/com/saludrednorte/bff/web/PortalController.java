@@ -7,11 +7,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controlador del portal de salud que expone endpoints agregados
  * para el dashboard del frontend, siguiendo el patrón BFF.
  */
+@Tag(name = "Portal", description = "Operaciones del portal de salud")
 @RestController
 @RequestMapping(path = "/api/portal", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PortalController {

@@ -16,7 +16,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Citas", description = "Operaciones de citas médicas")
 @RestController
 @RequestMapping("/api/citas")
 public class CitasController {

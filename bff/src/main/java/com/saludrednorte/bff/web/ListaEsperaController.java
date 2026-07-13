@@ -13,10 +13,12 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controlador de lista de espera que delega las operaciones al microservicio ms-gestionpacientes.
  */
+@Tag(name = "Lista de Espera", description = "Operaciones de lista de espera")
 @RestController
 @RequestMapping("/api/lista-espera")
 public class ListaEsperaController {

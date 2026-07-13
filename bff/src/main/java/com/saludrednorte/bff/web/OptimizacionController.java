@@ -16,10 +16,12 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controlador de optimización que delega las operaciones al microservicio ms-optimizacion.
  */
+@Tag(name = "Optimizacion", description = "Operaciones de optimización")
 @RestController
 @RequestMapping("/api/optimizacion")
 public class OptimizacionController {
