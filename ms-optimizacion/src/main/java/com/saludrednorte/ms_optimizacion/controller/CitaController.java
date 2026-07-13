@@ -126,4 +126,17 @@ public class CitaController {
             @Parameter(description = "ID de la cita") @PathVariable Long id) {
         citaService.cancelarCita(id);
     }
+
+    /**
+     * Elimina todas las citas de un paciente.
+     *
+     * @param pacienteId el ID del paciente
+     */
+    @DeleteMapping("/paciente/{pacienteId}")
+    @Operation(summary = "Eliminar citas por paciente", description = "Elimina todas las citas asociadas a un paciente")
+    @ApiResponse(responseCode = "204", description = "Citas eliminadas exitosamente")
+    public void eliminarCitasPorPaciente(
+            @Parameter(description = "ID del paciente") @PathVariable Long pacienteId) {
+        citaService.eliminarCitasPorPaciente(pacienteId);
+    }
 }

@@ -147,6 +147,36 @@ public class PacientePortalController {
     }
 
     /**
+     * Actualiza los datos personales del paciente autenticado.
+     *
+     * @param authorization token JWT del paciente
+     * @param paciente datos actualizados del paciente
+     * @return datos actualizados del paciente
+     */
+    @PutMapping("/mis-datos")
+    @Operation(summary = "Actualizar mis datos personales", description = "Actualiza la información personal del paciente autenticado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Datos actualizados exitosamente"),
+            @ApiResponse(responseCode = "401", description = "No autorizado"),
+            @ApiResponse(responseCode = "400", description = "Error al actualizar datos")
+    })
+    public ResponseEntity<?> actualizarMisDatos(
+            @Parameter(description = "Token JWT del paciente") @RequestHeader("Authorization") String authorization,
+            @RequestBody Paciente paciente) {
+        try {
+            Long pacienteId = extractPacienteIdFromToken(authorization);
+            if (pacienteId == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Token inválido o no es de paciente"));
+            }
+            paciente.setId(pacienteId);
+            Paciente updated = pacienteService.actualizarPaciente(paciente);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Error al actualizar datos: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Extrae el ID del paciente desde el token JWT.
      * El token tiene el formato: PACIENTE_{id}
      *

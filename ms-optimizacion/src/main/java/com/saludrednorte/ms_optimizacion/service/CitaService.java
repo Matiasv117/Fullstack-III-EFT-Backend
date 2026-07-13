@@ -141,4 +141,9 @@ public class CitaService {
         }
         citaRepository.deleteById(id);
     }
+
+    @Transactional
+    public void eliminarCitasPorPaciente(Long pacienteId) {
+        citaRepository.deleteByPacienteId(pacienteId);
+    }
 }

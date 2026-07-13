@@ -1,11 +1,11 @@
 package com.saludrednorte.ms_listas_espera.service;
 
+import com.saludrednorte.ms_listas_espera.client.CitaClient;
 import com.saludrednorte.ms_listas_espera.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
 import com.saludrednorte.ms_listas_espera.repository.ListaEsperaRepository;
-import com.saludrednorte.ms_optimizacion.repository.CitaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +33,7 @@ class PacienteServiceTest {
     private ListaEsperaRepository listaEsperaRepository;
 
     @Mock
-    private CitaRepository citaRepository;
+    private CitaClient citaClient;
 
     @Mock
     private NotificacionEventPublisher notificacionEventPublisher;
@@ -48,7 +48,7 @@ class PacienteServiceTest {
         pacienteService = new PacienteService();
         ReflectionTestUtils.setField(pacienteService, "pacienteRepository", pacienteRepository);
         ReflectionTestUtils.setField(pacienteService, "listaEsperaRepository", listaEsperaRepository);
-        ReflectionTestUtils.setField(pacienteService, "citaRepository", citaRepository);
+        ReflectionTestUtils.setField(pacienteService, "citaClient", citaClient);
         ReflectionTestUtils.setField(pacienteService, "notificacionEventPublisher", notificacionEventPublisher);
         ReflectionTestUtils.setField(pacienteService, "auditEventPublisher", auditEventPublisher);
     }
@@ -249,7 +249,7 @@ class PacienteServiceTest {
         pacienteService.eliminarPaciente(5L);
 
         verify(listaEsperaRepository).deleteByPacienteId(5L);
-        verify(citaRepository).deleteByPacienteId(5L);
+        verify(citaClient).eliminarCitasPorPaciente(5L);
         verify(pacienteRepository).deleteById(5L);
     }
 
@@ -265,7 +265,7 @@ class PacienteServiceTest {
                 });
 
         verify(listaEsperaRepository, never()).deleteByPacienteId(anyLong());
-        verify(citaRepository, never()).deleteByPacienteId(anyLong());
+        verify(citaClient, never()).eliminarCitasPorPaciente(anyLong());
         verify(pacienteRepository, never()).deleteById(anyLong());
     }
 }

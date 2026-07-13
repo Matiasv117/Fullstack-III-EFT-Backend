@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/lista-espera/**").hasAnyRole("FUNCIONARIO", "ADMIN")
                         .requestMatchers("/api/optimizacion/**").hasAnyRole("FUNCIONARIO", "ADMIN")
                         .requestMatchers("/api/autotriage/**").hasAnyRole("FUNCIONARIO", "ADMIN")
-                        .requestMatchers("/api/citas/**").hasAnyRole("FUNCIONARIO", "ADMIN")
+                        .requestMatchers("/api/citas/**").hasAnyRole("PACIENTE", "FUNCIONARIO", "ADMIN")
                         .requestMatchers("/api/auditoria/**").hasAnyRole("FUNCIONARIO", "ADMIN")
                         .anyRequest().authenticated()
                 )

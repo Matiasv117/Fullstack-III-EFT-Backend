@@ -1,11 +1,11 @@
 package com.saludrednorte.ms_listas_espera.service;
 
+import com.saludrednorte.ms_listas_espera.client.CitaClient;
 import com.saludrednorte.ms_listas_espera.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
 import com.saludrednorte.ms_listas_espera.repository.ListaEsperaRepository;
-import com.saludrednorte.ms_optimizacion.repository.CitaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import static com.saludrednorte.ms_listas_espera.config.CacheConfig.CACHE_PACIENTES;
@@ -39,7 +40,7 @@ public class PacienteService {
     private ListaEsperaRepository listaEsperaRepository;
 
     @Autowired
-    private CitaRepository citaRepository;
+    private CitaClient citaClient;
 
     @Autowired
     private NotificacionEventPublisher notificacionEventPublisher;
@@ -146,6 +147,7 @@ public class PacienteService {
      * @throws ResponseStatusException si el paciente no existe
      */
     @CacheEvict(value = CACHE_PACIENTES, allEntries = true)
+    @Transactional
     public void eliminarPaciente(Long id) {
         if (!pacienteRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente no encontrado");
@@ -153,7 +155,11 @@ public class PacienteService {
         try {
             // Eliminar entidades relacionadas primero
             listaEsperaRepository.deleteByPacienteId(id);
-            citaRepository.deleteByPacienteId(id);
+            try {
+                citaClient.eliminarCitasPorPaciente(id);
+            } catch (Exception e) {
+                logger.warn("No se pudieron eliminar citas del paciente {}: {}", id, e.getMessage());
+            }
             pacienteRepository.deleteById(id);
         } catch (Exception e) {
             logger.warn("Error eliminando paciente {}: {}", id, e.getMessage());

@@ -61,7 +61,7 @@ public class PacientePortalController {
             @RequestBody String pacienteJson) {
         try {
             String response = getWebClient().put()
-                    .uri(MS_GESTION_PACIENTES_URL + "/pacientes")
+                    .uri(MS_GESTION_PACIENTES_URL + "/pacientes/portal/mis-datos")
                     .header("Authorization", authorization)
                     .header("Content-Type", "application/json")
                     .bodyValue(pacienteJson)

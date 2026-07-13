@@ -37,4 +37,7 @@ public interface CitaClient {
 
     @GetMapping("/medicos/{id}")
     ResponseEntity<MedicoDTO> obtenerMedicoPorId(@PathVariable Long id);
+
+    @DeleteMapping("/citas/paciente/{pacienteId}")
+    ResponseEntity<Void> eliminarCitasPorPaciente(@PathVariable Long pacienteId);
 }
