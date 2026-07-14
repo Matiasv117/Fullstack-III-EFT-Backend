@@ -107,21 +107,21 @@ spring:
           predicates:
             - Path=/v3/api-docs/progreso
           filters:
-            - RewritePath=/v3/api-docs/progreso, /v3/api-docs
+            - RewritePath=/v3/api-docs/progreso, /api-docs
 
         - id: swagger-auth
           uri: lb://ms-auth
           predicates:
             - Path=/v3/api-docs/auth
           filters:
-            - RewritePath=/v3/api-docs/auth, /v3/api-docs
+            - RewritePath=/v3/api-docs/auth, /api-docs
 
         - id: swagger-auditoria
           uri: lb://ms-auditoria
           predicates:
             - Path=/v3/api-docs/auditoria
           filters:
-            - RewritePath=/v3/api-docs/auditoria, /v3/api-docs
+            - RewritePath=/v3/api-docs/auditoria, /api-docs
 
 springdoc:
   swagger-ui:

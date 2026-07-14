@@ -92,7 +92,9 @@
 - `@FeignClient(name = ...)` debe coincidir exactamente con `spring.application.name` del destino
 - ms-optimizacion espera `Long pacienteId` en DTO, pero ms-listas-espera devuelve `paciente: { id, nombre, apellido }` — mismatch de mapeo Jackson
 - JaCoCo configurado en los 9 servicios (incluye eureka-server y api-gateway)
-- Swagger/OpenAPI disponible en cada MS via springdoc: `/swagger-ui.html`, `/v3/api-docs`
+- **Swagger**: springdoc 2.6.x es **incompatible** con Spring Boot 3.4.x (`NoSuchMethodError: ControllerAdviceBean`). Usar **2.7.0+** en todos los pom.xml
+- **Swagger gateway**: api-gateway usa `springdoc-openapi-starter-webflux-ui` (no `webmvc-ui`). Los MS que tienen `springdoc.api-docs.path: /api-docs` (auth, auditoria, progreso) necesitan `"/api-docs/**"` como permitAll en SecurityConfig y el RewritePath del gateway debe apuntar a `/api-docs`
+- Swagger/OpenAPI unificado en `http://localhost:8080/swagger-ui.html` (7 grupos via gateway)
 - Config local: copiar `config/local-insforge.env.example` → `config/local-insforge.env`
 - `opencode.json` tiene MCP Neon server configurado (requiere `NEON_API_KEY`)
 
@@ -106,6 +108,14 @@
 - **ms-auditoria test config**: Agregado `spring.flyway.enabled: false` en `src/test/resources/application.yml`
 - **Resultado final**: 630 tests, 0 failures (266 frontend + 364 backend)
 
+### Swagger/OpenAPI funcional en todos los MS (2026-07-13)
+- **Causa raíz**: springdoc 2.6.0 incompatible con Spring Boot 3.4.x — `NoSuchMethodError: ControllerAdviceBean` por los `@RestControllerAdvice` existentes
+- **Fix**: actualizado springdoc a **2.7.0** en los 9 pom.xml
+- **Gateway**: Swagger unificado en `http://localhost:8080/swagger-ui.html` con 7 grupos (BFF, Gestion Pacientes, Notificaciones, Optimizacion, Progreso, Auth, Auditoria)
+- **Security**: agregados `/api-docs/**` como permitAll en SecurityConfig de auth, auditoria y progreso (usan `springdoc.api-docs.path: /api-docs`)
+- **Gateway RewritePath**: auth/auditoria/progreso apuntan a `/api-docs` (no `/v3/api-docs`) porque tienen path custom
+- **BFF SecurityConfig**: agregados Swagger paths como permitAll
+
 ### Cobertura JaCoCo salud-bff 85%+ (2026-07-13)
 - Expandidos tests en `NotificacionesControllerTest` (+8): POST crearNotificacion (3 paths), GET paciente/{id} (3 paths), GET info/canales error paths
 - Expandidos tests en `OptimizacionControllerTest` (+4): GET prioridad (3 paths), POST cancelar after-call success path
@@ -116,9 +126,12 @@
 
 ## Tareas pendientes
 
-### Swagger/OpenAPI funcional en todos los microservicios
-- Verificar que springdoc-openapi esté configurado correctamente en cada MS
-- Asegurar que `/swagger-ui.html` y `/v3/api-docs` funcionen en cada servicio
-- Documentar endpoints con anotaciones `@Operation`, `@Tag`, `@ApiResponse` en controllers
-- Configurar info de contacto y licencia en OpenAPI config
-- Considerar aggregate group para documentación centralizada vía BFF o Gateway
+### Documentar endpoints con anotaciones OpenAPI
+- Agregar `@Operation`, `@ApiResponse` a los controllers de cada MS
+- Agregar `@Tag` a los controllers que aún no lo tienen
+
+### Revisión final pre-presentación (2026-07-15)
+- Revisar alineación y coherencia del flujo de trabajo general del sistema
+- Verificar que todas las secciones del informe estén actualizadas
+- Preparar demostración en vivo para defensa oral (Swagger, tests, smoke test E2E, snippets de código)
+- Preparar respuestas individuales para posibles preguntas del profesor
