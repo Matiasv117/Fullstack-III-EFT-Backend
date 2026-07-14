@@ -21,7 +21,10 @@ public class SimpleAuthService {
             "/api/auth",
             "/actuator/health",
             "/actuator/info",
-            "/error"
+            "/error",
+            "/v3/api-docs",
+            "/swagger-ui",
+            "/webjars"
     );
 
     private static final List<String> USER_GET_PATH_PREFIXES = List.of(
