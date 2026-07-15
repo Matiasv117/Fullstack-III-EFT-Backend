@@ -1,0 +1,52 @@
+{
+  "family": "ms-auditoria",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": 256,
+  "memory": 512,
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "ms-auditoria",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/ms-auditoria:latest",
+      "portMappings": [
+        {
+          "containerPort": 8088,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "postgres" },
+        { "name": "DB_URL", "value": "jdbc:postgresql://ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require" },
+        { "name": "DB_USERNAME", "value": "neondb_owner" },
+        { "name": "RABBITMQ_HOST", "value": "rabbitmq" },
+        { "name": "RABBITMQ_PORT", "value": "5672" },
+        { "name": "RABBITMQ_USERNAME", "value": "guest" },
+        { "name": "RABBITMQ_PASSWORD", "value": "guest" },
+        { "name": "EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE", "value": "http://eureka-server:8761/eureka/" },
+        { "name": "JWT_SECRET", "value": "miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte" }
+      ],
+      "secrets": [
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:insforge/db-password:SecretString::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ms-auditoria",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8088/actuator/health || exit 1"],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 120
+      }
+    }
+  ]
+}
