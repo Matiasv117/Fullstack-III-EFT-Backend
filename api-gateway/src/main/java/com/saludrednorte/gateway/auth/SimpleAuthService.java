@@ -29,9 +29,14 @@ public class SimpleAuthService {
 
     private static final List<String> USER_GET_PATH_PREFIXES = List.of(
             "/api/portal",
-            "/pacientes",
-            "/lista-espera",
-            "/api/notificaciones/pendientes"
+            "/api/pacientes",
+            "/api/lista-espera",
+            "/api/notificaciones",
+            "/api/citas",
+            "/api/medicos",
+            "/api/optimizacion",
+            "/api/reportes",
+            "/api/horarios"
     );
 
     private final JwtTokenValidator jwtTokenValidator;

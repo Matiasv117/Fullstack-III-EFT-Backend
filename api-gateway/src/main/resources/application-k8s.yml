@@ -4,15 +4,17 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins:
-              - ${CORS_ORIGIN:http://localhost:5173}
+            allowedOriginPatterns:
+              - ${CORS_ORIGIN:*}
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: false
       routes:
         - id: ms-listas-espera
           uri: ${MS_LISTAS_ESPERA_URL:http://ms-listas-espera:8083}

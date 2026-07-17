@@ -39,10 +39,10 @@ const Dashboard = ({ user, onSectionChange }) => {
         .finally(() => setLoading(false))
     } else {
       Promise.all([
-        obtenerResumenPortal(),
-        reportesApi.obtenerMetricasListaEspera(),
-        obtenerPacientes(),
-        obtenerNotificacionesPendientes(),
+        obtenerResumenPortal().catch(() => ({ totalPacientes: 0, totalNotificacionesPendientes: 0 })),
+        reportesApi.obtenerMetricasListaEspera().catch(() => null),
+        obtenerPacientes().catch(() => []),
+        obtenerNotificacionesPendientes().catch(() => []),
       ])
         .then(([res, met, pac, notif]) => {
           setResumen(res?.resumen ?? null)
