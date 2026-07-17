@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
  * esto corresponde al RUT. El parámetro se llama "dni" para mantener compatibilidad
  * con el API existente de ms-gestionpacientes.
  */
-@FeignClient(name = "ms-listas-espera")
+@FeignClient(name = "ms-listas-espera", url = "${MS_LISTAS_ESPERA_URL:http://localhost:8083}")
 public interface PacienteClient {
 
     @GetMapping("/pacientes/buscar")

@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-notificaciones
+  namespace: insforge
+  labels:
+    app: ms-notificaciones
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-notificaciones
+  template:
+    metadata:
+      labels:
+        app: ms-notificaciones
+    spec:
+      containers:
+        - name: ms-notificaciones
+          image: 366092663280.dkr.ecr.us-east-1.amazonaws.com/ms-notificaciones:latest
+          ports:
+            - containerPort: 8085
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: JWT_SECRET
+            - name: SMTP_HOST
+              value: "localhost"
+            - name: SMTP_PORT
+              value: "1025"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8085
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8085
+            initialDelaySeconds: 40
+            periodSeconds: 15
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-notificaciones
+  namespace: insforge
+spec:
+  selector:
+    app: ms-notificaciones
+  ports:
+    - port: 8085
+      targetPort: 8085

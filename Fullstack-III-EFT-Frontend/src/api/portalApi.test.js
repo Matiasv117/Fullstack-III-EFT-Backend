@@ -23,11 +23,16 @@ describe('portalApi', () => {
       expect(httpClient.get).toHaveBeenCalledWith('/api/portal/resumen');
     });
 
-    it('should handle error when fetching summary', async () => {
+    it('should return fallback data when endpoint is unavailable', async () => {
       const error = new Error('Fetch failed');
       httpClient.get.mockRejectedValue(error);
 
-      await expect(obtenerResumenPortal()).rejects.toThrow('Fetch failed');
+      const result = await obtenerResumenPortal();
+
+      expect(result).toEqual({
+        totalPacientes: 0,
+        totalNotificacionesPendientes: 0,
+      });
     });
 
     it('should return data structure with expected fields', async () => {

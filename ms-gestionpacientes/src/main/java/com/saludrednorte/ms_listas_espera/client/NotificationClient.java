@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "ms-notificaciones")
+@FeignClient(name = "ms-notificaciones", url = "${MS_NOTIFICACIONES_URL:http://localhost:8085}")
 public interface NotificationClient {
 
     @PostMapping("/api/notificaciones")

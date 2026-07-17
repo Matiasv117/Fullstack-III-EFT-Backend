@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 import java.util.List;
 
-@FeignClient(name = "ms-listas-espera")
+@FeignClient(name = "ms-listas-espera", url = "${MS_LISTAS_ESPERA_URL:http://localhost:8083}")
 @CircuitBreaker(name = "listaEsperaService")
 public interface ListaEsperaClient {
 

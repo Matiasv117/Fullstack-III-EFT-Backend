@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    database-platform: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    show-sql: false
+  flyway:
+    enabled: true
+    table: flyway_ms_auth
+    baseline-on-migrate: true
+
+ms-listas-espera:
+  url: ${MS_LISTAS_ESPERA_URL:http://ms-listas-espera:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+eureka:
+  client:
+    enabled: false

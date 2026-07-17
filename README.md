@@ -1,182 +1,226 @@
-# Fullstack III 🚀
+# InsForge RedNorte
 
-Este repositorio contiene el desarrollo del Examen para la asignatura de **Fullstack III**. El proyecto consiste en una aplicación web robusta que integra tecnologías modernas de frontend y backend para resolver una problemática de negocio específica.
+Plataforma de gestion hospitalaria desplegada en **AWS EKS** con arquitectura de microservicios.
 
----
+## Arquitectura
 
-## 📋 Tabla de Contenidos
-
-| Icono | Sección |
-| :---: | :--- |
-| 📝 | [Descripción del Proyecto](#-descripción-del-proyecto) |
-| 🛠️ | [Tecnologías Utilizadas](#️-tecnologías-utilizadas) |
-| ⚙️ | [Requisitos Previos](#-requisitos-previos) |
-| 🚀 | [Instalación y Configuración](#-instalación-y-configuración) |
-| 👤 | [Autores](#-autores) |
-
----
-
-## 📝 Descripción del Proyecto
-La aplicación permite la gestión integral de datos, ofreciendo una interfaz de usuario intuitiva y una API eficiente. Se centra en el cumplimiento de los requerimientos técnicos de escalabilidad, seguridad y buenas prácticas de codificación.
-
----
-
-## 🛠️ Tecnologías Utilizadas
-
-### **Frontend**
-| Tecnología | Descripción |
-| :--- | :--- |
-| **React 19** | Biblioteca principal para la interfaz. |
-| **Vite 8** | Herramienta de construcción rápida. |
-| **Tailwind CSS v4** | Framework de estilos utility-first. |
-| **Lucide React** | Iconos vectoriales. |
-| **Vitest 4 + Testing Library** | Tests unitarios y de integración. |
-
-### **Backend & Database**
-| Tecnología | Descripción |
-| :--- | :--- |
-| **Java 17** | Lenguaje y runtime del backend. |
-| **Spring Boot 3.4.1** | Microservicios, BFF y API Gateway. |
-| **Spring Cloud Gateway** | Punto de entrada HTTP y enrutado (puerto 8080). |
-| **Eureka** | Descubrimiento de servicios (puerto 8761). |
-| **Spring Cloud OpenFeign** | Comunicación síncrona entre microservicios. |
-| **RabbitMQ** | Mensajería asíncrona (auditoría y notificaciones). |
-| **Redis** | Caché distribuida. |
-| **PostgreSQL / H2 / Neon** | PostgreSQL local o Neon cloud (perfil `postgres`), H2 en memoria por defecto. |
-| **JUnit 5 + Mockito + JaCoCo** | Tests y cobertura (~90%+ en servicios principales). |
-
-### **Componentes backend (carpetas)**
-| Carpeta | Rol | Puerto |
-| :--- | :--- | :--- |
-| `eureka-server` | Registro y descubrimiento de servicios. | 8761 |
-| `api-gateway` | Enruta peticiones a microservicios y al BFF. | 8080 |
-| `bff` | **Backend for Frontend**: agrega respuestas para el portal (ej. `/api/portal/resumen`). | 8097 |
-| `ms-auth` | Autenticación JWT (HMAC-SHA), registro y gestión de funcionarios. | 8087 |
-| `ms-gestionpacientes` | Pacientes y lista de espera. | 8083 |
-| `ms-notificaciones` | Notificaciones push/email. | 8085 |
-| `ms-optimizacion` | Citas, médicos, horarios y optimización (Strategy Pattern). | 8084 |
-| `ms-progreso` | Progreso de pacientes. | 8086 |
-| `ms-auditoria` | Auditoría de eventos (RabbitMQ). | 8088 |
-
----
-
-## ⚙️ Requisitos Previos
-Antes de comenzar, asegúrate de tener instalado:
-* 🔹 **Node.js** (versión 18 o superior recomendada)
-* 🔹 **Java 17** y **Maven** (o usar los `mvnw` incluidos)
-* 🔹 **Git**
-* 🔹 **npm** (para el frontend en el repo `Fullstack-III-EFT-Frontend`)
-
----
-
-## 🚀 Instalación y Configuración
-
-**Clonar el repositorio backend:**
-```bash
-git clone https://github.com/Matiasv117/Fullstack-III-EFT.git
+```
+Internet
+  |
+  v
+[NLB Frontend :80]  [NLB API Gateway :8080]
+  |                       |
+  v                       v
+[Frontend (React)]  [API Gateway (Spring Cloud Gateway)]
+                          |
+            +------+------+------+------+ 
+            |      |      |      |      |
+            v      v      v      v      v
+        ms-auth  ms-gp  ms-opt  ms-notif
+        :8087   :8083  :8084   :8085
+            |      |      |      |
+            +------+------+------+---> Neon PostgreSQL
 ```
 
-**Autores**
+## Microservicios
 
-| Nombre | GitHub |
-| :--- | :--- |
-| Matías Vargas | [@Matiasv117](https://github.com/Matiasv117) |
-| Benjamín Ibañez | [@beibanezv](https://github.com/beibanezv) |
-| Fabián Reyes | [@FabianReyes02](https://github.com/FabianReyes02) |
+| Servicio | Puerto | Descripcion |
+|---|---|---|
+| `api-gateway` | 8080 | Enrutamiento, JWT validation, CORS |
+| `ms-auth` | 8087 | Autenticacion, registro, roles |
+| `ms-gestionpacientes` | 8083 | Pacientes, lista de espera |
+| `ms-optimizacion` | 8084 | Citas, medicos, horarios, optimizacion |
+| `ms-notificaciones` | 8085 | Notificaciones email |
+| `frontend` | 80 (prod) | React SPA, nginx |
 
-## Tests
+## Stack
 
-### Backend (434 tests, 0 fallas)
-```bash
-# Cada microservicio
-cd ms-auth; .\mvnw test
-cd bff; .\mvnw test
-# Todos los servicios con cobertura
-.\mvnw verify
-```
-Cobertura JaCoCo: ms-auditoria 100%, ms-progreso 96%, ms-optimizacion 94%, bff 91%, ms-notificaciones 91%, ms-auth 87%, ms-gestionpacientes ≥85%.
+| Capa | Tecnologia |
+|---|---|
+| Frontend | React 19, Vite 8, Tailwind CSS v4, Lucide React |
+| Backend | Spring Boot 3.4.1, Java 17 |
+| BD | Neon PostgreSQL (Flyway por MS) |
+| Cache | ConcurrentMapCacheManager (in-memory) |
+| Comunicacion | Feign clients con URLs directas + env vars |
+| Gateway | Spring Cloud Gateway (Netty) |
+| Auth | JWT HMAC-SHA |
+| Deploy | AWS EKS (Auto Mode), ECR, NLB |
+| CI/CD | GitHub Actions |
 
-### Frontend (159 tests)
-```bash
-npm test        # Vitest
-npm run lint    # ESLint
-```
+## Requisitos
 
-## Smoke Test E2E (microservicios)
+- Java 17 + Maven (o `./mvnw`)
+- Node.js 18+
+- Docker
+- kubectl + AWS CLI (para deploy en EKS)
 
-Con los servicios levantados, puedes validar integración base con:
+## Desarrollo Local
+
+### Backend
 
 ```powershell
-Set-Location "ruta\a\Fullstack-III-EFT"
+# Iniciar los 5 microservicios en paralelo
+.\scripts\start-all.ps1
+
+# Detener todos
+.\scripts\stop-all.ps1
+
+# Smoke test E2E
 .\scripts\smoke-test-e2e.ps1
 ```
 
-## Arranque y apagado automático
+### Frontend
 
-Incluye Eureka, microservicios, API Gateway y **BFF** (`salud-bff` en el puerto **8097**).
-
-### Levantar todo
-
-```powershell
-Set-Location "ruta\a\Fullstack-III-EFT"
-.\scripts\start-all.ps1 -RestartExisting -RunSmokeTest
+```bash
+cd Fullstack-III-EFT-Frontend
+npm install
+npm run dev    # http://localhost:5173
 ```
 
-### Detener todo
+### Docker Compose (alternativa)
 
-```powershell
-Set-Location "ruta\a\Fullstack-III-EFT"
-.\scripts\stop-all.ps1
+```bash
+docker-compose up -d   # PostgreSQL + Mailpit + 5 microservicios
 ```
 
 ### Neon (PostgreSQL cloud)
 
-Todos los microservicios usan una misma instancia Neon con esquemas separados por servicio (Flyway).
+Todos los MS usan una instancia Neon compartida con esquemas separados por Flyway.
 
-1. Copiá `config/local-insforge.env.example` a `config/local-insforge.env` y pegá la **contraseña** de Neon (ese archivo no se sube a git).
-2. En PowerShell, desde la raíz del repo: **punto espacio** script (carga variables en esa ventana):
+1. Copiar `config/local-insforge.env.example` a `config/local-insforge.env`
+2. Cargar variables: `. .\scripts\load-insforge-env.ps1`
+3. Iniciar servicios en la misma ventana
 
-   ```powershell
-   . .\scripts\load-insforge-env.ps1
-   ```
+## Tests
 
-3. En la **misma** ventana, levanta cada microservicio.
+### Backend (270 tests, 0 fallas)
 
-Más detalle y la URI JDBC de ejemplo: `config/ejemplo-insforge.env`.
+```powershell
+# Por servicio
+cd ms-auth; .\mvnw.cmd test
 
-**API de notificaciones:** las rutas REST pasan a **`/api/notificaciones`** (español); la tabla JPA es **`notificaciones`**. Con perfil `postgres`, Flyway en `ms-notificaciones` renombra `notifications` → `notificaciones` si aún existe la tabla antigua en la base. Si en Neon ves `flyway_ms_*`, esas son **tablas de historial de migraciones** de cada microservicio, no tablas de negocio. Si ves `notifications` y `notificaciones` a la vez, la migración `V2__cleanup_legacy_notifications_table.sql` deja solo la versión actual en español.
+# Todos con cobertura
+.\mvnw.cmd verify
+```
 
-**Qué tabla mirar:** al pulsar **Registrar** se inserta en **`paciente`**. Al pulsar **Agregar a lista** se inserta en **`lista_espera`** (referencia al paciente por id). Si la BD sigue en 0 filas, casi siempre es porque los servicios siguen en **H2** (revisá el log al arrancar: debe decir `jdbc:postgresql://...`). Usá `config/local-insforge.env` + `start-all.ps1` o cargá variables antes de `mvnw`.
+### Frontend (266 tests)
 
-## Documentación de apoyo para la entrega
+```bash
+cd Fullstack-III-EFT-Frontend
+npm test
+npm run test:coverage
+```
 
-- `PLAN_BRANCHING.md`: estrategia de ramas y guía para explicar merges/conflictos.
-- `PATRONES_Y_ARQUITECTURA.md`: resumen de patrones aplicados en frontend y backend.
-- `arquetipo-maven-salud-ms/`: arquetipo base mínimo para nuevos microservicios Spring Boot.
-- `repositorios.txt`: índice de repositorios y componentes del monorepo.
+### Cobertura JaCoCo
 
-## Autenticación
+| Servicio | Lineas | Funciones |
+|---|---|---|
+| ms-optimizacion | 85%+ | 80%+ |
+| ms-auth | 87%+ | 80%+ |
+| ms-gestionpacientes | 85%+ | 80%+ |
+| ms-notificaciones | 91%+ | 80%+ |
 
-El sistema usa autenticación JWT con clave HMAC-SHA compartida.
+## Deploy en AWS EKS
 
-### Flujo actual
+### Estructura de.infra
 
-1. `POST /api/auth/login` (BFF 8097 o Gateway 8080) → valida credenciales contra `ms-auth` → devuelve `{ token, type: "Bearer" }`.
-2. El frontend almacena el token en `localStorage` y lo envía como `Authorization: Bearer <token>`.
-3. El `api-gateway` valida el token con `JwtTokenValidator` (filtro global).
-4. El BFF reenvía el token a los microservicios para mantener la sesión.
+| Recurso | Detalle |
+|---|---|
+| Cluster | `insforge-eks` (Auto Mode, us-east-1) |
+| VPC | 2 public + 2 private subnets, 2 NAT GWs |
+| ECR | 6 repos (1 por servicio + frontend) |
+| NLB | 2 internet-facing (frontend :80, api-gateway :8080) |
+| Nodos | Auto-provisioned por Karpenter (amd64) |
 
-### Usuarios por defecto (creados automáticamente al iniciar con BD vacía)
+### URLs de produccion
 
-| Usuario | Contraseña | Rol |
+```
+Frontend:    http://k8s-insforge-frontend-*.elb.us-east-1.amazonaws.com
+API Gateway: http://k8s-insforge-apigatew-*.elb.us-east-1.amazonaws.com:8080
+```
+
+### Comandos de deploy
+
+```powershell
+# Login a ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 366092663280.dkr.ecr.us-east-1.amazonaws.com
+
+# Build y push (ejemplo: api-gateway)
+cd api-gateway
+docker build -t 366092663280.dkr.ecr.us-east-1.amazonaws.com/api-gateway:latest .
+docker push 366092663280.dkr.ecr.us-east-1.amazonaws.com/api-gateway:latest
+
+# Apply manifests K8s
+kubectl apply -f k8s/namespace.yml
+kubectl apply -f k8s/secrets.yml
+kubectl apply -f k8s/ms-auth.yml
+kubectl apply -f k8s/ms-gestionpacientes.yml
+kubectl apply -f k8s/ms-optimizacion.yml
+kubectl apply -f k8s/ms-notificaciones.yml
+kubectl apply -f k8s/api-gateway.yml
+kubectl apply -f k8s/frontend.yml
+
+# Verificar
+kubectl get pods -n insforge
+kubectl get svc -n insforge
+```
+
+### CI/CD
+
+GitHub Actions (`.github/workflows/deploy.yml`):
+1. Build y test (backend + frontend)
+2. Build Docker images
+3. Push a ECR
+4. Deploy a EKS via kubectl
+5. Smoke test
+
+### Variables de entorno (K8s)
+
+| Variable | Servicio | Descripcion |
+|---|---|---|
+| `SPRING_PROFILES_ACTIVE` | Todos | `k8s` |
+| `DB_URL` | Backend | Neon PostgreSQL JDBC URL |
+| `DB_USERNAME` | Backend | `neondb_owner` |
+| `DB_PASSWORD` | Backend | Neon password |
+| `JWT_SECRET` | auth, gateway | Clave HMAC-SHA |
+| `MS_LISTAS_ESPERA_URL` | auth, gateway | `http://ms-gestionpacientes:8083` |
+| `MS_OPTIMIZACION_URL` | gateway, gestionpacientes | `http://ms-optimizacion:8084` |
+| `MS_NOTIFICACIONES_URL` | gateway, gestionpacientes, optimizacion | `http://ms-notificaciones:8085` |
+| `MS_AUTH_URL` | gateway | `http://ms-auth:8087` |
+
+## Feign Clients
+
+| Origen | Cliente | Destino | Env Var |
+|---|---|---|---|
+| ms-auth | PacienteClient | ms-gestionpacientes:8083 | `MS_LISTAS_ESPERA_URL` |
+| ms-gestionpacientes | CitaClient | ms-optimizacion:8084 | `MS_OPTIMIZACION_URL` |
+| ms-gestionpacientes | NotificationClient | ms-notificaciones:8085 | `MS_NOTIFICACIONES_URL` |
+| ms-optimizacion | PacienteClient | ms-gestionpacientes:8083 | `MS_LISTAS_ESPERA_URL` |
+| ms-optimizacion | ListaEsperaClient | ms-gestionpacientes:8083 | `MS_LISTAS_ESPERA_URL` |
+| ms-optimizacion | NotificationClient | ms-notificaciones:8085 | `MS_NOTIFICACIONES_URL` |
+
+## Autenticacion
+
+JWT HMAC-SHA con clave compartida. El API Gateway valida tokens en cada request.
+
+### Flujo
+
+1. `POST /api/auth/login` -> valida credenciales -> devuelve `{ token, type: "Bearer" }`
+2. Frontend almacena token en `localStorage`
+3. API Gateway valida token con `JwtTokenValidator` (filtro global)
+
+### Usuarios por defecto
+
+| Usuario | Contrasena | Rol |
 |---|---|---|
 | `admin` | `admin123` | `ROLE_ADMIN` |
 | `funcionario` | `funcionario123` | `ROLE_FUNCIONARIO` |
 | `paciente` | `paciente123` | `ROLE_PACIENTE` |
 
-### Reglas de acceso
+## Autores
 
-- Sin token: `401 Unauthorized`.
-- `ROLE_USER` o `ROLE_FUNCIONARIO` en endpoint de admin: `403 Forbidden`.
-- `ROLE_ADMIN`: acceso completo a gestión de funcionarios y administración.
-
+| Nombre | GitHub |
+|---|---|
+| Matias Vargas | [@Matiasv117](https://github.com/Matiasv117) |
+| Benjamin Ibanez | [@beibanezv](https://github.com/beibanezv) |
+| Fabian Reyes | [@FabianReyes02](https://github.com/FabianReyes02) |

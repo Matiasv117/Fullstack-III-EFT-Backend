@@ -11,42 +11,55 @@
 | Frontend | React 19, Vite 8, Tailwind CSS v4, Lucide React, Axios |
 | Backend | Spring Boot 3.4.1, Java 17 |
 | BD | Neon PostgreSQL (1 instancia compartida, Flyway por MS) |
-| Cache | Redis 7 (solo ms-gestionpacientes) |
-| Mensajería | RabbitMQ 3 (auditoría + notificaciones) |
-| Service Discovery | Eureka (:8761) |
-| Gateway | Spring Cloud Gateway (:8080) + BFF (:8097) |
+| Cache | ConcurrentMapCacheManager (in-memory, reemplaza Redis) |
+| Mensajería | Feign clients síncronos (reemplaza RabbitMQ) |
+| Service Discovery | URLs directas + env vars (reemplaza Eureka) |
+| Gateway | Spring Cloud Gateway (:8080) |
+| Orquestación | AWS EKS (Auto Mode + Karpenter) |
+| CI/CD | GitHub Actions → ECR → K8s |
+
+## Arquitectura simplificada (post-simplificación 2026-07-16)
+
+El proyecto fue simplificado de 7 microservicios a 5+frontend para facilitar el despliegue en AWS EKS. Se eliminaron: eureka-server, BFF, ms-auditoria, ms-progreso, Redis, RabbitMQ.
+
+### Flujo de comunicación
+**Frontend → Nginx (proxy) → API Gateway (:8080) → Microservicios**
+
+- Nginx proxy: `/api/*` → `http://api-gateway:8080` (mismo pod)
+- Síncrono: Feign clients entre MS (con `url` param + env vars)
+- Sin Eureka: API Gateway usa URLs directas configurable vía env vars
+- Sin RabbitMQ: Notificaciones se envían vía Feign (ms-gestionpacientes/ms-optimizacion → ms-notificaciones)
+- Sin Redis: Cache in-memory (ConcurrentMapCacheManager)
+- JWT HMAC-SHA, clave: `miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte`
+- Notificaciones endpoint permitAll (Feign clients internos no llevan JWT)
 
 ## Microservicios
-| Servicio | Puerto | `spring.application.name` |
-|---|---|---|
-| eureka-server | 8761 | eureka-server |
-| api-gateway | 8080 | api-gateway |
-| bff | 8097 | salud-bff |
-| ms-auth | 8087 | ms-auth |
-| ms-gestionpacientes | 8083 | **ms-listas-espera** |
-| ms-optimizacion | 8084 | ms-optimizacion |
-| ms-notificaciones | 8085 | ms-notificaciones |
-| ms-progreso | 8086 | ms-progreso |
-| ms-auditoria | 8088 | ms-auditoria |
+| Servicio | Puerto | `spring.application.name` | Estado |
+|---|---|---|---|
+| api-gateway | 8080 | api-gateway | Activo — rutas directas (sin lb://) |
+| ms-auth | 8087 | ms-auth | Activo |
+| ms-gestionpacientes | 8083 | **ms-listas-espera** | Activo |
+| ms-optimizacion | 8084 | ms-optimizacion | Activo |
+| ms-notificaciones | 8085 | ms-notificaciones | Activo |
+| Frontend | 5173 (dev) / 80 (prod) | — | Activo |
 
-## Arquitectura
-- **Frontend → BFF (:8097) → API Gateway (:8080) → Microservicios**
-- Síncrono: Feign clients entre MS
-- Asíncrono: RabbitMQ — `salud.auditoria.exchange` (publishers: auth, gp, optimizacion; consumer: auditoria), `salud.notificaciones.exchange` (publishers: gp, optimizacion; consumer: notificaciones)
-- JWT HMAC-SHA, clave: `miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte`
-- BFF SecurityConfig: auth/actuator → permitAll, admin → ADMIN, pacientes/lista-espera/optimizacion/autotriage/citas/auditoria → FUNCIONARIO+ADMIN, resto authenticated
-- Notificaciones endpoint permitAll (Feign clients internos no llevan JWT)
+### Eliminados (no desplegar)
+- eureka-server (:8761) — eliminado
+- BFF (:8097) — eliminado
+- ms-auditoria (:8088) — eliminado
+- ms-progreso (:8086) — eliminado
+- Redis — eliminado
+- RabbitMQ — eliminado
 
 ## Base de Datos
 - **Neon cloud** (no local) — todos los MS apuntan a `ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb`
 - Usuario: `neondb_owner`, password: `npg_Viz5aYF6NSuO` (defaults en `application.yml`, sobreescribible vía env vars)
-- Cada MS usa su propia tabla Flyway: `flyway_ms_progreso`, etc.
-- Perfil Spring: `postgres`
-- `docker-compose.yml` solo levanta Redis + RabbitMQ + Mailpit (no PostgreSQL)
+- Cada MS usa su propia tabla Flyway: `flyway_ms_auth`, `flyway_ms_listas_espera`, `flyway_ms_optimizacion`, `flyway_ms_notificaciones`
+- `docker-compose.yml` solo levanta Mailpit (sin Redis/RabbitMQ)
 
 ## Frontend
 - **Sin React Router** — navegación por `activeSection` en `App.jsx`
-- `httpClient.js` baseURL: `http://localhost:8097` (BFF)
+- `httpClient.js` baseURL: `''` (vacio — URLs relativas para que Nginx proxy maneje `/api/*`)
 - Vite dev proxy: `/api` → `http://localhost:8080` (gateway)
 - Tema Tailwind v4 en `src/index.css` con `@theme`
 - Componentes en `src/componentes/`, APIs en `src/api/`, hooks en `src/hooks/`
@@ -65,73 +78,148 @@
 ### Backend (cada MS, usar `.\mvnw.cmd` en Windows)
 | Comando | Descripción |
 |---|---|
-| `.\mvnw.cmd spring-boot:run` | Iniciar servicio (perfil `postgres` vía env o config) |
+| `.\mvnw.cmd spring-boot:run` | Iniciar servicio |
 | `.\mvnw.cmd test` | Tests JUnit |
 | `.\mvnw.cmd verify` | Tests + JaCoCo coverage |
 
 ### Scripts generales (raíz)
 | Comando | Descripción |
 |---|---|
-| `scripts/start-all.ps1` | Docker infra + todos los MS (Eureka 1°, resto paralelo) |
-| `scripts/start-no-docker.ps1` | MS sin Docker (infra debe estar aparte) |
-| `scripts/stop-all.ps1` | Mata procesos por puerto |
+| `scripts/start-all.ps1` | 5 MS en paralelo (sin Eureka, sin Docker infra) |
+| `scripts/stop-all.ps1` | Mata procesos por puerto (8080, 8087, 8083, 8084, 8085) |
 | `scripts/smoke-test-e2e.ps1` | Smoke test via gateway |
 
-## Orden de arranque
-1. `docker compose up -d` (Redis, RabbitMQ, Mailpit)
-2. Eureka server (obligatorio primero)
-3. Resto de MS en paralelo (todos dependen de Eureka)
+### AWS EKS
+| Comando | Descripción |
+|---|---|
+| `kubectl get pods -n insforge` | Ver pods |
+| `kubectl get svc -n insforge` | Ver servicios |
+| `kubectl logs -n insforge -l app=<name> -f` | Logs de un MS |
+| `kubectl delete pod -n insforge -l app=<name>` | Self-healing demo |
+| `kubectl rollout restart deployment <name> -n insforge` | Reiniciar deployment |
+| `kubectl scale deployment --all --replicas=0 -n insforge` | Apagar todos (ahorrar) |
+| `kubectl scale deployment <name> -n insforge --replicas=1` | Encender uno |
+
+## Orden de arranque (actualizado)
+1. `scripts/start-all.ps1` — inicia los 5 MS en paralelo
+2. `npm run dev` en Fullstack-III-EFT-Frontend/
+3. Abrir http://localhost:5173
+
+**Ya no se necesita:** Docker (Redis/RabbitMQ), Eureka, BFF
 
 ## Convenciones
 - **Backend**: controller → service → repository → entity, DTOs separados de entidades, Feign clients, config en `application.yml`
 - **Frontend**: PascalCase componentes (`GestionPacientes.jsx`), camelCase hooks con prefijo `use`, camelCase API modules, Tailwind utility classes (sin CSS separados)
 
+## Feign Clients (URLs directas)
+
+Todos los Feign clients usan `url` param con env var para desacoplar de Eureka:
+
+| MS origen | Cliente Feign | URL destino | Env var |
+|---|---|---|---|
+| ms-auth | PacienteClient | ms-gestionpacientes:8083 | `MS_LISTAS_ESPERA_URL` |
+| ms-gestionpacientes | CitaClient | ms-optimizacion:8084 | `MS_OPTIMIZACION_URL` |
+| ms-gestionpacientes | NotificationClient | ms-notificaciones:8085 | `MS_NOTIFICACIONES_URL` |
+| ms-optimizacion | PacienteClient | ms-gestionpacientes:8083 | `MS_LISTAS_ESPERA_URL` |
+| ms-optimizacion | ListaEsperaClient | ms-gestionpacientes:8083 | `MS_LISTAS_ESPERA_URL` |
+| ms-optimizacion | NotificationClient | ms-notificaciones:8085 | `MS_NOTIFICACIONES_URL` |
+
 ## Gotchas / Bugs
-- `ms-gestionpacientes` se registra como **`ms-listas-espera`** en Eureka: `@FeignClient(name = "ms-listas-espera")` y rutas `lb://ms-listas-espera`
-- En Windows siempre agregar `eureka.instance.prefer-ip-address: true` en nuevos MS (hostname no resuelve por DNS)
+- `ms-gestionpacientes` se registra como **`ms-listas-espera`** en `spring.application.name` (legacy name, no cambiar)
 - `@FeignClient(name = ...)` debe coincidir exactamente con `spring.application.name` del destino
 - ms-optimizacion espera `Long pacienteId` en DTO, pero ms-listas-espera devuelve `paciente: { id, nombre, apellido }` — mismatch de mapeo Jackson
-- JaCoCo configurado en los 9 servicios (incluye eureka-server y api-gateway)
-- **Swagger**: springdoc 2.6.x es **incompatible** con Spring Boot 3.4.x (`NoSuchMethodError: ControllerAdviceBean`). Usar **2.7.0+** en todos los pom.xml
-- **Swagger gateway**: api-gateway usa `springdoc-openapi-starter-webflux-ui` (no `webmvc-ui`). Los MS que tienen `springdoc.api-docs.path: /api-docs` (auth, auditoria, progreso) necesitan `"/api-docs/**"` como permitAll en SecurityConfig y el RewritePath del gateway debe apuntar a `/api-docs`
-- Swagger/OpenAPI unificado en `http://localhost:8080/swagger-ui.html` (7 grupos via gateway)
+- JaCoCo configurado en los 5 servicios activos
+- **Swagger**: springdoc 2.7.0+ (incompatible con 2.6.x en Spring Boot 3.4.x)
+- **Swagger gateway**: api-gateway usa `springdoc-openapi-starter-webflux-ui` (no `webmvc-ui`)
 - Config local: copiar `config/local-insforge.env.example` → `config/local-insforge.env`
-- `opencode.json` tiene MCP Neon server configurado (requiere `NEON_API_KEY`)
+
+## Deploy AWS EKS (2026-07-17)
+
+### Cluster
+- **Nombre**: insforge-manual
+- **Region**: us-east-1
+- **Modo**: Manual (Managed Node Groups)
+- **K8s Version**: 1.31
+- **VPC**: `vpc-0d1c6629c36bb3556` (4 subnets, 2 NAT GWs)
+- **Account**: 366092663280
+- **Costo**: ~$8.20/día (EKS + EC2 + NAT GWs + NLBs)
+- **Presupuesto restante**: ~$29 → ~3.5 días 24/7
+- **IAM Roles**: `LabEksClusterRole` (cluster) + `LabEksNodeRole` (nodos)
+- **Node Group**: `insforge-nodes` (t3.medium, min 2, desired 3, max 4)
+- **CloudWatch**: Habilitado (OTel Container Insights)
+
+### ECR Repos
+- `366092663280.dkr.ecr.us-east-1.amazonaws.com/{api-gateway,ms-auth,ms-gestionpacientes,ms-optimizacion,ms-notificaciones,frontend}:latest`
+
+### K8s Resources
+- Namespace: `insforge`
+- Secrets: `insforge-secrets` (DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET)
+- 6 Deployments + 6 Services (2 LoadBalancer NLB, 4 ClusterIP)
+
+### NLBs (internet-facing)
+- **Frontend**: `a796e2d22281e4840a1d71e4253014c1-5e784c18168e743b.elb.us-east-1.amazonaws.com` (port 80)
+- **API Gateway**: `a16febf025c6b4ad4a02eaa9f34e24d1-dfe0ff84fc128f87.elb.us-east-1.amazonaws.com` (port 8080)
+
+### Fixes aplicados durante deploy
+- **api-gateway pom.xml**: agregado `spring-boot-starter-actuator` (faltaba, probes fallaban)
+- **ms-notificaciones application-k8s.properties**: agregado `management.health.mail.enabled=false` (Mailpit no existe en K8s)
+- **k8s manifests**: agregadas annotations NLB internet-facing
+- **Subnets tags**: `kubernetes.io/role/elb=1` en públicas, `kubernetes.io/role/internal-elb=1` en privadas
+- **NodeClass**: restringido a subnets privadas (nodos necesitan NAT para ECR)
+- **httpClient.js**: baseURL cambiado de `http://localhost:8080` a `''` (vacio para nginx proxy)
+- **httpClient.test.js**: test actualizado para baseURL vacío
 
 ## Tareas completadas
 
+### Simplificación del proyecto (2026-07-16)
+- Eliminados: eureka-server, BFF, ms-auditoria, ms-progreso, Redis, RabbitMQ
+- API Gateway: rutas `lb://` → URLs directas con env vars (MS_LISTAS_ESPERA_URL, etc.)
+- 6 Feign clients: agregado `url` param con default localhost + env var override
+- Eureka deshabilitado en todos los MS: `eureka.client.enabled: false`
+- ms-notificaciones: eliminado messaging/ (RabbitMQ), eliminada dependencia spring-amqp
+- ms-gestionpacientes: eliminado messaging/ (RabbitMQ), eliminado RedisCacheManager → ConcurrentMapCacheManager
+- ms-optimizacion: eliminado messaging/ (RabbitMQ), eliminado TestMessagingConfig
+- Frontend: baseURL cambiado de 8097 (BFF) → 8080 (API Gateway directo) → `''` (vacio, nginx proxy)
+- SecurityConfig ms-auth: actuator paths reducidos a `/actuator/health` y `/actuator/info`
+- **Resultado**: 318 tests, 0 failures (266 frontend + 52 backend)
+
+### Despliegue K8s preparado (2026-07-16)
+- Dockerfiles multi-stage creados para los 5 MS + Frontend (con nginx)
+- nginx.conf creado para Frontend (proxy /api → api-gateway)
+- `application-k8s.yml` creado para api-gateway, ms-auth, ms-gestionpacientes, ms-optimizacion
+- `application-k8s.properties` creado para ms-notificaciones
+- K8s manifests creados en `k8s/` con annotations NLB internet-facing
+
+### Deploy AWS EKS completado (2026-07-17)
+- VPC creada con 4 subnets (2 públicas, 2 privadas) + 2 NAT GWs
+- EKS cluster `insforge-eks` con Auto Mode + Karpenter
+- 6 ECR repos creados, todas las imágenes push
+- Todos los pods Running, 0 restarts
+- 2 NLBs internet-facing activos
+- Login funcional end-to-end (Frontend → Nginx → API Gateway → ms-auth)
+- CI/CD pipeline `.github/workflows/deploy.yml` creado
+- Architecture diagrams: `architecture.puml`, `architecture.drawio`
+- `README.md` reescrito con documentación completa
+
 ### Fixes de tests (2026-07-13)
-- **ms-auth `AdminControllerTest`**: Agregado `@Mock JwtUtil` + stubs con `lenient()` en `@BeforeEach` para evitar `UnnecessaryStubbingException`
-- **BFF `ListaEsperaControllerTest`**: Agregado `ObjectMapper` y `@Mock ProgresoService` para resolver NPE por `@InjectMocks`
-- **Frontend `Notificaciones.test.jsx`**: Mock de `gestionPacientesApi` + uso de `waitFor` para asserts async
-- **Eliminados `contextLoads()` vacíos**: `MsProgresoApplicationTests.java` y `MsAuditoriaApplicationTests.java` (causaban timeout con `@SpringBootTest` sin tests reales)
-- **ms-auditoria test config**: Agregado `spring.flyway.enabled: false` en `src/test/resources/application.yml`
-- **Resultado final**: 630 tests, 0 failures (266 frontend + 364 backend)
+- **ms-auth `AdminControllerTest`**: Agregado `@Mock JwtUtil` + stubs con `lenient()` en `@BeforeEach`
+- **BFF `ListaEsperaControllerTest`**: Agregado `ObjectMapper` y `@Mock ProgresoService`
+- **Frontend `Notificaciones.test.jsx`**: Mock de `gestionPacientesApi` + uso de `waitFor`
+- **Eliminados `contextLoads()` vacíos**: `MsProgresoApplicationTests.java` y `MsAuditoriaApplicationTests.java`
 
-### Swagger/OpenAPI funcional en todos los MS (2026-07-13)
-- **Causa raíz**: springdoc 2.6.0 incompatible con Spring Boot 3.4.x — `NoSuchMethodError: ControllerAdviceBean` por los `@RestControllerAdvice` existentes
-- **Fix**: actualizado springdoc a **2.7.0** en los 9 pom.xml
-- **Gateway**: Swagger unificado en `http://localhost:8080/swagger-ui.html` con 7 grupos (BFF, Gestion Pacientes, Notificaciones, Optimizacion, Progreso, Auth, Auditoria)
-- **Security**: agregados `/api-docs/**` como permitAll en SecurityConfig de auth, auditoria y progreso (usan `springdoc.api-docs.path: /api-docs`)
-- **Gateway RewritePath**: auth/auditoria/progreso apuntan a `/api-docs` (no `/v3/api-docs`) porque tienen path custom
-- **BFF SecurityConfig**: agregados Swagger paths como permitAll
-
-### Cobertura JaCoCo salud-bff 85%+ (2026-07-13)
-- Expandidos tests en `NotificacionesControllerTest` (+8): POST crearNotificacion (3 paths), GET paciente/{id} (3 paths), GET info/canales error paths
-- Expandidos tests en `OptimizacionControllerTest` (+4): GET prioridad (3 paths), POST cancelar after-call success path
-- Fix en `PacientesControllerTest`: mapper vía `ReflectionTestUtils.setField` para cubrir after-call completo
-- Expandidos tests en `ListaEsperaControllerTest` (+7): GET metricas (3 paths), POST after-call success, PUT/POST/GET error paths
-- Expandidos tests en `PortalResumenServiceTest` (+3): WebClientResponseException catch blocks, Mono.empty() → blockOptional().orElseGet() path
-- **Resultado**: 153 tests, 0 failures, 97.5% line coverage (threshold: 85%)
+### Swagger/OpenAPI funcional (2026-07-13)
+- springdoc actualizado a 2.7.0+ en todos los pom.xml
+- Gateway: Swagger unificado en `http://localhost:8080/swagger-ui.html`
 
 ## Tareas pendientes
 
-### Documentar endpoints con anotaciones OpenAPI
-- Agregar `@Operation`, `@ApiResponse` a los controllers de cada MS
-- Agregar `@Tag` a los controllers que aún no lo tienen
+### Pre-presentación
+- [ ] Self-healing demo en vivo: `kubectl delete pod -n insforge -l app=ms-auth`
+- [ ] Capturas de pantalla para informe (VPC, EKS, ECR, pods, NLB, login)
+- [ ] Autoscaling: `kubectl autoscale deployment <name> -n insforge --cpu-percent=50 --min=1 --max=3`
+- [ ] Preparar respuestas defensa oral (ver PLAN_DESPLIEGUE_AWS_AID.md)
+- [ ] Commit final de todos los cambios al repo
 
-### Revisión final pre-presentación (2026-07-15)
-- Revisar alineación y coherencia del flujo de trabajo general del sistema
-- Verificar que todas las secciones del informe estén actualizadas
-- Preparar demostración en vivo para defensa oral (Swagger, tests, smoke test E2E, snippets de código)
-- Preparar respuestas individuales para posibles preguntas del profesor
+### Post-defensa (opcional)
+- [ ] Documentar endpoints con anotaciones OpenAPI
+- [ ] Configurar CloudWatch logs (pendiente — incompatible con K8s 1.36 actual)

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-07-17T02:30:00.000Z" agent="InsForge" version="24.0.0">
+  <diagram id="insforge-architecture" name="Arquitectura InsForge">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="InsForge RedNorte - Arquitectura AWS EKS" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=20;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="500" y="20" width="500" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Internet -->
+        <mxCell id="internet" value="Internet" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#2196F3;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="70" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- VPC Border -->
+        <mxCell id="vpc" value="AWS VPC (us-east-1) — VPC: vpc-0d1c6629c36bb3556" style="swimlane;startSize=30;fillColor=#ECEFF1;strokeColor=#607D8B;strokeWidth=2;fontSize=13;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="200" width="1340" height="720" as="geometry" />
+        </mxCell>
+
+        <!-- NLB Frontend -->
+        <mxCell id="nlb_fe" value="&lt;b&gt;NLB Frontend&lt;/b&gt;&lt;br&gt;:80 (internet-facing)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#B3E5FC;strokeColor=#0288D1;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="120" y="50" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- NLB Gateway -->
+        <mxCell id="nlb_gw" value="&lt;b&gt;NLB API Gateway&lt;/b&gt;&lt;br&gt;:8080 (internet-facing)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#B3E5FC;strokeColor=#0288D1;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="500" y="50" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ECR -->
+        <mxCell id="ecr_box" value="Amazon ECR" style="swimlane;startSize=25;fillColor=#FFF8E1;strokeColor=#F9A825;strokeWidth=1;fontSize=11;fontStyle=1;rounded=1;" vertex="1" parent="vpc">
+          <mxGeometry x="1020" y="50" width="280" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr1" value="api-gateway:latest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="ecr_box">
+          <mxGeometry x="10" y="30" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr2" value="ms-auth:latest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="ecr_box">
+          <mxGeometry x="140" y="30" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr3" value="ms-gestionpacientes:latest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="ecr_box">
+          <mxGeometry x="10" y="70" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr4" value="ms-optimizacion:latest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="ecr_box">
+          <mxGeometry x="140" y="70" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr5" value="ms-notificaciones:latest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="ecr_box">
+          <mxGeometry x="10" y="110" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr6" value="frontend:latest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="ecr_box">
+          <mxGeometry x="140" y="110" width="120" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Frontend -->
+        <mxCell id="frontend" value="&lt;b&gt;Frontend&lt;/b&gt;&lt;br&gt;React 19 + Vite 8&lt;br&gt;Tailwind CSS v4&lt;br&gt;Nginx (:80)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FF9800;strokeWidth=2;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="100" y="160" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- API Gateway -->
+        <mxCell id="gateway" value="&lt;b&gt;API Gateway&lt;/b&gt;&lt;br&gt;Spring Cloud Gateway&lt;br&gt;Netty (:8080)&lt;br&gt;JWT Validation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#9C27B0;strokeWidth=2;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="430" y="160" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Microservicios -->
+        <mxCell id="ms_auth" value="&lt;b&gt;MS Auth&lt;/b&gt;&lt;br&gt;Spring Boot (:8087)&lt;br&gt;JWT, Registro, Roles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#4CAF50;strokeWidth=2;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="80" y="320" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ms_gp" value="&lt;b&gt;MS GestionPacientes&lt;/b&gt;&lt;br&gt;Spring Boot (:8083)&lt;br&gt;Pacientes, Lista Espera" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#4CAF50;strokeWidth=2;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="370" y="320" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ms_opt" value="&lt;b&gt;MS Optimizacion&lt;/b&gt;&lt;br&gt;Spring Boot (:8084)&lt;br&gt;Citas, Medicos, Horarios" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#4CAF50;strokeWidth=2;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="660" y="320" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ms_notif" value="&lt;b&gt;MS Notificaciones&lt;/b&gt;&lt;br&gt;Spring Boot (:8085)&lt;br&gt;Email (SMTP)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#4CAF50;strokeWidth=2;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="950" y="320" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Database -->
+        <mxCell id="db" value="&lt;b&gt;Neon PostgreSQL&lt;/b&gt;&lt;br&gt;Shared instance (us-east-1)&lt;br&gt;Flyway: flyway_ms_auth, flyway_ms_listas_espera,&lt;br&gt;flyway_ms_optimizacion, flyway_ms_notificaciones" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=20;fillColor=#FFEBEE;strokeColor=#F44336;strokeWidth=2;fontSize=11;" vertex="1" parent="vpc">
+          <mxGeometry x="400" y="480" width="320" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- K8s Cluster label -->
+        <mxCell id="k8s_label" value="EKS Cluster: insforge-eks (Auto Mode) | Nodos: Karpenter auto-provisioned (amd64)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="vpc">
+          <mxGeometry x="100" y="640" width="500" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- GitHub Actions -->
+        <mxCell id="ci_box" value="GitHub Actions CI/CD" style="swimlane;startSize=25;fillColor=#E8EAF6;strokeColor=#3F51B5;strokeWidth=1;fontSize=11;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="950" width="600" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ci1" value="Build &amp; Test" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C5CAE9;strokeColor=#3F51B5;fontSize=10;" vertex="1" parent="ci_box">
+          <mxGeometry x="10" y="32" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="ci2" value="Docker Build" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C5CAE9;strokeColor=#3F51B5;fontSize=10;" vertex="1" parent="ci_box">
+          <mxGeometry x="140" y="32" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="ci3" value="Push ECR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C5CAE9;strokeColor=#3F51B5;fontSize=10;" vertex="1" parent="ci_box">
+          <mxGeometry x="270" y="32" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="ci4" value="Deploy EKS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C5CAE9;strokeColor=#3F51B5;fontSize=10;" vertex="1" parent="ci_box">
+          <mxGeometry x="400" y="32" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="ci_arr1" style="endArrow=classic;html=1;strokeColor=#3F51B5;" edge="1" parent="ci_box" source="ci1" target="ci2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ci_arr2" style="endArrow=classic;html=1;strokeColor=#3F51B5;" edge="1" parent="ci_box" source="ci2" target="ci3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ci_arr3" style="endArrow=classic;html=1;strokeColor=#3F51B5;" edge="1" parent="ci_box" source="ci3" target="ci4"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Feign clients (dashed) -->
+        <mxCell id="feign1" value="Feign: PacienteClient" style="endArrow=classic;html=1;strokeColor=#FF9800;dashed=1;dashPattern=5 5;fontSize=9;fontColor=#FF9800;" edge="1" parent="vpc" source="ms_auth" target="ms_gp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="feign2" value="Feign: CitaClient" style="endArrow=classic;html=1;strokeColor=#FF9800;dashed=1;dashPattern=5 5;fontSize=9;fontColor=#FF9800;" edge="1" parent="vpc" source="ms_gp" target="ms_opt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="feign3" value="Feign: NotificationClient" style="endArrow=classic;html=1;strokeColor=#FF9800;dashed=1;dashPattern=5 5;fontSize=9;fontColor=#FF9800;" edge="1" parent="vpc" source="ms_gp" target="ms_notif">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="feign4" value="Feign: PacienteClient" style="endArrow=classic;html=1;strokeColor=#FF9800;dashed=1;dashPattern=5 5;fontSize=9;fontColor=#FF9800;" edge="1" parent="vpc" source="ms_opt" target="ms_gp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="feign5" value="Feign: ListaEsperaClient" style="endArrow=classic;html=1;strokeColor=#FF9800;dashed=1;dashPattern=5 5;fontSize=9;fontColor=#FF9800;" edge="1" parent="vpc" source="ms_opt" target="ms_gp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="feign6" value="Feign: NotificationClient" style="endArrow=classic;html=1;strokeColor=#FF9800;dashed=1;dashPattern=5 5;fontSize=9;fontColor=#FF9800;" edge="1" parent="vpc" source="ms_opt" target="ms_notif">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Gateway to MS -->
+        <mxCell id="gw_auth" style="endArrow=classic;html=1;strokeColor=#9C27B0;strokeWidth=2;" edge="1" parent="vpc" source="gateway" target="ms_auth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gw_gp" style="endArrow=classic;html=1;strokeColor=#9C27B0;strokeWidth=2;" edge="1" parent="vpc" source="gateway" target="ms_gp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gw_opt" style="endArrow=classic;html=1;strokeColor=#9C27B0;strokeWidth=2;" edge="1" parent="vpc" source="gateway" target="ms_opt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gw_notif" style="endArrow=classic;html=1;strokeColor=#9C27B0;strokeWidth=2;" edge="1" parent="vpc" source="gateway" target="ms_notif">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- NLB to Frontend/Gateway -->
+        <mxCell id="nlb1" style="endArrow=classic;html=1;strokeColor=#0288D1;strokeWidth=2;" edge="1" parent="vpc" source="nlb_fe" target="frontend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nlb2" style="endArrow=classic;html=1;strokeColor=#0288D1;strokeWidth=2;" edge="1" parent="vpc" source="nlb_gw" target="gateway">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Frontend to Gateway -->
+        <mxCell id="fe_gw" value="/api/**" style="endArrow=classic;html=1;strokeColor=#FF5722;strokeWidth=2;fontSize=9;fontColor=#FF5722;" edge="1" parent="vpc" source="frontend" target="gateway">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- DB connections -->
+        <mxCell id="db1" style="endArrow=classic;html=1;strokeColor=#F44336;strokeWidth=1;dashed=1;" edge="1" parent="vpc" source="ms_auth" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="db2" style="endArrow=classic;html=1;strokeColor=#F44336;strokeWidth=1;dashed=1;" edge="1" parent="vpc" source="ms_gp" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="db3" style="endArrow=classic;html=1;strokeColor=#F44336;strokeWidth=1;dashed=1;" edge="1" parent="vpc" source="ms_opt" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="db4" style="endArrow=classic;html=1;strokeColor=#F44336;strokeWidth=1;dashed=1;" edge="1" parent="vpc" source="ms_notif" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Internet to NLBs -->
+        <mxCell id="int1" style="endArrow=classic;html=1;strokeColor=#2196F3;strokeWidth=2;" edge="1" parent="1" source="internet" target="nlb_fe">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="int2" style="endArrow=classic;html=1;strokeColor=#2196F3;strokeWidth=2;" edge="1" parent="1" source="internet" target="nlb_gw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

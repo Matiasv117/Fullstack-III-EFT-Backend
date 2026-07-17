@@ -1,0 +1,79 @@
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - ${CORS_ORIGIN:http://localhost:5173}
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      routes:
+        - id: ms-listas-espera
+          uri: ${MS_LISTAS_ESPERA_URL:http://ms-listas-espera:8083}
+          predicates:
+            - Path=/api/lista-espera/**,/lista-espera/**,/api/pacientes/**,/pacientes/**
+          filters:
+            - RewritePath=/api(?<segment>/.*), $\{segment}
+
+        - id: ms-notificaciones
+          uri: ${MS_NOTIFICACIONES_URL:http://ms-notificaciones:8085}
+          predicates:
+            - Path=/api/notificaciones/**
+          filters:
+            - StripPrefix=0
+
+        - id: ms-optimizacion
+          uri: ${MS_OPTIMIZACION_URL:http://ms-optimizacion:8084}
+          predicates:
+            - Path=/api/optimizacion/**,/optimizacion/**,/api/citas/**,/citas/**,/api/medicos/**,/medicos/**,/api/horarios/**,/horarios/**
+          filters:
+            - RewritePath=/api(?<segment>/.*), $\{segment}
+
+        - id: ms-auth
+          uri: ${MS_AUTH_URL:http://ms-auth:8087}
+          predicates:
+            - Path=/api/auth/**,/api/admin/**
+          filters:
+            - StripPrefix=0
+
+        # Swagger aggregation routes
+        - id: swagger-gestionpacientes
+          uri: ${MS_LISTAS_ESPERA_URL:http://ms-listas-espera:8083}
+          predicates:
+            - Path=/v3/api-docs/gestionpacientes
+          filters:
+            - RewritePath=/v3/api-docs/gestionpacientes, /v3/api-docs
+
+        - id: swagger-notificaciones
+          uri: ${MS_NOTIFICACIONES_URL:http://ms-notificaciones:8085}
+          predicates:
+            - Path=/v3/api-docs/notificaciones
+          filters:
+            - RewritePath=/v3/api-docs/notificaciones, /v3/api-docs
+
+        - id: swagger-optimizacion
+          uri: ${MS_OPTIMIZACION_URL:http://ms-optimizacion:8084}
+          predicates:
+            - Path=/v3/api-docs/optimizacion
+          filters:
+            - RewritePath=/v3/api-docs/optimizacion, /v3/api-docs
+
+        - id: swagger-auth
+          uri: ${MS_AUTH_URL:http://ms-auth:8087}
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - RewritePath=/v3/api-docs/auth, /api-docs
+
+jwt:
+  secret: ${JWT_SECRET:miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte}
+
+eureka:
+  client:
+    enabled: false

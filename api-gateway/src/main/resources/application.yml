@@ -24,131 +24,78 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
       routes:
-        - id: salud-bff
-          uri: lb://salud-bff
-          predicates:
-            - Path=/api/portal/**
-          filters:
-            - StripPrefix=0
-
         - id: ms-listas-espera
-          uri: lb://ms-listas-espera
+          uri: ${MS_LISTAS_ESPERA_URL:http://localhost:8083}
           predicates:
             - Path=/api/lista-espera/**,/lista-espera/**,/api/pacientes/**,/pacientes/**
           filters:
-            - StripPrefix=0
+            - RewritePath=/api(?<segment>/.*), $\{segment}
 
         - id: ms-notificaciones
-          uri: lb://ms-notificaciones
+          uri: ${MS_NOTIFICACIONES_URL:http://localhost:8085}
           predicates:
             - Path=/api/notificaciones/**
           filters:
             - StripPrefix=0
 
         - id: ms-optimizacion
-          uri: lb://ms-optimizacion
+          uri: ${MS_OPTIMIZACION_URL:http://localhost:8084}
           predicates:
             - Path=/api/optimizacion/**,/optimizacion/**,/api/citas/**,/citas/**,/api/medicos/**,/medicos/**,/api/horarios/**,/horarios/**
           filters:
-            - StripPrefix=0
-
-        - id: ms-progreso
-          uri: lb://ms-progreso
-          predicates:
-            - Path=/progreso/**
-          filters:
-            - StripPrefix=0
+            - RewritePath=/api(?<segment>/.*), $\{segment}
 
         - id: ms-auth
-          uri: lb://ms-auth
+          uri: ${MS_AUTH_URL:http://localhost:8087}
           predicates:
-            - Path=/api/auth/**
-          filters:
-            - StripPrefix=0
-
-        - id: ms-auditoria
-          uri: lb://ms-auditoria
-          predicates:
-            - Path=/api/auditoria/**
+            - Path=/api/auth/**,/api/admin/**
           filters:
             - StripPrefix=0
 
         # Swagger aggregation routes
-        - id: swagger-bff
-          uri: lb://salud-bff
-          predicates:
-            - Path=/v3/api-docs/bff
-          filters:
-            - RewritePath=/v3/api-docs/bff, /v3/api-docs
-
         - id: swagger-gestionpacientes
-          uri: lb://ms-listas-espera
+          uri: ${MS_LISTAS_ESPERA_URL:http://localhost:8083}
           predicates:
             - Path=/v3/api-docs/gestionpacientes
           filters:
             - RewritePath=/v3/api-docs/gestionpacientes, /v3/api-docs
 
         - id: swagger-notificaciones
-          uri: lb://ms-notificaciones
+          uri: ${MS_NOTIFICACIONES_URL:http://localhost:8085}
           predicates:
             - Path=/v3/api-docs/notificaciones
           filters:
             - RewritePath=/v3/api-docs/notificaciones, /v3/api-docs
 
         - id: swagger-optimizacion
-          uri: lb://ms-optimizacion
+          uri: ${MS_OPTIMIZACION_URL:http://localhost:8084}
           predicates:
             - Path=/v3/api-docs/optimizacion
           filters:
             - RewritePath=/v3/api-docs/optimizacion, /v3/api-docs
 
-        - id: swagger-progreso
-          uri: lb://ms-progreso
-          predicates:
-            - Path=/v3/api-docs/progreso
-          filters:
-            - RewritePath=/v3/api-docs/progreso, /api-docs
-
         - id: swagger-auth
-          uri: lb://ms-auth
+          uri: ${MS_AUTH_URL:http://localhost:8087}
           predicates:
             - Path=/v3/api-docs/auth
           filters:
             - RewritePath=/v3/api-docs/auth, /api-docs
 
-        - id: swagger-auditoria
-          uri: lb://ms-auditoria
-          predicates:
-            - Path=/v3/api-docs/auditoria
-          filters:
-            - RewritePath=/v3/api-docs/auditoria, /api-docs
-
 springdoc:
   swagger-ui:
     urls:
-      - name: BFF
-        url: /v3/api-docs/bff
       - name: Gestion Pacientes
         url: /v3/api-docs/gestionpacientes
       - name: Notificaciones
         url: /v3/api-docs/notificaciones
       - name: Optimizacion
         url: /v3/api-docs/optimizacion
-      - name: Progreso
-        url: /v3/api-docs/progreso
       - name: Auth
         url: /v3/api-docs/auth
-      - name: Auditoria
-        url: /v3/api-docs/auditoria
 
 jwt:
-  secret: miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte
+  secret: ${JWT_SECRET:miClaveSecretaSuperSeguraParaJWT2024SaludRedNorte}
 
 eureka:
   client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: false
-  instance:
-    prefer-ip-address: true
+    enabled: false

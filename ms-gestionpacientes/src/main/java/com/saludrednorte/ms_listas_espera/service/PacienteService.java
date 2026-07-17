@@ -1,7 +1,6 @@
 package com.saludrednorte.ms_listas_espera.service;
 
 import com.saludrednorte.ms_listas_espera.client.CitaClient;
-import com.saludrednorte.ms_listas_espera.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_listas_espera.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_listas_espera.entity.Paciente;
 import com.saludrednorte.ms_listas_espera.repository.PacienteRepository;
@@ -45,9 +44,6 @@ public class PacienteService {
     @Autowired
     private NotificacionEventPublisher notificacionEventPublisher;
 
-    @Autowired
-    private AuditEventPublisher auditEventPublisher;
-
     /**
      * Registra un nuevo paciente en el sistema.
      * <p>
@@ -67,21 +63,12 @@ public class PacienteService {
 
         Paciente savedPaciente = pacienteRepository.save(paciente);
 
-        // Publicar notificación de forma asíncrona vía RabbitMQ
-        try {
-            notificacionEventPublisher.publicar(
-                    savedPaciente.getId(),
-                    "PACIENTE_ASIGNADO",
-                    "Paciente " + savedPaciente.getNombre() + " " +
-                            savedPaciente.getApellido() + " registrado en el sistema"
-            );
-            logger.info("Evento de notificación publicado para paciente {}", savedPaciente.getId());
-        } catch (Exception e) {
-            logger.warn("Fallo al publicar notificación pero paciente registrado: {}", e.getMessage());
-        }
-
-        auditEventPublisher.publicar("PACIENTE_REGISTRADO",
-                "Paciente ID " + savedPaciente.getId() + " - " + savedPaciente.getNombre() + " " + savedPaciente.getApellido());
+        notificacionEventPublisher.publicar(
+                savedPaciente.getId(),
+                "PACIENTE_ASIGNADO",
+                "Paciente " + savedPaciente.getNombre() + " " +
+                        savedPaciente.getApellido() + " registrado en el sistema"
+        );
 
         return savedPaciente;
     }
@@ -125,17 +112,11 @@ public class PacienteService {
 
         Paciente updatedPaciente = pacienteRepository.save(paciente);
 
-        // Publicar notificación de actualización vía RabbitMQ
-        try {
-            notificacionEventPublisher.publicar(
-                    updatedPaciente.getId(),
-                    "ACTUALIZACION_ESTADO",
-                    "Datos del paciente " + updatedPaciente.getNombre() + " actualizados"
-            );
-            logger.info("Evento de actualización publicado para paciente {}", updatedPaciente.getId());
-        } catch (Exception e) {
-            logger.warn("Fallo al publicar notificación pero paciente actualizado: {}", e.getMessage());
-        }
+        notificacionEventPublisher.publicar(
+                updatedPaciente.getId(),
+                "ACTUALIZACION_ESTADO",
+                "Datos del paciente " + updatedPaciente.getNombre() + " actualizados"
+        );
 
         return updatedPaciente;
     }

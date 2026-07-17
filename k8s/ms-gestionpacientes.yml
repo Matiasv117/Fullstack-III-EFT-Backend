@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-gestionpacientes
+  namespace: insforge
+  labels:
+    app: ms-gestionpacientes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-gestionpacientes
+  template:
+    metadata:
+      labels:
+        app: ms-gestionpacientes
+    spec:
+      containers:
+        - name: ms-gestionpacientes
+          image: 366092663280.dkr.ecr.us-east-1.amazonaws.com/ms-gestionpacientes:latest
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: JWT_SECRET
+            - name: MS_OPTIMIZACION_URL
+              value: "http://ms-optimizacion:8084"
+            - name: MS_NOTIFICACIONES_URL
+              value: "http://ms-notificaciones:8085"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 40
+            periodSeconds: 15
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-gestionpacientes
+  namespace: insforge
+spec:
+  selector:
+    app: ms-gestionpacientes
+  ports:
+    - port: 8083
+      targetPort: 8083

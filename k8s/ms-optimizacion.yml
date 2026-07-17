@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-optimizacion
+  namespace: insforge
+  labels:
+    app: ms-optimizacion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-optimizacion
+  template:
+    metadata:
+      labels:
+        app: ms-optimizacion
+    spec:
+      containers:
+        - name: ms-optimizacion
+          image: 366092663280.dkr.ecr.us-east-1.amazonaws.com/ms-optimizacion:latest
+          ports:
+            - containerPort: 8084
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: insforge-secrets
+                  key: JWT_SECRET
+            - name: MS_LISTAS_ESPERA_URL
+              value: "http://ms-gestionpacientes:8083"
+            - name: MS_NOTIFICACIONES_URL
+              value: "http://ms-notificaciones:8085"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 40
+            periodSeconds: 15
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-optimizacion
+  namespace: insforge
+spec:
+  selector:
+    app: ms-optimizacion
+  ports:
+    - port: 8084
+      targetPort: 8084

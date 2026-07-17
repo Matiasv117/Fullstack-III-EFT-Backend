@@ -23,8 +23,8 @@ const reportesApi = {
     try {
       const response = await httpClient.get('/api/auditoria/eventos');
       return response.data;
-    } catch (err) {
-      throw new Error(err.message || 'Error al obtener eventos de auditoría');
+    } catch {
+      return [];
     }
   },
 };

@@ -5,7 +5,6 @@ import com.saludrednorte.ms_optimizacion.client.PacienteClient;
 import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
 import com.saludrednorte.ms_optimizacion.dto.PacienteDTO;
 import com.saludrednorte.ms_optimizacion.dto.ReasignacionResponse;
-import com.saludrednorte.ms_optimizacion.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_optimizacion.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
 import com.saludrednorte.ms_optimizacion.entity.EstadoCita;
@@ -36,9 +35,6 @@ class OptimizacionServiceTest {
 
     @Mock
     private NotificacionEventPublisher notificacionEventPublisher;
-
-    @Mock
-    private AuditEventPublisher auditEventPublisher;
 
     @Mock
     private PacienteClient pacienteClient;
@@ -95,7 +91,6 @@ class OptimizacionServiceTest {
         verify(citaService, times(1)).cancelarCita(1L);
         verify(estrategia, times(1)).reasignarCita(cita);
         verify(notificacionEventPublisher, times(1)).publicar(eq(100L), eq("CITA_REASIGNADA"), anyString(), eq("paciente@test.com"));
-        verify(auditEventPublisher, times(1)).publicar(eq("sistema"), eq("CITA_OPTIMIZADA"), anyString());
     }
 
     @Test
@@ -111,7 +106,6 @@ class OptimizacionServiceTest {
         verify(citaService, times(1)).cancelarCita(999L);
         verify(estrategia, never()).reasignarCita(any());
         verify(notificacionEventPublisher, never()).publicar(anyLong(), anyString(), anyString(), anyString());
-        verify(auditEventPublisher, never()).publicar(anyString(), anyString(), anyString());
     }
 
     @Test

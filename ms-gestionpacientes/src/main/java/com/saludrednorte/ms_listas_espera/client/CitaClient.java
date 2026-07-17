@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "ms-optimizacion")
+@FeignClient(name = "ms-optimizacion", url = "${MS_OPTIMIZACION_URL:http://localhost:8084}")
 public interface CitaClient {
 
     @PostMapping("/citas")

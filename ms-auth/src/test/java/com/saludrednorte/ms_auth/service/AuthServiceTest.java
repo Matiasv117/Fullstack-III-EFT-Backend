@@ -8,7 +8,6 @@ import com.saludrednorte.ms_auth.dto.PacienteLoginRequest;
 import com.saludrednorte.ms_auth.dto.RegisterRequest;
 import feign.FeignException;
 import com.saludrednorte.ms_auth.entity.User;
-import com.saludrednorte.ms_auth.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_auth.repository.UserRepository;
 import com.saludrednorte.ms_auth.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,9 +51,6 @@ class AuthServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private AuditEventPublisher auditEventPublisher;
 
     @Mock
     private PacienteClient pacienteClient;
@@ -147,8 +143,6 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BadCredentialsException.class);
-
-        verify(auditEventPublisher).publicar("admin", "LOGIN_FALLIDO", "Credenciales inválidas");
     }
 
     @Test

@@ -6,7 +6,6 @@ import com.saludrednorte.ms_optimizacion.dto.ListaEsperaDTO;
 import com.saludrednorte.ms_optimizacion.dto.PacienteDTO;
 import com.saludrednorte.ms_optimizacion.dto.ReasignacionResponse;
 import com.saludrednorte.ms_optimizacion.entity.EstadoCita;
-import com.saludrednorte.ms_optimizacion.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_optimizacion.messaging.NotificacionEventPublisher;
 import com.saludrednorte.ms_optimizacion.entity.Cita;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -46,9 +45,6 @@ public class OptimizacionService {
     private NotificacionEventPublisher notificacionEventPublisher;
 
     @Autowired
-    private AuditEventPublisher auditEventPublisher;
-
-    @Autowired
     private PrioridadCalculadora prioridadCalculadora;
 
     /**
@@ -83,7 +79,7 @@ public class OptimizacionService {
 
         String nombrePaciente = null;
 
-        // Publicar notificación de reasignación vía RabbitMQ
+        // Publicar notificación de reasignación vía Feign
         try {
             String emailDestino = null;
             try {
@@ -104,13 +100,9 @@ public class OptimizacionService {
                     "Cita reasignada para " + citaCancelada.getFechaHora(),
                     emailDestino
             );
-            logger.info("Evento de reasignación publicado para cita {}", citaCancelada.getId());
         } catch (Exception e) {
             logger.warn("Fallo al publicar reasignación de cita {} : {}", citaCancelada.getId(), e.getMessage());
         }
-
-        auditEventPublisher.publicar("sistema", "CITA_OPTIMIZADA",
-                "Cita ID " + citaCancelada.getId() + " reasignada para paciente " + citaCancelada.getPacienteId());
 
         return new ReasignacionResponse(citaCancelada.getId(), citaCancelada.getPacienteId(), nombrePaciente);
     }

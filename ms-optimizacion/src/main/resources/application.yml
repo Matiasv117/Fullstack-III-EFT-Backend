@@ -24,11 +24,6 @@ spring:
     enabled: true
     table: flyway_ms_optimizacion
     baseline-on-migrate: true
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
   cloud:
     openfeign:
       client:
@@ -39,12 +34,7 @@ spring:
 
 eureka:
   client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
+    enabled: false
 
 resilience4j:
   circuitbreaker:

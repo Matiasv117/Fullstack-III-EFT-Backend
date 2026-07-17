@@ -9,15 +9,11 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 
 $services = @(
-    [ordered]@{ Name = 'eureka-server';      Path = Join-Path $root 'eureka-server';         Port = 8761; Ready = 'Http'; Url = 'http://localhost:8761';                         Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'ms-auth';            Path = Join-Path $root 'ms-auth';               Port = 8087; Ready = 'Http'; Url = 'http://localhost:8087/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'ms-auditoria';       Path = Join-Path $root 'ms-auditoria';          Port = 8088; Ready = 'Http'; Url = 'http://localhost:8088/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'ms-gestionpacientes'; Path = Join-Path $root 'ms-gestionpacientes';  Port = 8083; Ready = 'Http'; Url = 'http://localhost:8083/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'ms-notificaciones';   Path = Join-Path $root 'ms-notificaciones';    Port = 8085; Ready = 'Http'; Url = 'http://localhost:8085/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'ms-optimizacion';     Path = Join-Path $root 'ms-optimizacion';      Port = 8084; Ready = 'Http'; Url = 'http://localhost:8084/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'ms-progreso';          Path = Join-Path $root 'ms-progreso';           Port = 8086; Ready = 'Http'; Url = 'http://localhost:8086/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'api-gateway';         Path = Join-Path $root 'api-gateway';          Port = 8080; Ready = 'Port'; Url = $null;                                           Command = '.\mvnw.cmd spring-boot:run' },
-    [ordered]@{ Name = 'salud-bff';           Path = Join-Path $root 'bff';                  Port = 8097; Ready = 'Http'; Url = 'http://localhost:8097/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' }
+    [ordered]@{ Name = 'api-gateway';          Path = Join-Path $root 'api-gateway';          Port = 8080; Ready = 'Port'; Url = $null;                                           Command = '.\mvnw.cmd spring-boot:run' },
+    [ordered]@{ Name = 'ms-auth';              Path = Join-Path $root 'ms-auth';              Port = 8087; Ready = 'Http'; Url = 'http://localhost:8087/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
+    [ordered]@{ Name = 'ms-gestionpacientes';  Path = Join-Path $root 'ms-gestionpacientes';  Port = 8083; Ready = 'Http'; Url = 'http://localhost:8083/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
+    [ordered]@{ Name = 'ms-notificaciones';    Path = Join-Path $root 'ms-notificaciones';    Port = 8085; Ready = 'Http'; Url = 'http://localhost:8085/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' },
+    [ordered]@{ Name = 'ms-optimizacion';      Path = Join-Path $root 'ms-optimizacion';      Port = 8084; Ready = 'Http'; Url = 'http://localhost:8084/actuator/health';          Command = '.\mvnw.cmd spring-boot:run' }
 )
 
 function Test-PortListening {
@@ -107,12 +103,10 @@ function Start-ServiceWindow {
 
     Write-Host "[START] $($Service.Name)" -ForegroundColor Cyan
     
-    # Si existe local-insforge.env, leer variables y pasarlas explícitamente
     $envFile = Join-Path $root 'config\local-insforge.env'
     $startCmd = $Service.Command
     
     if (Test-Path $envFile) {
-        # Leer variables del archivo
         $springProfiles = ""
         $dbUrl = ""
         $dbUsername = ""
@@ -134,7 +128,6 @@ function Start-ServiceWindow {
             }
         }
         
-        # Construir comando con variables de entorno explícitas
         if ($springProfiles -and $dbUrl -and $dbUsername -and $dbPassword) {
             $startCmd = "`$env:SPRING_PROFILES_ACTIVE='$springProfiles'; `$env:DB_URL='$dbUrl'; `$env:DB_USERNAME='$dbUsername'; `$env:DB_PASSWORD='$dbPassword'; " + $Service.Command
         }
@@ -146,33 +139,18 @@ function Start-ServiceWindow {
         -PassThru
 }
 
-Write-Host "=== Levantando todos los servicios ===" -ForegroundColor Cyan
+Write-Host "=== Levantando servicios (modo local) ===" -ForegroundColor Cyan
 Write-Host "Raiz: $root" -ForegroundColor DarkGray
+Write-Host "Servicios: api-gateway, ms-auth, ms-gestionpacientes, ms-notificaciones, ms-optimizacion" -ForegroundColor DarkGray
 
-# Iniciar RabbitMQ y Redis con Docker Compose
-Write-Host "[START] Iniciando RabbitMQ y Redis con Docker Compose..." -ForegroundColor Cyan
-$dockerComposePath = Join-Path $root 'docker-compose.yml'
-if (Test-Path $dockerComposePath) {
-    docker-compose -f $dockerComposePath up -d rabbitmq redis mailpit
-    Write-Host "[WAIT] Esperando a que RabbitMQ, Redis y Mailpit estén listos..." -ForegroundColor Cyan
-    Start-Sleep -Seconds 15
-} else {
-    Write-Host "[WARN] No se encontró docker-compose.yml en $root" -ForegroundColor Yellow
-}
-
-# 1) Arrancar Eureka primero (obligatorio, todos dependen de él)
-$eurekaSvc = $services | Where-Object { $_.Name -eq 'eureka-server' }
-$eurekaProcess = Start-ServiceWindow -Service $eurekaSvc
-Start-Sleep -Seconds 10
-if ($null -ne $eurekaProcess -and $eurekaProcess.HasExited) {
-    throw "eureka-server termino inmediatamente tras iniciar (exit code: $($eurekaProcess.ExitCode))."
-}
-Wait-ForHttp -Url $eurekaSvc.Url -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $eurekaSvc.Name -Process $eurekaProcess
-Wait-ForHttp -Url 'http://localhost:8761/eureka/apps' -TimeoutSeconds 60 -ServiceName 'eureka-registry' -Process $eurekaProcess
+# 1) Arrancar API Gateway primero (los demás dependen de él)
+$gatewaySvc = $services | Where-Object { $_.Name -eq 'api-gateway' }
+$gatewayProcess = Start-ServiceWindow -Service $gatewaySvc
+Wait-ForPort -Port $gatewaySvc.Port -TimeoutSeconds $StartupTimeoutSeconds -ServiceName $gatewaySvc.Name -Process $gatewayProcess
 Start-Sleep -Seconds 5
 
 # 2) Arrancar el resto de servicios en paralelo
-$otherServices = $services | Where-Object { $_.Name -ne 'eureka-server' }
+$otherServices = $services | Where-Object { $_.Name -ne 'api-gateway' }
 $launched = @{}
 foreach ($service in $otherServices) {
     $proc = Start-ServiceWindow -Service $service
@@ -181,7 +159,7 @@ foreach ($service in $otherServices) {
     }
 }
 
-# 3) Pequeña pausa para que los procesos se estabilicen antes de verificar
+# 3) Pequeña pausa para que los procesos se estabilicen
 Start-Sleep -Seconds 5
 
 # 4) Verificar que ningún proceso haya muerto inmediatamente
@@ -193,7 +171,7 @@ foreach ($entry in $launched.GetEnumerator()) {
     }
 }
 
-# 5) Esperar por cada servicio (health checks rápidos, ya están corriendo en paralelo)
+# 5) Esperar por cada servicio
 foreach ($entry in $launched.GetEnumerator()) {
     $name = $entry.Key
     $proc = $entry.Value.Process
@@ -213,4 +191,4 @@ if ($RunSmokeTest) {
 
 Write-Host "=== Todo levantado correctamente ===" -ForegroundColor Green
 Write-Host "Gateway: http://localhost:8080" -ForegroundColor Cyan
-Write-Host "Eureka : http://localhost:8761" -ForegroundColor Cyan
+Write-Host "Frontend: npm run dev (en Fullstack-III-EFT-Frontend/)" -ForegroundColor Cyan

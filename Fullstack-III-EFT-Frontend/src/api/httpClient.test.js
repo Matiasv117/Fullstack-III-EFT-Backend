@@ -21,7 +21,7 @@ describe('httpClient', () => {
     const { default: httpClient } = await import('./httpClient');
 
     expect(axios.create).toHaveBeenCalledWith({
-      baseURL: 'http://localhost:8097',
+      baseURL: '',
       timeout: 15000,
     });
     expect(httpClient).toBeDefined();

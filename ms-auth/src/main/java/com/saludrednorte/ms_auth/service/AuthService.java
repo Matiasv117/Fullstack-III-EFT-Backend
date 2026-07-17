@@ -7,7 +7,6 @@ import com.saludrednorte.ms_auth.dto.PacienteLoginRequest;
 import com.saludrednorte.ms_auth.dto.RegisterRequest;
 import com.saludrednorte.ms_auth.repository.UserRepository;
 import com.saludrednorte.ms_auth.client.PacienteClient;
-import com.saludrednorte.ms_auth.messaging.AuditEventPublisher;
 import com.saludrednorte.ms_auth.security.JwtUtil;
 import com.saludrednorte.ms_auth.util.RutUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,9 +45,6 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private AuditEventPublisher auditEventPublisher;
-
-    @Autowired
     private PacienteClient pacienteClient;
 
     /**
@@ -73,10 +69,8 @@ public class AuthService {
                     .map(authority -> authority.getAuthority())
                     .orElse("ROLE_USER");
 
-            auditEventPublisher.publicar(loginRequest.getUsername(), "LOGIN_EXITOSO", "Inicio de sesión exitoso");
             return new LoginResponse(token, userDetails.getUsername(), role);
         } catch (BadCredentialsException e) {
-            auditEventPublisher.publicar(loginRequest.getUsername(), "LOGIN_FALLIDO", "Credenciales inválidas");
             throw e;
         }
     }
@@ -98,8 +92,6 @@ public class AuthService {
                 request.getRole()
         );
         userRepository.save(user);
-
-        auditEventPublisher.publicar(user.getUsername(), "USUARIO_REGISTRADO", "Nuevo usuario registrado con rol " + user.getRole());
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         String token = jwtUtil.generateToken(userDetails);
@@ -200,11 +192,6 @@ public class AuthService {
                 );
                 nuevoPaciente.setEmail(request.getEmail());
                 paciente = pacienteClient.crearPaciente(nuevoPaciente);
-                auditEventPublisher.publicar(
-                        "PACIENTE_" + request.getRut(),
-                        "PACIENTE_CREADO_AUTO",
-                        "Paciente creado automáticamente: " + request.getNombre() + " " + request.getApellido()
-                );
             }
 
             // Crear UserDetails para el paciente
@@ -217,19 +204,8 @@ public class AuthService {
             // Generar token JWT
             String token = jwtUtil.generateToken(userDetails);
 
-            auditEventPublisher.publicar(
-                    "PACIENTE_" + paciente.getId(),
-                    "LOGIN_PACIENTE_EXITOSO",
-                    "Login exitoso para paciente: " + paciente.getNombre() + " " + paciente.getApellido()
-            );
-
             return new LoginResponse(token, "PACIENTE_" + paciente.getId(), "ROLE_PACIENTE");
         } catch (Exception e) {
-            auditEventPublisher.publicar(
-                    "PACIENTE_" + request.getRut(),
-                    "LOGIN_PACIENTE_FALLIDO",
-                    "Error en login de paciente: " + e.getMessage()
-            );
             throw new BadCredentialsException("Error al autenticar paciente: " + e.getMessage());
         }
     }
