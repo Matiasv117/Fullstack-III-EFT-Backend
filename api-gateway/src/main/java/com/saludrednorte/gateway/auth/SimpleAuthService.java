@@ -1,6 +1,5 @@
 package com.saludrednorte.gateway.auth;
 
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public class SimpleAuthService {
             "/webjars"
     );
 
-    private static final List<String> USER_GET_PATH_PREFIXES = List.of(
+    private static final List<String> USER_PATH_PREFIXES = List.of(
             "/api/portal",
             "/api/pacientes",
             "/api/lista-espera",
@@ -76,7 +75,7 @@ public class SimpleAuthService {
 
     /**
      * Verifica si un rol tiene permiso para acceder a una ruta con un método específico.
-     * Los administradores tienen acceso completo; los usuarios solo GET a rutas permitidas.
+     * Los administradores tienen acceso completo; los usuarios tienen acceso a rutas permitidas.
      *
      * @param method método HTTP (GET, POST, etc.)
      * @param path   la ruta solicitada
@@ -96,11 +95,7 @@ public class SimpleAuthService {
             return false;
         }
 
-        if (!HttpMethod.GET.matches(method)) {
-            return false;
-        }
-
-        return USER_GET_PATH_PREFIXES.stream().anyMatch(path::startsWith);
+        return USER_PATH_PREFIXES.stream().anyMatch(path::startsWith);
     }
 
     public record TokenData(String username, String role) {

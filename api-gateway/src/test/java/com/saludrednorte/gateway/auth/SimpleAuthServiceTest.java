@@ -117,7 +117,8 @@ class SimpleAuthServiceTest {
         assertThat(authService.canAccess("GET", "/productos", "ADMIN")).isTrue();
         assertThat(authService.canAccess("GET", "/productos", "USER")).isFalse();
         assertThat(authService.canAccess("GET", "/api/portal/resumen", "USER")).isTrue();
-        assertThat(authService.canAccess("POST", "/pacientes", "USER")).isFalse();
+        assertThat(authService.canAccess("POST", "/api/pacientes", "USER")).isTrue();
+        assertThat(authService.canAccess("DELETE", "/api/pacientes/1", "USER")).isTrue();
     }
 
     private String buildJwt(String username, String role) {
