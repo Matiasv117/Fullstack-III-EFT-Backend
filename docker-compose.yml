@@ -1,4 +1,18 @@
 services:
+  # ── Frontend (React + Nginx) ──
+  frontend:
+    build:
+      context: ./Fullstack-III-EFT-Frontend
+      dockerfile: Dockerfile
+    container_name: insforge-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - insforge-net
+
   # ── PostgreSQL (base de datos local) ──
   postgres:
     image: postgres:16-alpine
@@ -16,6 +30,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - insforge-net
 
   # ── Mailpit ( SMTP local para notificaciones) ──
   mailpit:
@@ -24,6 +40,8 @@ services:
     ports:
       - "1025:1025"   # SMTP
       - "8025:8025"   # Web UI
+    networks:
+      - insforge-net
 
   # ── API Gateway ──
   api-gateway:
@@ -45,6 +63,8 @@ services:
         condition: service_started
       ms-gestionpacientes:
         condition: service_started
+    networks:
+      - insforge-net
 
   # ── ms-auth ──
   ms-auth:
@@ -64,6 +84,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - insforge-net
 
   # ── ms-gestionpacientes ──
   ms-gestionpacientes:
@@ -84,6 +106,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - insforge-net
 
   # ── ms-optimizacion ──
   ms-optimizacion:
@@ -104,6 +128,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - insforge-net
 
   # ── ms-notificaciones ──
   ms-notificaciones:
@@ -126,6 +152,12 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_started
+    networks:
+      - insforge-net
 
 volumes:
   postgres_data:
+
+networks:
+  insforge-net:
+    driver: bridge
