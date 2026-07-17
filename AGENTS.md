@@ -2,7 +2,8 @@
 
 ## Repo & Git
 - GitHub: `https://github.com/Matiasv117/Fullstack-III-EFT-Backend.git`
-- Branch: `main`
+- Branch: `deploy` (rama de producción, pipeline se dispara aquí)
+- `main` = código estable
 - Windows LF→CRLF warnings on `git add`: normal, ignore
 
 ## Stack
@@ -15,7 +16,7 @@
 | Mensajería | Feign clients síncronos (reemplaza RabbitMQ) |
 | Service Discovery | URLs directas + env vars (reemplaza Eureka) |
 | Gateway | Spring Cloud Gateway (:8080) |
-| Orquestación | AWS EKS (Auto Mode + Karpenter) |
+| Orquestación | AWS EKS (Manual Mode, Managed Node Groups) |
 | CI/CD | GitHub Actions → ECR → K8s |
 
 ## Arquitectura simplificada (post-simplificación 2026-07-16)
@@ -55,7 +56,7 @@ El proyecto fue simplificado de 7 microservicios a 5+frontend para facilitar el 
 - **Neon cloud** (no local) — todos los MS apuntan a `ep-shy-hall-ai8fgqi2-pooler.c-4.us-east-1.aws.neon.tech/neondb`
 - Usuario: `neondb_owner`, password: `npg_Viz5aYF6NSuO` (defaults en `application.yml`, sobreescribible vía env vars)
 - Cada MS usa su propia tabla Flyway: `flyway_ms_auth`, `flyway_ms_listas_espera`, `flyway_ms_optimizacion`, `flyway_ms_notificaciones`
-- `docker-compose.yml` solo levanta Mailpit (sin Redis/RabbitMQ)
+- `docker-compose.yml` levanta: frontend + 5 MS + PostgreSQL + Mailpit en red `insforge-net`
 
 ## Frontend
 - **Sin React Router** — navegación por `activeSection` en `App.jsx`
@@ -138,15 +139,15 @@ Todos los Feign clients usan `url` param con env var para desacoplar de Eureka:
 ### Cluster
 - **Nombre**: insforge-manual
 - **Region**: us-east-1
-- **Modo**: Manual (Managed Node Groups)
+- **Modo**: Manual (Managed Node Groups) — NO Auto Mode
 - **K8s Version**: 1.31
 - **VPC**: `vpc-0d1c6629c36bb3556` (4 subnets, 2 NAT GWs)
 - **Account**: 366092663280
-- **Costo**: ~$8.20/día (EKS + EC2 + NAT GWs + NLBs)
-- **Presupuesto restante**: ~$29 → ~3.5 días 24/7
+- **Costo**: ~$8.64/día (EKS $2.40 + EC2 $3.00 + NAT GWs $2.16 + NLBs $1.08)
 - **IAM Roles**: `LabEksClusterRole` (cluster) + `LabEksNodeRole` (nodos)
 - **Node Group**: `insforge-nodes` (t3.medium, min 2, desired 3, max 4)
 - **CloudWatch**: Habilitado (OTel Container Insights)
+- **Vocareum STS**: Credenciales temporales (empiezan con `ASIA`), requieren `AWS_SESSION_TOKEN`
 
 ### ECR Repos
 - `366092663280.dkr.ecr.us-east-1.amazonaws.com/{api-gateway,ms-auth,ms-gestionpacientes,ms-optimizacion,ms-notificaciones,frontend}:latest`
@@ -156,9 +157,32 @@ Todos los Feign clients usan `url` param con env var para desacoplar de Eureka:
 - Secrets: `insforge-secrets` (DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET)
 - 6 Deployments + 6 Services (2 LoadBalancer NLB, 4 ClusterIP)
 
-### NLBs (internet-facing)
-- **Frontend**: `a796e2d22281e4840a1d71e4253014c1-5e784c18168e743b.elb.us-east-1.amazonaws.com` (port 80)
-- **API Gateway**: `a16febf025c6b4ad4a02eaa9f34e24d1-dfe0ff84fc128f87.elb.us-east-1.amazonaws.com` (port 8080)
+### NLBs (internet-facing, URLs permanentes)
+- **Frontend**: `http://a796e2d22281e4840a1d71e4253014c1-5e784c18168e743b.elb.us-east-1.amazonaws.com` (port 80)
+- **API Gateway**: `http://a16febf025c6b4ad4a02eaa9f34e24d1-dfe0ff84fc128f87.elb.us-east-1.amazonaws.com:8080` (port 8080)
+
+### Usuarios de prueba
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `admin` | `admin123` | ROLE_ADMIN |
+| `fun1` | `funcionario1` | ROLE_FUNCIONARIO |
+
+### Ahorro de costo (nodos a 1 antes de dormir)
+```bash
+aws eks update-nodegroup-config --cluster-name insforge-manual --nodegroup-name insforge-nodes --scaling-config minSize=1,desiredSize=1,maxSize=1 --region us-east-1
+```
+
+### Restaurar nodos (mañana antes de presentar)
+```bash
+aws eks update-nodegroup-config --cluster-name insforge-manual --nodegroup-name insforge-nodes --scaling-config minSize=2,desiredSize=3,maxSize=4 --region us-east-1
+```
+
+### Mañana: solo actualizar GitHub Secrets
+Los 3 secrets que cambian con cada sesión Vocareum:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
+`AWS_ACCOUNT_ID` (`366092663280`) NO cambia.
 
 ### Fixes aplicados durante deploy
 - **api-gateway pom.xml**: agregado `spring-boot-starter-actuator` (faltaba, probes fallaban)
@@ -192,14 +216,22 @@ Todos los Feign clients usan `url` param con env var para desacoplar de Eureka:
 
 ### Deploy AWS EKS completado (2026-07-17)
 - VPC creada con 4 subnets (2 públicas, 2 privadas) + 2 NAT GWs
-- EKS cluster `insforge-eks` con Auto Mode + Karpenter
+- EKS cluster `insforge-manual` con Managed Node Groups (NO Auto Mode)
 - 6 ECR repos creados, todas las imágenes push
 - Todos los pods Running, 0 restarts
 - 2 NLBs internet-facing activos
 - Login funcional end-to-end (Frontend → Nginx → API Gateway → ms-auth)
-- CI/CD pipeline `.github/workflows/deploy.yml` creado
+- CI/CD pipeline `.github/workflows/deploy.yml` creado (rama `deploy`)
 - Architecture diagrams: `architecture.puml`, `architecture.drawio`
 - `README.md` reescrito con documentación completa
+
+### Fixes críticos (2026-07-17, sesión nocturna)
+- **SimpleAuthFilter 403 fix**: `USER_GET_PATH_PREFIXES` corregido de `/pacientes` a `/api/pacientes` (agregados `/api/pacientes`, `/api/lista-espera`, `/api/notificaciones`, `/api/citas`, `/api/medicos`, `/api/optimizacion`, `/api/reportes`, `/api/horarios`)
+- **CORS fix**: `allowedOrigins` → `allowedOriginPatterns: ["*"]`, `allowedHeaders` como lista, `allowCredentials: false`
+- **Gateway K8s probes**: `initialDelaySeconds` aumentado a 50/60 para startup de 38s
+- **Dashboard resilience**: `.catch()` agregado a cada llamada en `Promise.all` del Dashboard.jsx
+- **docker-compose.yml**: Agregado servicio `frontend` + red explícita `insforge-net` en todos los servicios
+- **nginx.conf**: Verificado correcto con `proxy_set_header Authorization $http_authorization`
 
 ### Fixes de tests (2026-07-13)
 - **ms-auth `AdminControllerTest`**: Agregado `@Mock JwtUtil` + stubs con `lenient()` en `@BeforeEach`
@@ -213,13 +245,15 @@ Todos los Feign clients usan `url` param con env var para desacoplar de Eureka:
 
 ## Tareas pendientes
 
-### Pre-presentación
-- [ ] Self-healing demo en vivo: `kubectl delete pod -n insforge -l app=ms-auth`
-- [ ] Capturas de pantalla para informe (VPC, EKS, ECR, pods, NLB, login)
-- [ ] Autoscaling: `kubectl autoscale deployment <name> -n insforge --cpu-percent=50 --min=1 --max=3`
-- [ ] Preparar respuestas defensa oral (ver PLAN_DESPLIEGUE_AWS_AID.md)
-- [ ] Commit final de todos los cambios al repo
+### Pre-presentación (MAÑANA)
+- [ ] Borrar `ARCHITECTURE.md` (describe arquitectura vieja con 7 MS, Eureka, BFF)
+- [ ] Capturar screenshots: VPC, EKS, ECR, NLBs, pods, pipeline verde, login
+- [ ] Grabar videos: self-healing, scaling, demo frontend completa
+- [ ] Actualizar GitHub Secrets con nuevas credenciales Vocareum
+- [ ] Restaurar nodos: `aws eks update-nodegroup-config ... --scaling-config minSize=2,desiredSize=3,maxSize=4`
+- [ ] Verificar frontend accesible desde NLB URL
+- [ ] Ensayar presentación 10-15 min con guía
 
 ### Post-defensa (opcional)
 - [ ] Documentar endpoints con anotaciones OpenAPI
-- [ ] Configurar CloudWatch logs (pendiente — incompatible con K8s 1.36 actual)
+- [ ] Configurar CloudWatch logs (pendiente — incompatible con K8s actual)
